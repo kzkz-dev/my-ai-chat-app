@@ -1,65 +1,38 @@
-from flask import Flask, request, Response, session, redirect, url_for, jsonify, send_file
+from flask import Flask, request, Response, session
 from groq import Groq
-from flask_sqlalchemy import SQLAlchemy
-from datetime import datetime
 import os
 import requests
 import feedparser
-from gtts import gTTS
-import io
-import json
+from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
-app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///smart_ai.db'
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.secret_key = os.urandom(24)  # চ্যাট হিস্ট্রি সেশনের জন্য
 
-db = SQLAlchemy(app)
-
-# ডাটাবেস মডেল
-class Chat(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    session_id = db.Column(db.String(50))  # সেশন ID দিয়ে আলাদা করা
-    title = db.Column(db.String(200), default="New Chat")
-    messages = db.Column(db.Text)  # JSON string
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
-
-with app.app_context():
-    db.create_all()
-
-# Groq keys rotation
+# ৩টা Groq key — Render-এ GROQ_KEYS নামে কমা দিয়ে দাও
 GROQ_KEYS = os.environ.get("GROQ_KEYS", "").split(",")
 current_key_index = 0
 
 def get_groq_client():
     global current_key_index
     if not GROQ_KEYS:
-        raise ValueError("কোনো Groq key নেই!")
+        raise ValueError("কোনো Groq key পাওয়া যায়নি! Render-এ GROQ_KEYS সেট করো।")
 
     for _ in range(len(GROQ_KEYS)):
         key = GROQ_KEYS[current_key_index].strip()
         try:
             client = Groq(api_key=key)
-            client.chat.completions.create(model="llama-3.3-70b-versatile", messages=[{"role": "user", "content": "hi"}], max_tokens=1)
+            # টেস্ট কল (ছোট্ট করে চেক করি key কাজ করে কি না)
+            client.chat.completions.create(
+                model="llama-3.3-70b-versatile",
+                messages=[{"role": "user", "content": "test"}],
+                max_tokens=1
+            )
             return client
-        except:
+        except Exception as e:
+            print(f"Key {current_key_index} failed: {e}")
             current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
-    raise ValueError("সব key invalid!")
 
-# রিয়েল-টাইম ডেটা
-def get_latest_news():
-    try:
-        feed = feedparser.parse("https://news.google.com/rss/search?q=Bangladesh&hl=bn&gl=BD&ceid=BD:bn")
-        return "\n".join([f"📰 {e.title}" for e in feed.entries[:5]])
-    except:
-        return "খবর লোড করতে সমস্যা।"
-
-def get_crypto_price(coin="bitcoin"):
-    try:
-        r = requests.get(f"https://api.coingecko.com/api/v3/simple/price?ids={coin}&vs_currencies=usd")
-        return f"💰 {coin.title()}: ${r.json()[coin]['usd']} USD"
-    except:
-        return "প্রাইস লোড করতে সমস্যা।"
+    raise ValueError("সব Groq key invalid বা rate-limited!")
 
 @app.route("/")
 def home():
@@ -75,20 +48,19 @@ def home():
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css">
         <style>
-            :root { --bg: #f8f9fa; --text: #212529; --bot: #ffffff; --user: #0d6efd; }
+            :root { --primary: #0d6efd; --bg: #f8f9fa; --text: #212529; --bot: #ffffff; --user: #0d6efd; }
             body.dark { --bg: #0d1117; --text: #c9d1d9; --bot: #161b22; --user: #238636; }
             body { margin: 0; background: var(--bg); color: var(--text); font-family: system-ui; height: 100vh; display: flex; flex-direction: column; }
-            header { background: var(--bot); padding: 12px; display: flex; justify-content: space-between; }
-            #chat-list { padding: 10px; background: var(--bot); border-bottom: 1px solid #333; overflow-x: auto; white-space: nowrap; }
-            .chat-item { padding: 8px 16px; background: #333; color: white; border-radius: 20px; margin-right: 8px; cursor: pointer; display: inline-block; }
+            header { background: var(--bot); padding: 12px; display: flex; justify-content: space-between; border-bottom: 1px solid #30363d; }
             #chat { flex: 1; overflow-y: auto; padding: 16px; }
-            .message { margin: 12px 0; padding: 14px; border-radius: 18px; max-width: 85%; }
+            .message { margin: 12px 0; padding: 14px; border-radius: 18px; max-width: 85%; line-height: 1.6; }
             .user { background: var(--user); color: white; margin-left: auto; }
-            .bot { background: var(--bot); border: 1px solid #333; }
-            #input-area { background: var(--bot); padding: 12px; position: sticky; bottom: 0; border-top: 1px solid #333; }
-            #input-form { display: flex; gap: 8px; }
-            #msg { flex: 1; padding: 12px; border-radius: 24px; border: 1px solid #333; background: #0d1117; color: var(--text); }
-            button, .mic { padding: 12px; background: #0d6efd; color: white; border: none; border-radius: 50%; cursor: pointer; }
+            .bot { background: var(--bot); border: 1px solid #30363d; box-shadow: 0 1px 4px rgba(0,0,0,0.15); }
+            .typing { color: #8b949e; font-style: italic; }
+            #input-area { background: var(--bot); padding: 12px; position: sticky; bottom: 0; border-top: 1px solid #30363d; }
+            #input-form { display: flex; gap: 8px; max-width: 900px; margin: auto; }
+            #msg { flex: 1; padding: 12px; border-radius: 24px; border: 1px solid #30363d; background: #0d1117; color: var(--text); }
+            button { padding: 12px 20px; background: var(--primary); color: white; border: none; border-radius: 24px; cursor: pointer; }
         </style>
     </head>
     <body>
@@ -96,36 +68,24 @@ def home():
             <h1>Smart AI Buddy</h1>
             <button onclick="toggleTheme()">🌙</button>
         </header>
-        <div id="chat-list"></div>
         <div id="chat"></div>
         <div id="input-area">
             <form id="input-form">
-                <button type="button" class="mic" onclick="startVoice()"><i class="fas fa-microphone"></i></button>
-                <input id="msg" placeholder="লিখুন বা বলুন..." autocomplete="off">
+                <input id="msg" placeholder="মেসেজ লিখুন..." autocomplete="off" autofocus>
                 <button type="submit">পাঠান</button>
             </form>
         </div>
 
         <script>
             const chat = document.getElementById('chat');
-            const chatList = document.getElementById('chat-list');
+            const form = document.getElementById('input-form');
             const input = document.getElementById('msg');
-            let currentChatId = 'new';
-            let recognition;
 
             function toggleTheme() {
                 document.body.classList.toggle('dark');
+                localStorage.setItem('theme', document.body.classList.contains('dark') ? 'dark' : 'light');
             }
-
-            function startVoice() {
-                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
-                recognition.lang = 'bn-BD';
-                recognition.onresult = e => {
-                    input.value = e.results[0][0].transcript;
-                    sendMessage();
-                };
-                recognition.start();
-            }
+            if (localStorage.getItem('theme') === 'dark') document.body.classList.add('dark');
 
             function addMessage(text, isUser = false) {
                 const div = document.createElement('div');
@@ -133,6 +93,7 @@ def home():
                 div.innerHTML = marked.parse(text);
                 chat.appendChild(div);
                 chat.scrollTop = chat.scrollHeight;
+                hljs.highlightAll();
             }
 
             function showTyping() {
@@ -154,7 +115,7 @@ def home():
                 const typing = showTyping();
 
                 try {
-                    const res = await fetch(`/chat?prompt=\( {encodeURIComponent(text)}&chat_id= \){currentChatId}`);
+                    const res = await fetch(`/chat?prompt=${encodeURIComponent(text)}`);
                     const reader = res.body.getReader();
                     let full = '';
 
@@ -167,6 +128,7 @@ def home():
                         full += new TextDecoder().decode(value);
                         typing.innerHTML = marked.parse(full);
                         chat.scrollTop = chat.scrollHeight;
+                        hljs.highlightAll();
                     }
                 } catch (e) {
                     typing.innerHTML = '⚠️ সমস্যা: ' + e.message;
@@ -188,56 +150,54 @@ def home():
 @app.route("/chat")
 def chat():
     prompt = request.args.get("prompt")
-    chat_id = request.args.get("chat_id", "new")
-
     if not prompt:
         return "No prompt", 400
 
-    # চ্যাট হিস্ট্রি ডাটাবেস থেকে লোড
-    chat_entry = Chat.query.filter_by(session_id=session.sid if chat_id == "new" else chat_id).first()
-    if not chat_entry:
-        chat_entry = Chat(session_id=session.sid, messages=json.dumps([]))
-        db.session.add(chat_entry)
-        db.session.commit()
+    # চ্যাট হিস্ট্রি সেশনে রাখা
+    if 'chat_history' not in session:
+        session['chat_history'] = [
+            {
+                "role": "system",
+                "content": """
+                তুমি Smart AI Buddy — একটা অত্যন্ত স্মার্ট, দ্রুত, আপডেটেড এবং হেল্পফুল AI।
+                তোমার মালিকের নাম KAWCHUR (বাংলায় কাওছুর)।
+                যদি কেউ তোমার মালিক কে জিজ্ঞেস করে, বলো: "আমার মালিক KAWCHUR (কাওছুর)"।
+                
+                স্টাইল:
+                - বাংলা/বাংলিশ/ইংরেজি — ইউজারের স্টাইলে মিশিয়ে কথা বলো।
+                - সত্যি, নিরপেক্ষ, সর্বশেষ তথ্য দিয়ে উত্তর।
+                - জটিল প্রশ্নে step-by-step চিন্তা করে উত্তর দাও।
+                - মজার প্রশ্নে হিউমার, সিরিয়াসে সিরিয়াস।
+                - সংক্ষিপ্ত কিন্তু পূর্ণাঙ্গ উত্তর।
+                - খবর, প্রাইস, সময় ইত্যাদি রিয়েল-টাইমে দিতে পারো।
+                - কোডিং, ম্যাথ, লজিক, লাইফ অ্যাডভাইস — সবকিছুতে এক্সপার্ট।
+                - না জানলে বলো "আমি নিশ্চিত না"।
+                """
+            }
+        ]
 
-    history = json.loads(chat_entry.messages)
-    history.append({"role": "user", "content": prompt})
+    session['chat_history'].append({"role": "user", "content": prompt})
 
     def generate():
         try:
             stream = get_groq_client().chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=history,
+                messages=session['chat_history'],
                 temperature=0.7,
                 stream=True
             )
-            full = ""
+            full_response = ""
             for chunk in stream:
-                if chunk.choices[0].delta.content:
+                if chunk.choices and chunk.choices[0].delta.content is not None:
                     content = chunk.choices[0].delta.content
-                    full += content
+                    full_response += content
                     yield content
 
-            history.append({"role": "assistant", "content": full})
-            chat_entry.messages = json.dumps(history)
-            db.session.commit()
+            session['chat_history'].append({"role": "assistant", "content": full_response})
         except Exception as e:
-            yield f"⚠️ সমস্যা: {str(e)}"
+            yield f"⚠️ সমস্যা: {str(e)} (key rotation হয়েছে, আবার চেষ্টা করুন)"
 
     return Response(generate(), mimetype="text/plain")
-
-@app.route("/admin")
-def admin():
-    password = request.args.get("password")
-    if password == "kawchur123":  # এটা পরিবর্তন করে স্ট্রং করো
-        session["is_admin"] = True
-        return "এডমিন প্যানেলে স্বাগতম! (এখানে ইউজার লিস্ট, লগ ইত্যাদি যোগ করা যাবে)"
-    return """
-    <form>
-        <input type="password" name="password" placeholder="এডমিন পাসওয়ার্ড">
-        <button type="submit">লগইন</button>
-    </form>
-    """
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
