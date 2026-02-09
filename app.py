@@ -1,24 +1,26 @@
 from flask import Flask, request, Response, session
 from groq import Groq
 import os
-import requests
-import feedparser
-from datetime import datetime
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)  # চ্যাট হিস্ট্রি সেশনের জন্য
+app.secret_key = os.urandom(24)
 
-# ৩টা Groq key — Render-এ GROQ_KEYS নামে কমা দিয়ে দাও
+# Render-এর GROQ_KEYS থেকে কি (Key) লোড করা
 GROQ_KEYS = os.environ.get("GROQ_KEYS", "").split(",")
 current_key_index = 0
 
 def get_groq_client():
     global current_key_index
-    if not GROQ_KEYS:
+    if not GROQ_KEYS or GROQ_KEYS == ['']:
         raise ValueError("কোনো Groq key পাওয়া যায়নি! Render-এ GROQ_KEYS সেট করো।")
 
+    # ৩ বার চেষ্টা করবে ভিন্ন ভিন্ন কি দিয়ে
     for _ in range(len(GROQ_KEYS)):
         key = GROQ_KEYS[current_key_index].strip()
+        if not key:
+            current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+            continue
+            
         try:
             client = Groq(api_key=key)
             # টেস্ট কল (ছোট্ট করে চেক করি key কাজ করে কি না)
@@ -153,7 +155,7 @@ def chat():
     if not prompt:
         return "No prompt", 400
 
-    # চ্যাট হিস্ট্রি সেশনে রাখা
+    # ১. চ্যাট হিস্ট্রি সেশন তৈরি বা লোড করা (রিকোয়েস্ট কন্টেক্সটের ভেতরে)
     if 'chat_history' not in session:
         session['chat_history'] = [
             {
@@ -169,33 +171,41 @@ def chat():
                 - জটিল প্রশ্নে step-by-step চিন্তা করে উত্তর দাও।
                 - মজার প্রশ্নে হিউমার, সিরিয়াসে সিরিয়াস।
                 - সংক্ষিপ্ত কিন্তু পূর্ণাঙ্গ উত্তর।
-                - খবর, প্রাইস, সময় ইত্যাদি রিয়েল-টাইমে দিতে পারো।
-                - কোডিং, ম্যাথ, লজিক, লাইফ অ্যাডভাইস — সবকিছুতে এক্সপার্ট।
                 - না জানলে বলো "আমি নিশ্চিত না"।
                 """
             }
         ]
 
+    # ২. ইউজারের মেসেজ সেশনে যোগ করা
     session['chat_history'].append({"role": "user", "content": prompt})
+    session.modified = True
+    
+    # ৩. জেনারেটরের জন্য মেসেজ লিস্ট কপি করে নেওয়া
+    # (এটিই আপনার 'Working outside of request context' সমস্যার সমাধান)
+    messages_for_groq = list(session['chat_history'])
 
     def generate():
         try:
-            stream = get_groq_client().chat.completions.create(
+            # এখানে সরাসরি session ভেরিয়েবল ব্যবহার করবেন না, messages_for_groq ব্যবহার করুন
+            client = get_groq_client()
+            stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=session['chat_history'],
+                messages=messages_for_groq,
                 temperature=0.7,
                 stream=True
             )
-            full_response = ""
+            
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content is not None:
                     content = chunk.choices[0].delta.content
-                    full_response += content
                     yield content
 
-            session['chat_history'].append({"role": "assistant", "content": full_response})
+            # নোট: স্ট্রিমিং চলাকালীন বা শেষে session আপডেট করা যায় না, 
+            # কারণ রেসপন্স হেডার আগেই পাঠানো হয়ে যায়।
+
         except Exception as e:
-            yield f"⚠️ সমস্যা: {str(e)} (key rotation হয়েছে, আবার চেষ্টা করুন)"
+            print(f"Error in generate: {e}")
+            yield f"⚠️ সমস্যা: {str(e)} (Key rotation check logs)"
 
     return Response(generate(), mimetype="text/plain")
 
