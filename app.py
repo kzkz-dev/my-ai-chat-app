@@ -4,7 +4,7 @@ import os
 
 app = Flask(__name__)
 
-# Environment variable for Groq API key - set this in Render dashboard
+# Key টা env var থেকে নেবে (Render-এ সেট করবা)
 GROQ_KEY = os.environ.get("GROQ_API_KEY")
 if not GROQ_KEY:
     raise ValueError("GROQ_API_KEY environment variable not set!")
