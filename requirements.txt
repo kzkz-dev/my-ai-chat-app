@@ -3,6 +3,3 @@ groq
 gunicorn
 requests
 feedparser
-flask-sqlalchemy
-flask-login
-gtts
