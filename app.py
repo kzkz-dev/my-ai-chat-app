@@ -28,10 +28,9 @@ def get_groq_client():
 
     raise ValueError("সব Groq key invalid!")
 
-# বাংলাদেশের বর্তমান সময় বের করার ফাংশন
 def get_bd_time():
     utc_now = datetime.utcnow()
-    bd_time = utc_now + timedelta(hours=6) # UTC+6 for Bangladesh
+    bd_time = utc_now + timedelta(hours=6)
     return bd_time.strftime("%A, %d %B %Y, %I:%M %p")
 
 @app.route("/")
@@ -67,98 +66,89 @@ def home():
                 --bot-text: #e4e6eb;
                 --text-color: #e4e6eb;
             }
-            body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+            body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Roboto', sans-serif; height: 100vh; display: flex; flex-direction: column; }
             
-            /* Header */
             header {
-                padding: 15px; text-align: center; background: var(--chat-bg);
-                box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 10;
-                display: flex; justify-content: space-between; align-items: center;
+                position: fixed; top: 0; left: 0; right: 0; height: 60px;
+                background: var(--chat-bg); box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 100;
+                display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
             }
-            h1 { font-size: 1.2rem; margin: 0; color: var(--text-color); }
-            .theme-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-color); cursor: pointer; }
-
-            /* Chat Area */
-            #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
             
-            .message-wrapper { display: flex; width: 100%; }
+            #chat-container {
+                margin-top: 60px; /* Header height */
+                margin-bottom: 70px; /* Input area height */
+                padding: 20px;
+                overflow-y: auto;
+                height: calc(100vh - 130px);
+            }
+            
+            .message-wrapper { display: flex; width: 100%; margin-bottom: 10px; }
             .message-wrapper.user { justify-content: flex-end; }
             .message-wrapper.bot { justify-content: flex-start; }
 
             .message {
                 max-width: 75%; padding: 10px 15px; border-radius: 18px;
-                font-size: 0.95rem; line-height: 1.5; position: relative; word-wrap: break-word;
+                font-size: 0.95rem; line-height: 1.5; word-wrap: break-word;
             }
             .user .message { background: var(--user-msg-bg); color: var(--user-text); border-bottom-right-radius: 4px; }
             .bot .message { background: var(--bot-msg-bg); color: var(--bot-text); border-bottom-left-radius: 4px; }
             
-            .message p { margin: 0; }
-            .message ul, .message ol { padding-left: 20px; margin: 5px 0; }
+            #input-area {
+                position: fixed; bottom: 0; left: 0; right: 0;
+                height: 70px;
+                background: var(--input-area-bg);
+                display: flex; align-items: center; gap: 10px; padding: 0 10px;
+                z-index: 100; border-top: 1px solid rgba(0,0,0,0.1);
+            }
             
-            /* Typing Animation */
-            .typing { font-style: italic; opacity: 0.7; font-size: 0.8rem; margin-left: 10px; margin-bottom: 10px; color: var(--text-color); display: none; }
-
-            /* Input Area */
-            #input-area { padding: 10px; background: var(--input-area-bg); display: flex; align-items: center; gap: 10px; }
             input {
                 flex: 1; padding: 12px 15px; border-radius: 20px; border: none; outline: none;
                 background: var(--chat-bg); color: var(--text-color); font-size: 1rem;
             }
-            button {
-                background: #0084ff; color: white; border: none; padding: 10px 15px;
-                border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
-                transition: transform 0.1s;
+            
+            button.send-btn {
+                background: #0084ff; color: white; border: none; padding: 10px;
+                border-radius: 50%; cursor: pointer; height: 40px; width: 40px;
+                display: flex; align-items: center; justify-content: center;
             }
-            button:active { transform: scale(0.95); }
-
+            
+            .theme-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-color); cursor: pointer; }
         </style>
     </head>
     <body>
         <header>
-            <div style="width: 24px;"></div> <h1>Smart AI Buddy</h1>
+            <div style="width: 24px;"></div>
+            <h3>Smart AI Buddy</h3>
             <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </header>
 
         <div id="chat-container">
             <div class="message-wrapper bot">
                 <div class="message">
-                    হ্যালো! আমি তৈরি। আমি সবকিছু নিয়ে কথা বলতে পারি। আপনার কী সাহায্য লাগবে? 👋
+                    হ্যালো! আমি তৈরি। এখন আমাকে মেসেজ পাঠাতে পারবেন! 👇
                 </div>
             </div>
         </div>
-        <div class="typing" id="typing-indicator">AI লিখছে...</div>
 
         <div id="input-area">
-            <input id="msg" placeholder="এখানে লিখুন..." autocomplete="off">
-            <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            <input id="msg" placeholder="মেসেজ লিখুন..." autocomplete="off">
+            <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
 
         <script>
             const chat = document.getElementById('chat-container');
             const input = document.getElementById('msg');
-            const typingInd = document.getElementById('typing-indicator');
 
             function toggleTheme() {
                 document.body.classList.toggle('dark');
                 const btn = document.querySelector('.theme-btn i');
-                if (document.body.classList.contains('dark')) {
-                    btn.classList.remove('fa-moon');
-                    btn.classList.add('fa-sun');
-                } else {
-                    btn.classList.remove('fa-sun');
-                    btn.classList.add('fa-moon');
-                }
+                btn.className = document.body.classList.contains('dark') ? 'fas fa-sun' : 'fas fa-moon';
             }
 
             function appendMessage(text, isUser) {
                 const wrapper = document.createElement('div');
                 wrapper.className = `message-wrapper ${isUser ? 'user' : 'bot'}`;
-                
-                const msgDiv = document.createElement('div');
-                msgDiv.className = 'message';
-                msgDiv.innerHTML = marked.parse(text);
-                
-                wrapper.appendChild(msgDiv);
+                wrapper.innerHTML = `<div class="message">${marked.parse(text)}</div>`;
                 chat.appendChild(wrapper);
                 chat.scrollTop = chat.scrollHeight;
             }
@@ -166,27 +156,21 @@ def home():
             async function sendMessage() {
                 const text = input.value.trim();
                 if (!text) return;
-
                 appendMessage(text, true);
                 input.value = '';
-                typingInd.style.display = 'block';
-                chat.scrollTop = chat.scrollHeight;
-
+                
                 try {
                     const res = await fetch(`/chat?prompt=${encodeURIComponent(text)}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
                     let fullResponse = '';
                     
-                    // Create a placeholder for bot response
                     const wrapper = document.createElement('div');
                     wrapper.className = 'message-wrapper bot';
                     const msgDiv = document.createElement('div');
                     msgDiv.className = 'message';
                     wrapper.appendChild(msgDiv);
                     chat.appendChild(wrapper);
-
-                    typingInd.style.display = 'none';
 
                     while (true) {
                         const { done, value } = await reader.read();
@@ -196,14 +180,11 @@ def home():
                         chat.scrollTop = chat.scrollHeight;
                     }
                 } catch (e) {
-                    typingInd.style.display = 'none';
-                    appendMessage("⚠️ একটু সমস্যা হয়েছে, আবার চেষ্টা করুন।", false);
+                    appendMessage("⚠️ সমস্যা হয়েছে!", false);
                 }
             }
-
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') sendMessage();
-            });
+            
+            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
         </script>
     </body>
     </html>
@@ -212,71 +193,40 @@ def home():
 @app.route("/chat")
 def chat():
     prompt = request.args.get("prompt")
-    if not prompt:
-        return "No prompt", 400
-
-    # বাংলাদেশ সময় আপডেট করা
+    if not prompt: return "No prompt", 400
+    
     bd_time_str = get_bd_time()
-
-    if 'chat_history' not in session:
-        session['chat_history'] = []
-
-    # সিস্টেম প্রম্পট (প্রতিবার লেটেস্ট সময় সহ আপডেট হবে)
-    # আমরা হিস্ট্রির শুরুতে সিস্টেম মেসেজ না রেখে, প্রতি রিকোয়েস্টে ইনজেক্ট করব
-    # এতে সে সময় মনে রাখতে পারবে।
     
-    current_system_prompt = {
+    if 'chat_history' not in session: session['chat_history'] = []
+    
+    system_prompt = {
         "role": "system",
-        "content": f"""
-        You are Smart AI Buddy, a friendly and intelligent assistant.
-        
-        **Your Capabilities:**
-        1. **Current Time & Date:** You know that today is **{bd_time_str}** (Bangladesh Time). If asked about time, tell this.
-        2. **Owner:** Your creator is **KAWCHUR**. 
-           - **RULE:** NEVER mention your owner unless the user specifically asks "Who created you?". Keep it hidden otherwise.
-        3. **Language:** Reply in Bangla if the user speaks Bangla. Reply in English if they speak English.
-        4. **Personality:** Be natural, like a human friend. Don't sound like a robot. Use emojis.
-        
-        Answer short questions shortly. Answer complex questions with details.
-        """
+        "content": f"You are Smart AI Buddy. Current time in Bangladesh: {bd_time_str}. Owner: KAWCHUR (Reveal owner ONLY if asked). Reply in user's language (Bangla/English). Be friendly."
     }
-
-    # সেশন থেকে আগের মেসেজ নেওয়া (System prompt বাদে)
-    user_history = [msg for msg in session['chat_history'] if msg['role'] != 'system']
     
-    # নতুন মেসেজ যোগ করা
-    user_history.append({"role": "user", "content": prompt})
-    
-    # গ্রোক-এ পাঠানোর জন্য ফাইনাল লিস্ট (System Prompt + User History)
-    messages_for_groq = [current_system_prompt] + user_history
-
-    # সেশন আপডেট করা (ভবিষ্যতের জন্য)
-    session['chat_history'] = user_history[-10:] # মেমোরি হালকা রাখতে লাস্ট ১০টা মেসেজ রাখি
+    history = [msg for msg in session['chat_history'] if msg['role'] != 'system']
+    history.append({"role": "user", "content": prompt})
+    session['chat_history'] = history[-10:]
     session.modified = True
-
+    
     def generate():
         try:
             client = get_groq_client()
             stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=messages_for_groq,
-                temperature=0.8, # সৃজনশীলতার জন্য একটু বাড়ালাম
+                messages=[system_prompt] + history,
                 stream=True
             )
-            
-            full_response = ""
+            resp = ""
             for chunk in stream:
-                if chunk.choices and chunk.choices[0].delta.content is not None:
-                    content = chunk.choices[0].delta.content
-                    full_response += content
-                    yield content
-            
-            # অ্যাসিস্ট্যান্টের উত্তর হিস্ট্রিতে যোগ করা (পরের বার মনে রাখার জন্য)
-            session['chat_history'].append({"role": "assistant", "content": full_response})
+                if chunk.choices and chunk.choices[0].delta.content:
+                    c = chunk.choices[0].delta.content
+                    resp += c
+                    yield c
+            session['chat_history'].append({"role": "assistant", "content": resp})
             session.modified = True
-
         except Exception as e:
-            yield f"⚠️ সমস্যা: {str(e)}"
+            yield f"Error: {str(e)}"
 
     return Response(generate(), mimetype="text/plain")
 
