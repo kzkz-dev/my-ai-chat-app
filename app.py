@@ -3,12 +3,12 @@ from groq import Groq
 import os
 import uuid
 from datetime import datetime, timedelta
+import pytz
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# মেমোরিতে চ্যাট হিস্ট্রি রাখার জন্য গ্লোবাল ভেরিয়েবল
-# (এটি কুকি সেশনের সীমাবদ্ধতা বাইপাস করবে)
+# মেমোরিতে চ্যাট হিস্ট্রি রাখার জন্য (Error Fix)
 user_chats = {}
 
 # Render-এর GROQ_KEYS লোড করা
@@ -18,7 +18,7 @@ current_key_index = 0
 def get_groq_client():
     global current_key_index
     if not GROQ_KEYS or GROQ_KEYS == ['']:
-        raise ValueError("কোনো Groq key পাওয়া যায়নি!")
+        raise ValueError("No Groq keys found!")
 
     for _ in range(len(GROQ_KEYS)):
         key = GROQ_KEYS[current_key_index].strip()
@@ -30,17 +30,23 @@ def get_groq_client():
         except Exception as e:
             print(f"Key failed: {e}")
             current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+    raise ValueError("All keys invalid!")
 
-    raise ValueError("সব Groq key invalid!")
-
+# ১. সময় ফিক্স (TimeZone ব্যবহার করে)
 def get_bd_time():
-    utc_now = datetime.utcnow()
-    bd_time = utc_now + timedelta(hours=6)
-    return bd_time.strftime("%A, %d %B %Y, %I:%M %p")
+    bd_zone = pytz.timezone('Asia/Dhaka')
+    bd_time = datetime.now(bd_zone)
+    # ফরম্যাট: 10:30 PM
+    return bd_time.strftime("%I:%M %p") 
+
+# ২. তারিখ ফিক্স
+def get_bd_date():
+    bd_zone = pytz.timezone('Asia/Dhaka')
+    bd_time = datetime.now(bd_zone)
+    return bd_time.strftime("%d %B, %Y (%A)")
 
 @app.route("/")
 def home():
-    # ইউজারকে একটি ইউনিক ID দেওয়া (যদি না থাকে)
     if 'user_id' not in session:
         session['user_id'] = str(uuid.uuid4())
         
@@ -50,91 +56,112 @@ def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Smart AI Buddy</title>
+        <title>Smart AI</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
         <style>
             :root {
-                --bg-color: #ffffff;
-                --chat-bg: #ffffff;
-                --input-area-bg: #f0f2f5;
-                --user-msg-bg: #0084ff;
-                --user-text: #ffffff;
-                --bot-msg-bg: #e4e6eb;
-                --bot-text: #050505;
-                --text-color: #050505;
+                --primary: #007AFF; /* Default Blue */
+                --bg: #ffffff;
+                --text: #000000;
+                --gray: #f2f2f7;
+                --msg-user: #007AFF;
+                --msg-bot: #e9e9eb;
+                --text-user: #ffffff;
+                --text-bot: #000000;
             }
-            body.dark {
-                --bg-color: #18191a;
-                --chat-bg: #18191a;
-                --input-area-bg: #242526;
-                --user-msg-bg: #0084ff;
-                --user-text: #ffffff;
-                --bot-msg-bg: #3a3b3c;
-                --bot-text: #e4e6eb;
-                --text-color: #e4e6eb;
-            }
-            body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Roboto', sans-serif; height: 100vh; display: flex; flex-direction: column; }
             
+            /* থিম ভেরিয়েবল */
+            body.theme-blue { --primary: #007AFF; --msg-user: #007AFF; }
+            body.theme-green { --primary: #25D366; --msg-user: #25D366; } /* WhatsApp */
+            body.theme-purple { --primary: #8B5CF6; --msg-user: #8B5CF6; }
+            body.theme-orange { --primary: #F97316; --msg-user: #F97316; }
+            body.theme-dark { 
+                --bg: #111827; --text: #ffffff; --gray: #1f2937; 
+                --msg-bot: #374151; --text-bot: #ffffff; 
+                --primary: #3B82F6; --msg-user: #3B82F6;
+            }
+
+            body { 
+                margin: 0; background: var(--bg); color: var(--text); 
+                font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; 
+                transition: background 0.3s, color 0.3s;
+            }
+            
+            /* হেডার ডিজাইন */
             header {
                 position: fixed; top: 0; left: 0; right: 0; height: 60px;
-                background: var(--chat-bg); box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 100;
-                display: flex; justify-content: space-between; align-items: center; padding: 0 20px;
+                background: var(--bg); 
+                border-bottom: 1px solid rgba(0,0,0,0.1);
+                display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
+                z-index: 100;
             }
+            body.theme-dark header { border-bottom: 1px solid rgba(255,255,255,0.1); }
             
-            #chat-container {
-                margin-top: 60px;
-                margin-bottom: 70px;
-                padding: 20px;
-                overflow-y: auto;
-                height: calc(100vh - 130px);
-            }
+            .brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
             
-            .message-wrapper { display: flex; width: 100%; margin-bottom: 10px; }
-            .message-wrapper.user { justify-content: flex-end; }
-            .message-wrapper.bot { justify-content: flex-start; }
+            .controls { display: flex; gap: 15px; }
+            .icon-btn { background: none; border: none; font-size: 1.2rem; color: var(--text); cursor: pointer; transition: transform 0.2s; }
+            .icon-btn:active { transform: scale(0.9); }
+            
+            /* ল্যাঙ্গুয়েজ ব্যাজ */
+            #lang-badge { font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 12px; background: var(--gray); }
 
-            .message {
-                max-width: 75%; padding: 10px 15px; border-radius: 18px;
-                font-size: 0.95rem; line-height: 1.5; word-wrap: break-word;
+            /* চ্যাট এরিয়া */
+            #chat-container {
+                margin-top: 60px; margin-bottom: 70px; padding: 15px;
+                overflow-y: auto; height: 100%; scroll-behavior: smooth;
             }
-            .user .message { background: var(--user-msg-bg); color: var(--user-text); border-bottom-right-radius: 4px; }
-            .bot .message { background: var(--bot-msg-bg); color: var(--bot-text); border-bottom-left-radius: 4px; }
             
-            #input-area {
-                position: fixed; bottom: 0; left: 0; right: 0;
-                height: 70px;
-                background: var(--input-area-bg);
-                display: flex; align-items: center; gap: 10px; padding: 0 10px;
-                z-index: 100; border-top: 1px solid rgba(0,0,0,0.1);
+            .message-wrapper { display: flex; width: 100%; margin-bottom: 12px; }
+            .message-wrapper.user { justify-content: flex-end; }
+            
+            .message {
+                max-width: 80%; padding: 10px 16px; border-radius: 20px;
+                font-size: 0.95rem; line-height: 1.5; word-wrap: break-word;
+                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
             }
+            .user .message { background: var(--msg-user); color: var(--text-user); border-bottom-right-radius: 4px; }
+            .bot .message { background: var(--msg-bot); color: var(--text-bot); border-bottom-left-radius: 4px; }
+            
+            .message p { margin: 0; }
+            
+            /* ইনপুট এরিয়া */
+            #input-area {
+                position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
+                background: var(--bg); border-top: 1px solid rgba(0,0,0,0.05);
+                display: flex; align-items: center; gap: 10px; padding: 0 15px;
+                z-index: 100;
+            }
+            body.theme-dark #input-area { border-top: 1px solid rgba(255,255,255,0.1); }
             
             input {
-                flex: 1; padding: 12px 15px; border-radius: 20px; border: none; outline: none;
-                background: var(--chat-bg); color: var(--text-color); font-size: 1rem;
+                flex: 1; padding: 12px 20px; border-radius: 25px; border: none; 
+                background: var(--gray); color: var(--text); font-size: 1rem; outline: none;
             }
             
             button.send-btn {
-                background: #0084ff; color: white; border: none; padding: 10px;
-                border-radius: 50%; cursor: pointer; height: 40px; width: 40px;
-                display: flex; align-items: center; justify-content: center;
+                background: var(--primary); color: white; border: none; 
+                width: 45px; height: 45px; border-radius: 50%; 
+                cursor: pointer; display: flex; align-items: center; justify-content: center;
+                font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
             }
-            
-            .theme-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-color); cursor: pointer; }
         </style>
     </head>
-    <body>
+    <body class="theme-blue">
         <header>
-            <div style="width: 24px;"></div>
-            <h3>Smart AI Buddy</h3>
-            <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            <div class="brand"><i class="fas fa-robot" style="color: var(--primary)"></i> AI Buddy</div>
+            <div class="controls">
+                <span id="lang-badge" onclick="toggleLang()">BN</span>
+                <button class="icon-btn" onclick="toggleTheme()"><i class="fas fa-palette"></i></button>
+            </div>
         </header>
 
         <div id="chat-container">
             <div class="message-wrapper bot">
                 <div class="message">
-                    হ্যালো! আমি তৈরি। আমাকে যা খুশি জিজ্ঞেস করতে পারেন! 👋
+                    হ্যালো! আমি তৈরি। আমাকে যা খুশি জিজ্ঞেস করতে পারেন। 👇
                 </div>
             </div>
         </div>
@@ -147,14 +174,26 @@ def home():
         <script>
             const chat = document.getElementById('chat-container');
             const input = document.getElementById('msg');
+            const langBadge = document.getElementById('lang-badge');
+            
+            // ৩. থিম এবং ভাষা সেটআপ
+            const themes = ['theme-blue', 'theme-green', 'theme-purple', 'theme-orange', 'theme-dark'];
+            let currentThemeIdx = 0;
+            let currentLang = 'bn'; // 'bn' or 'en'
 
-            // ইউনিক সেশন ID সেট করা (যদি পেজ রিলোড হয়)
-            fetch('/'); 
-
+            // থিম পরিবর্তন ফাংশন
             function toggleTheme() {
-                document.body.classList.toggle('dark');
-                const btn = document.querySelector('.theme-btn i');
-                btn.className = document.body.classList.contains('dark') ? 'fas fa-sun' : 'fas fa-moon';
+                document.body.classList.remove(themes[currentThemeIdx]);
+                currentThemeIdx = (currentThemeIdx + 1) % themes.length;
+                document.body.classList.add(themes[currentThemeIdx]);
+            }
+
+            // ভাষা পরিবর্তন ফাংশন
+            function toggleLang() {
+                currentLang = currentLang === 'bn' ? 'en' : 'bn';
+                langBadge.innerText = currentLang.toUpperCase();
+                langBadge.style.background = currentLang === 'bn' ? '#d1fae5' : '#e0f2fe';
+                langBadge.style.color = currentLang === 'bn' ? '#065f46' : '#075985';
             }
 
             function appendMessage(text, isUser) {
@@ -168,11 +207,13 @@ def home():
             async function sendMessage() {
                 const text = input.value.trim();
                 if (!text) return;
+                
                 appendMessage(text, true);
                 input.value = '';
                 
                 try {
-                    const res = await fetch(`/chat?prompt=${encodeURIComponent(text)}`);
+                    // ল্যাঙ্গুয়েজ প্যারামিটার পাঠানো হচ্ছে
+                    const res = await fetch(`/chat?prompt=${encodeURIComponent(text)}&lang=${currentLang}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
                     let fullResponse = '';
@@ -192,7 +233,7 @@ def home():
                         chat.scrollTop = chat.scrollHeight;
                     }
                 } catch (e) {
-                    appendMessage("⚠️ সমস্যা হয়েছে!", false);
+                    appendMessage("⚠️ Connection error!", false);
                 }
             }
             
@@ -205,53 +246,65 @@ def home():
 @app.route("/chat")
 def chat():
     prompt = request.args.get("prompt")
+    lang_pref = request.args.get("lang", "bn") # ফ্রন্টএন্ড থেকে ভাষা আসছে
+    
     if not prompt: return "No prompt", 400
     
-    # ইউজার সনাক্ত করা
-    if 'user_id' not in session:
-        session['user_id'] = str(uuid.uuid4())
+    # ইউজার ID (APK-তে প্রতিবার অ্যাপ ওপেন করলে নতুন সেশন হতে পারে, তাই কুকি ইউজ করছি)
+    if 'user_id' not in session: session['user_id'] = str(uuid.uuid4())
     user_id = session['user_id']
     
-    bd_time_str = get_bd_time()
+    # বর্তমান সঠিক সময় (Render এর সার্ভার টাইম নয়, বাংলাদেশ টাইম)
+    time_str = get_bd_time()
+    date_str = get_bd_date()
     
-    # এই ইউজারের আগের চ্যাট লোড করা (মেমোরি থেকে)
-    if user_id not in user_chats:
-        user_chats[user_id] = []
+    if user_id not in user_chats: user_chats[user_id] = []
     
-    # সিস্টেম প্রম্পট (প্রতিবার লেটেস্ট টাইম সহ)
+    # ৪. স্মার্ট এবং শর্ট সিস্টেম প্রম্পট (বেশি কথা বলবে না)
+    # ভাষা অনুযায়ী ইনস্ট্রাকশন সেট করা
+    lang_instruction = "Reply in Bangla." if lang_pref == 'bn' else "Reply in English."
+    
     system_prompt = {
         "role": "system",
-        "content": f"You are Smart AI Buddy. Current time in Bangladesh: {bd_time_str}. Owner: KAWCHUR (Only reveal if asked). Reply in user's language (Bangla/English). Be friendly."
+        "content": f"""
+        You are Smart AI Buddy. 
+        Current Time: {time_str} (Bangladesh Time).
+        Current Date: {date_str}.
+        Owner: KAWCHUR (Say ONLY if asked).
+        
+        **STRICT INSTRUCTIONS:**
+        1. {lang_instruction}
+        2. Be CONCISE and SMART like ChatGPT. Do NOT write long essays unless asked.
+        3. Be friendly and witty.
+        4. If asked about time, give the exact time provided above.
+        """
     }
     
-    # ইউজারের নতুন মেসেজ মেমোরিতে যোগ করা
+    # ইউজারের মেসেজ অ্যাড
     user_chats[user_id].append({"role": "user", "content": prompt})
+    user_chats[user_id] = user_chats[user_id][-8:] # মেমোরি ক্লিন রাখা
     
-    # মেমোরি বেশি বড় হতে না দেওয়া (লাস্ট ১০টা মেসেজ)
-    user_chats[user_id] = user_chats[user_id][-10:]
-    
-    # API-তে পাঠানোর জন্য লিস্ট তৈরি
-    messages_for_groq = [system_prompt] + user_chats[user_id]
+    messages_final = [system_prompt] + user_chats[user_id]
 
     def generate():
         try:
             client = get_groq_client()
             stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=messages_for_groq,
-                stream=True
+                messages=messages_final,
+                stream=True,
+                temperature=0.7 
             )
             
-            full_response = ""
+            full_resp = ""
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     c = chunk.choices[0].delta.content
-                    full_response += c
+                    full_resp += c
                     yield c
             
-            # উত্তর শেষ হলে গ্লোবাল মেমোরিতে সেভ করা (Safe Zone!)
-            # এখানে session ব্যবহার করছি না, তাই আর error দেবে না
-            user_chats[user_id].append({"role": "assistant", "content": full_response})
+            # গ্লোবাল ভেরিয়েবলে সেভ (Session error fix)
+            user_chats[user_id].append({"role": "assistant", "content": full_resp})
             
         except Exception as e:
             yield f"Error: {str(e)}"
