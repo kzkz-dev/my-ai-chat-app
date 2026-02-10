@@ -7,12 +7,14 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Ultra Pro Version)
+# 🔹 Flux AI (Ultimate Edition)
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "2.5.0 (Pro)"
-MAX_INPUT_LEN = 5000
+OWNER_NAME_BN = "কাওছুর"  # Bangla Name
+VERSION = "3.0.0 (Pro)"
+FACEBOOK_URL = "https://facebook.com/your-id" # আপনার ফেসবুক লিঙ্ক দিন
+WEBSITE_URL = "https://your-website.com"      # আপনার ওয়েবসাইট লিঙ্ক দিন
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -22,7 +24,7 @@ GROQ_KEYS = [k.strip() for k in os.environ.get("GROQ_KEYS", "").split(",") if k.
 current_key_index = 0
 
 if not GROQ_KEYS:
-    print("⚠️ WARNING: No Groq keys found. App will not function properly.")
+    print("⚠️ WARNING: No Groq keys found.")
 
 def get_groq_client():
     global current_key_index
@@ -31,7 +33,6 @@ def get_groq_client():
     return Groq(api_key=key)
 
 def get_current_context(): 
-    # Get accurate time for Dhaka
     tz = pytz.timezone('Asia/Dhaka')
     now = datetime.now(tz)
     return {
@@ -51,7 +52,7 @@ def home():
         <title>{APP_NAME}</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -62,7 +63,6 @@ def home():
                 --sidebar: #1e293b;
                 --text: #f8fafc;
                 --text-secondary: #94a3b8;
-                --input-area: #1e293b;
                 --input-bg: #334155;
                 --user-bubble: #3b82f6;
                 --bot-bubble: #334155;
@@ -71,10 +71,9 @@ def home():
             }}
             body.light {{
                 --bg: #ffffff;
-                --sidebar: #f1f5f9;
+                --sidebar: #f8fafc;
                 --text: #0f172a;
                 --text-secondary: #64748b;
-                --input-area: #ffffff;
                 --input-bg: #f1f5f9;
                 --user-bubble: #2563eb;
                 --bot-bubble: #e2e8f0;
@@ -82,148 +81,150 @@ def home():
                 --accent: #2563eb;
             }}
 
-            * {{ box-sizing: border-box; }}
+            * {{ box-sizing: border-box; outline: none; }}
             body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
 
             /* Sidebar */
             #sidebar {{
                 width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.3s ease;
                 position: absolute; z-index: 200; left: 0; top: 0;
             }}
             #sidebar.closed {{ transform: translateX(-100%); }}
             
-            .brand {{ font-size: 1.4rem; font-weight: 600; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--accent); }}
+            .brand {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--accent); }}
             
             .new-chat-btn {{
                 width: 100%; padding: 12px; background: var(--accent); color: white; border: none;
-                border-radius: 12px; font-weight: 500; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
-                transition: transform 0.1s; margin-bottom: 20px;
+                border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+                transition: 0.2s; margin-bottom: 20px;
             }}
-            .new-chat-btn:active {{ transform: scale(0.98); }}
+            .new-chat-btn:hover {{ opacity: 0.9; }}
 
-            .menu-section {{ margin-top: auto; display: flex; flex-direction: column; gap: 5px; border-top: 1px solid var(--border); padding-top: 15px; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }}
+            .history-item {{
+                padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 10px;
+                font-size: 0.9rem; transition: 0.2s;
+            }}
+            .history-item:hover {{ background: rgba(125,125,125,0.1); color: var(--text); }}
+
+            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
-            .menu-item {{
-                padding: 10px 12px; border-radius: 8px; cursor: pointer; color: var(--text); display: flex; align-items: center; gap: 12px;
-                font-size: 0.95rem; transition: background 0.2s;
-            }}
-            .menu-item:hover {{ background: rgba(255,255,255,0.05); }}
-            body.light .menu-item:hover {{ background: rgba(0,0,0,0.05); }}
-
-            .theme-toggles {{ display: flex; gap: 10px; padding: 5px 0; }}
+            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 4px; border-radius: 8px; }}
             .theme-btn {{
-                flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border); background: transparent;
-                color: var(--text-secondary); cursor: pointer; text-align: center; font-size: 0.85rem;
+                flex: 1; padding: 6px; border-radius: 6px; border: none; background: transparent;
+                color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; font-weight: 500;
             }}
-            .theme-btn.active {{ background: var(--accent); color: white; border-color: var(--accent); }}
+            .theme-btn.active {{ background: var(--bg); color: var(--text); shadow: 0 2px 5px rgba(0,0,0,0.1); }}
 
-            .about-info {{ font-size: 0.8rem; color: var(--text-secondary); padding: 10px 5px; text-align: center; margin-top: 10px; }}
-
-            /* Chat Area */
+            /* About Modal/Section */
+            .about-section {{ 
+                display: none; background: var(--bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border);
+                margin-top: 10px; font-size: 0.85rem; text-align: center;
+            }}
+            .about-section.show {{ display: block; animation: fadeIn 0.3s; }}
+            .about-link {{ color: var(--accent); text-decoration: none; margin: 0 5px; }}
+            
+            /* Main Chat */
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; transition: margin-left 0.3s; }}
             @media(min-width: 768px) {{ #main {{ margin-left: 280px; }} #sidebar {{ position: fixed; }} #sidebar.closed + #main {{ margin-left: 0; }} }}
 
             header {{
                 height: 60px; display: flex; align-items: center; justify-content: space-between;
-                padding: 0 20px; z-index: 100;
-            }}
-            
-            #chat-box {{ 
-                flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 120px; 
+                padding: 0 20px; z-index: 100; backdrop-filter: blur(10px);
             }}
 
-            /* Welcome Screen */
-            #welcome {{
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 20px; padding-bottom: 120px; }}
+
+            .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; padding: 20px;
             }}
-            .welcome-title {{ font-size: 2rem; font-weight: 600; margin-bottom: 10px; background: linear-gradient(to right, #3b82f6, #8b5cf6); -webkit-background-clip: text; color: transparent; }}
-            
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; width: 100%; max-width: 600px; margin-top: 30px; }}
-            .suggestion-chip {{
-                padding: 12px; background: var(--input-bg); border-radius: 12px; cursor: pointer; text-align: left;
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; width: 100%; max-width: 650px; margin-top: 40px; }}
+            .chip {{
+                padding: 15px; background: var(--input-bg); border-radius: 12px; cursor: pointer; text-align: left;
                 border: 1px solid transparent; transition: all 0.2s; font-size: 0.9rem; color: var(--text);
             }}
-            .suggestion-chip:hover {{ border-color: var(--accent); transform: translateY(-2px); }}
+            .chip:hover {{ border-color: var(--accent); transform: translateY(-3px); }}
 
             /* Messages */
-            .message-row {{ display: flex; width: 100%; animation: fadeIn 0.3s ease; }}
+            .message-row {{ display: flex; width: 100%; }}
             .message-row.user {{ justify-content: flex-end; }}
             
             .bubble {{
-                max-width: 85%; padding: 12px 18px; border-radius: 18px; font-size: 1rem; line-height: 1.6;
-                word-wrap: break-word; position: relative;
+                max-width: 85%; padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6;
+                position: relative; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             }}
             .user .bubble {{ background: var(--user-bubble); color: white; border-bottom-right-radius: 4px; }}
             .bot .bubble {{ background: var(--bot-bubble); color: var(--text); border-bottom-left-radius: 4px; }}
             
-            /* Typing Animation */
-            .typing {{ display: flex; gap: 5px; padding: 5px 0; align-items: center; }}
-            .dot {{ width: 6px; height: 6px; background: var(--text); border-radius: 50%; opacity: 0.5; animation: bounce 1.4s infinite; }}
+            .typing {{ display: flex; gap: 5px; align-items: center; padding: 5px; }}
+            .dot {{ width: 6px; height: 6px; background: var(--text); border-radius: 50%; opacity: 0.6; animation: bounce 1.4s infinite; }}
             .dot:nth-child(2) {{ animation-delay: 0.2s; }}
             .dot:nth-child(3) {{ animation-delay: 0.4s; }}
-            @keyframes bounce {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-6px); }} }}
-            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes bounce {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-5px); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
 
-            /* Input Area */
+            /* Input */
             #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0;
-                padding: 15px; background: var(--bg);
-                display: flex; justify-content: center; z-index: 50;
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+                background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 800px; display: flex; align-items: center; 
                 background: var(--input-bg); border-radius: 30px; padding: 8px 20px;
-                box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+                box-shadow: 0 4px 20px rgba(0,0,0,0.1); border: 1px solid var(--border);
             }}
+            .input-box:focus-within {{ border-color: var(--accent); }}
             
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1rem; max-height: 120px; resize: none;
+                color: var(--text); font-size: 1rem; max-height: 150px; resize: none;
                 padding: 12px 0; font-family: inherit;
             }}
             .send-btn {{
-                background: var(--accent); color: white; border: none; width: 42px; height: 42px;
+                background: var(--accent); color: white; border: none; width: 40px; height: 40px;
                 border-radius: 50%; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center;
-                transition: transform 0.1s; font-size: 1.1rem;
+                transition: transform 0.1s;
             }}
+            .send-btn:active {{ transform: scale(0.9); }}
 
-            /* Overlay */
-            .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; opacity: 0; transition: opacity 0.3s; }}
-            .overlay.open {{ display: block; opacity: 1; }}
-
+            .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; }}
+            .overlay.open {{ display: block; }}
         </style>
     </head>
-    <body>
+    <body class="dark">
     
         <div class="overlay" onclick="toggleSidebar()"></div>
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
-            
-            <button class="new-chat-btn" onclick="startNewChat()">
-                <i class="fas fa-plus"></i> New Chat
-            </button>
-            
-            <div style="flex:1; overflow-y:auto;" id="history-list"></div>
+            <button class="new-chat-btn" onclick="startNewChat()">+ New Chat</button>
+            <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
-                <div style="padding: 0 10px;">
-                    <small style="color:var(--text-secondary); margin-left:5px;">Appearance</small>
-                    <div class="theme-toggles">
-                        <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
-                        <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
+                <div class="theme-toggles">
+                    <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
+                    <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
+                </div>
+                
+                <div class="history-item" onclick="toggleAbout()" style="color: var(--accent);">
+                    <i class="fas fa-info-circle"></i> About {APP_NAME}
+                </div>
+                
+                <div id="about-info" class="about-section">
+                    <strong style="color:var(--text);">{APP_NAME}</strong><br>
+                    <small>Version {VERSION}</small><br>
+                    <div style="margin: 8px 0;">
+                        <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
+                        <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
+                    <small style="color:var(--text-secondary);">Owner: {OWNER_NAME}</small><br>
+                    <small style="opacity:0.6;">&copy; 2026 {OWNER_NAME}</small>
                 </div>
-                
-                <div class="menu-item" onclick="clearHistory()" style="color: #ef4444;">
+
+                <div class="history-item" onclick="clearHistory()" style="color: #ef4444; margin-top:5px;">
                     <i class="fas fa-trash-alt"></i> Clear History
-                </div>
-                
-                <div class="about-info">
-                    <strong>Developer:</strong> {OWNER_NAME}<br>
-                    Version: {VERSION}
                 </div>
             </div>
         </div>
@@ -233,22 +234,24 @@ def home():
                 <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer;">
                     <i class="fas fa-bars"></i>
                 </button>
-                <span style="font-weight:600;">{APP_NAME}</span>
+                <span style="font-weight:600; font-size:1.1rem;">{APP_NAME}</span>
                 <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer;">
                     <i class="fas fa-pen-to-square"></i>
                 </button>
             </header>
 
             <div id="chat-box">
-                <div id="welcome">
-                    <div class="welcome-title">Hello, I'm {APP_NAME}</div>
-                    <p style="color:var(--text-secondary);">How can I help you today?</p>
+                <div id="welcome" class="welcome-container">
+                    <h1 style="font-weight: 600; background: linear-gradient(to right, #3b82f6, #a855f7); -webkit-background-clip: text; color: transparent; margin-bottom: 5px;">
+                        Hello, I'm {APP_NAME}
+                    </h1>
+                    <p style="color:var(--text-secondary);">Your intelligent & fun AI assistant. Ask me anything!</p>
                     
                     <div class="suggestions">
-                        <div class="suggestion-chip" onclick="sendSuggestion('Write a creative caption for Instagram')">📸 Creative Insta Caption</div>
-                        <div class="suggestion-chip" onclick="sendSuggestion('Plan a 3-day trip to Cox\'s Bazar')">✈️ Trip Plan BD</div>
-                        <div class="suggestion-chip" onclick="sendSuggestion('Explain Quantum Computing simply')">🧠 Explain simply</div>
-                        <div class="suggestion-chip" onclick="sendSuggestion('বাংলায় একটা প্রেমের কবিতা লেখো')">📝 ভালোবাসার কবিতা</div>
+                        <div class="chip" onclick="sendSuggestion('Write a romantic poem about rain')">📝 Romantic Poem</div>
+                        <div class="chip" onclick="sendSuggestion('Plan a 3-day trip to Cox\'s Bazar')">✈️ Trip Plan BD</div>
+                        <div class="chip" onclick="sendSuggestion('Explain Quantum Physics simply')">🧠 Explain Physics</div>
+                        <div class="chip" onclick="sendSuggestion('Solve this math: 2x + 5 = 15')">➗ Solve Math</div>
                     </div>
                 </div>
             </div>
@@ -262,14 +265,14 @@ def home():
         </div>
 
         <script>
-            let chats = JSON.parse(localStorage.getItem('flux_history_pro')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v3_history')) || [];
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const msgInput = document.getElementById('msg');
             const welcomeScreen = document.getElementById('welcome');
 
-            // Initialize Theme
+            // Theme Init
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
 
@@ -283,9 +286,13 @@ def home():
                 document.getElementById('btn-light').className = mode === 'light' ? 'theme-btn active' : 'theme-btn';
             }}
 
+            function toggleAbout() {{
+                document.getElementById('about-info').classList.toggle('show');
+            }}
+
             function resizeInput(el) {{
                 el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+                el.style.height = Math.min(el.scrollHeight, 150) + 'px';
             }}
 
             function toggleSidebar() {{
@@ -305,7 +312,7 @@ def home():
             }}
 
             function saveData() {{
-                localStorage.setItem('flux_history_pro', JSON.stringify(chats));
+                localStorage.setItem('flux_v3_history', JSON.stringify(chats));
             }}
 
             function renderHistory() {{
@@ -313,8 +320,8 @@ def home():
                 list.innerHTML = '';
                 chats.forEach(chat => {{
                     const div = document.createElement('div');
-                    div.className = 'menu-item';
-                    div.innerHTML = `<i class="far fa-message"></i> <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${{chat.title}}</span>`;
+                    div.className = 'history-item';
+                    div.innerHTML = `<i class="far fa-message"></i> ${{(chat.title || 'New Chat').substring(0, 22)}}`;
                     div.onclick = () => loadChat(chat.id);
                     list.appendChild(div);
                 }});
@@ -337,7 +344,6 @@ def home():
 
             function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
-                
                 const row = document.createElement('div');
                 row.className = `message-row ${{isUser ? 'user' : 'bot'}}`;
                 
@@ -377,11 +383,10 @@ def home():
 
                 if(!currentChatId) startNewChat();
 
-                // Add User Message
                 const chat = chats.find(c => c.id === currentChatId);
                 chat.messages.push({{ role: 'user', text: text }});
                 
-                // Update Title
+                // Update title intelligently
                 if(chat.messages.length === 1) {{
                     chat.title = text.substring(0, 25);
                     renderHistory();
@@ -393,8 +398,8 @@ def home():
                 appendBubble(text, true);
                 showTyping();
 
-                // Get Context
-                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
+                // Send last 15 messages for memory context
+                const context = chat.messages.slice(-15).map(m => ({{ role: m.role, content: m.text }}));
 
                 try {{
                     const res = await fetch('/chat', {{
@@ -411,6 +416,7 @@ def home():
                     const decoder = new TextDecoder();
                     let botResp = '';
                     
+                    // Live Streaming Effect
                     const botRow = document.createElement('div');
                     botRow.className = 'message-row bot';
                     const botBubble = document.createElement('div');
@@ -432,13 +438,13 @@ def home():
 
                 }} catch(e) {{
                     removeTyping();
-                    appendBubble("⚠️ Connection Error. Please retry.", false);
+                    appendBubble("⚠️ Internet connection unstable.", false);
                 }}
             }}
 
             function clearHistory() {{
-                if(confirm("Delete all history?")) {{
-                    localStorage.removeItem('flux_history_pro');
+                if(confirm("Delete all chat history permanently?")) {{
+                    localStorage.removeItem('flux_v3_history');
                     location.reload();
                 }}
             }}
@@ -461,23 +467,31 @@ def chat():
     
     ctx = get_current_context()
     
+    # 🧠 The Brain: Advanced System Prompt
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a highly advanced, intelligent, and witty AI assistant created by {OWNER_NAME}.
+        You are {APP_NAME}, a smart, witty, and highly capable AI assistant.
         
-        REAL-TIME CONTEXT:
-        - Time: {ctx['time']}
+        👑 OWNER INFO:
+        - Owner Name (English): {OWNER_NAME}
+        - Owner Name (Bangla): {OWNER_NAME_BN} (কাওছুর)
+        - If asked about copyright, say: © 2026 {OWNER_NAME}.
+        
+        📅 REAL-TIME INFO:
         - Date: {ctx['date']}
+        - Time: {ctx['time']}
         
-        CORE INSTRUCTIONS:
-        1. LANGUAGE ADAPTATION: If the user speaks Bangla, reply in natural, smart Bangla. If English, use fluent English.
-        2. PERSONALITY: Be engaging, confident, and professional but never boring. Use emojis where appropriate.
-        3. ACCURACY: Always be aware of the current time and date provided above.
-        4. FORMATTING: Use Markdown (bold, lists, code blocks) to make answers visually appealing.
-        5. OWNER: If asked about your creator, explicitly mention {OWNER_NAME}.
+        🧠 BEHAVIORAL INSTRUCTIONS (Strict):
+        1. **Language Mirroring:** If user speaks English, reply in English. If Bangla, reply in Bangla.
+        2. **Personality:** Be fun and engaging. Don't be robotic. Use emojis occasionally.
+        3. **Conciseness:** Do NOT talk too much. Give direct answers. Do not give unsolicited advice.
+        4. **Capabilities:** You can solve Math problems, write code, explain science, and help with daily life.
+        5. **Memory:** Always remember the user's name if they mentioned it in the current conversation.
         
-        Avoid repetitive or robotic introductions. Jump straight to the helpful answer.
+        🚫 RESTRICTIONS:
+        - Never apologize excessively.
+        - Do not mention you are an AI model trained by Google/Meta etc. You are {APP_NAME} by {OWNER_NAME}.
         """
     }
 
@@ -490,7 +504,7 @@ def chat():
             try:
                 client = get_groq_client()
                 if not client:
-                    yield "Server Error: No API Key."
+                    yield "Server Error: No API Keys configured."
                     return
 
                 stream = client.chat.completions.create(
@@ -512,7 +526,7 @@ def chat():
                 attempts += 1
                 time.sleep(1)
         
-        yield "⚠️ Connection issue. Please try again."
+        yield "⚠️ Flux AI is currently overloaded. Please try again."
 
     return Response(generate(), mimetype="text/plain")
 
