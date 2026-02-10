@@ -2,16 +2,22 @@ from flask import Flask, request, Response, session
 from groq import Groq
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import datetime
 import pytz
+
+# ==========================================
+# 🔹 অ্যাপের কনফিগারেশন
+APP_NAME = "Flux"
+OWNER_NAME = "KAWCHUR"
+# ==========================================
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# মেমোরিতে চ্যাট হিস্ট্রি রাখার জন্য (Error Fix)
+# মেমোরি স্টোরেজ
 user_chats = {}
 
-# Render-এর GROQ_KEYS লোড করা
+# Groq Keys লোড করা
 GROQ_KEYS = os.environ.get("GROQ_KEYS", "").split(",")
 current_key_index = 0
 
@@ -19,7 +25,6 @@ def get_groq_client():
     global current_key_index
     if not GROQ_KEYS or GROQ_KEYS == ['']:
         raise ValueError("No Groq keys found!")
-
     for _ in range(len(GROQ_KEYS)):
         key = GROQ_KEYS[current_key_index].strip()
         if not key:
@@ -27,217 +32,320 @@ def get_groq_client():
             continue
         try:
             return Groq(api_key=key)
-        except Exception as e:
-            print(f"Key failed: {e}")
+        except Exception:
             current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
     raise ValueError("All keys invalid!")
 
-# ১. সময় ফিক্স (TimeZone ব্যবহার করে)
-def get_bd_time():
-    bd_zone = pytz.timezone('Asia/Dhaka')
-    bd_time = datetime.now(bd_zone)
-    # ফরম্যাট: 10:30 PM
-    return bd_time.strftime("%I:%M %p") 
+def get_time():
+    return datetime.now(pytz.timezone('Asia/Dhaka')).strftime("%I:%M %p")
 
-# ২. তারিখ ফিক্স
-def get_bd_date():
-    bd_zone = pytz.timezone('Asia/Dhaka')
-    bd_time = datetime.now(bd_zone)
-    return bd_time.strftime("%d %B, %Y (%A)")
+def get_date():
+    return datetime.now(pytz.timezone('Asia/Dhaka')).strftime("%d %B, %Y")
 
 @app.route("/")
 def home():
-    if 'user_id' not in session:
-        session['user_id'] = str(uuid.uuid4())
-        
-    return """
+    if 'user_id' not in session: session['user_id'] = str(uuid.uuid4())
+    
+    return f"""
     <!DOCTYPE html>
-    <html lang="bn">
+    <html lang="en">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Smart AI</title>
+        <title>{APP_NAME} AI</title>
+        
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+
         <style>
-            :root {
-                --primary: #007AFF; /* Default Blue */
+            :root {{
+                --primary: #6366f1;
+                --primary-dark: #4f46e5;
+                --gradient: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
                 --bg: #ffffff;
-                --text: #000000;
-                --gray: #f2f2f7;
-                --msg-user: #007AFF;
-                --msg-bot: #e9e9eb;
+                --sidebar: #f8fafc;
+                --text: #0f172a;
+                --msg-bot: #f1f5f9;
+                --msg-user: #6366f1;
                 --text-user: #ffffff;
-                --text-bot: #000000;
-            }
+                --border: #e2e8f0;
+            }}
             
-            /* থিম ভেরিয়েবল */
-            body.theme-blue { --primary: #007AFF; --msg-user: #007AFF; }
-            body.theme-green { --primary: #25D366; --msg-user: #25D366; } /* WhatsApp */
-            body.theme-purple { --primary: #8B5CF6; --msg-user: #8B5CF6; }
-            body.theme-orange { --primary: #F97316; --msg-user: #F97316; }
-            body.theme-dark { 
-                --bg: #111827; --text: #ffffff; --gray: #1f2937; 
-                --msg-bot: #374151; --text-bot: #ffffff; 
-                --primary: #3B82F6; --msg-user: #3B82F6;
-            }
+            body.dark {{
+                --bg: #0f172a;
+                --sidebar: #1e293b;
+                --text: #f8fafc;
+                --msg-bot: #1e293b;
+                --msg-user: #6366f1;
+                --border: #334155;
+            }}
 
-            body { 
+            * {{ box-sizing: border-box; }}
+            body {{ 
                 margin: 0; background: var(--bg); color: var(--text); 
-                font-family: 'Inter', sans-serif; height: 100vh; display: flex; flex-direction: column; 
-                transition: background 0.3s, color 0.3s;
-            }
+                font-family: 'Outfit', sans-serif; height: 100vh; display: flex; 
+                flex-direction: column; overflow: hidden; transition: 0.3s;
+            }}
             
-            /* হেডার ডিজাইন */
-            header {
-                position: fixed; top: 0; left: 0; right: 0; height: 60px;
-                background: var(--bg); 
-                border-bottom: 1px solid rgba(0,0,0,0.1);
-                display: flex; justify-content: space-between; align-items: center; padding: 0 15px;
-                z-index: 100;
-            }
-            body.theme-dark header { border-bottom: 1px solid rgba(255,255,255,0.1); }
+            /* Header */
+            header {{
+                height: 60px; display: flex; align-items: center; justify-content: space-between;
+                padding: 0 15px; border-bottom: 1px solid var(--border);
+                background: var(--bg); z-index: 50;
+            }}
             
-            .brand { font-weight: 700; font-size: 1.2rem; display: flex; align-items: center; gap: 8px; }
+            .brand {{ 
+                font-size: 1.4rem; font-weight: 700; 
+                background: var(--gradient); -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 8px;
+            }}
             
-            .controls { display: flex; gap: 15px; }
-            .icon-btn { background: none; border: none; font-size: 1.2rem; color: var(--text); cursor: pointer; transition: transform 0.2s; }
-            .icon-btn:active { transform: scale(0.9); }
+            /* Sidebar */
+            #sidebar {{
+                position: fixed; left: -260px; top: 0; bottom: 0; width: 260px;
+                background: var(--sidebar); z-index: 1000; transition: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                border-right: 1px solid var(--border); padding: 25px;
+                box-shadow: 5px 0 15px rgba(0,0,0,0.1);
+                display: flex; flex-direction: column; gap: 15px;
+            }}
+            #sidebar.open {{ left: 0; }}
+            .overlay {{
+                position: fixed; inset: 0; background: rgba(0,0,0,0.6); 
+                z-index: 900; display: none; backdrop-filter: blur(2px);
+            }}
+            .overlay.open {{ display: block; }}
             
-            /* ল্যাঙ্গুয়েজ ব্যাজ */
-            #lang-badge { font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 12px; background: var(--gray); }
+            .menu-btn {{
+                padding: 12px; border-radius: 12px; cursor: pointer; display: flex; 
+                align-items: center; gap: 12px; color: var(--text); font-weight: 500;
+                transition: 0.2s;
+            }}
+            .menu-btn:hover {{ background: rgba(99, 102, 241, 0.1); color: var(--primary); }}
+            
+            /* Chat Area */
+            #chat-container {{
+                flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 100px;
+                display: flex; flex-direction: column; gap: 18px;
+            }}
+            
+            /* Welcome Screen */
+            #welcome-screen {{
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                height: 80%; text-align: center; gap: 20px;
+            }}
+            .flux-logo {{
+                font-size: 3.5rem; background: var(--gradient); -webkit-background-clip: text;
+                -webkit-text-fill-color: transparent; animation: pulse 2s infinite;
+            }}
+            @keyframes pulse {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.05); }} 100% {{ transform: scale(1); }} }}
+            
+            .suggestions {{ display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; padding: 0 20px; }}
+            .chip {{
+                padding: 10px 18px; border: 1px solid var(--border); border-radius: 25px;
+                font-size: 0.9rem; cursor: pointer; background: var(--bg); color: var(--text);
+                transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            }}
+            .chip:hover {{ border-color: var(--primary); color: var(--primary); transform: translateY(-2px); }}
 
-            /* চ্যাট এরিয়া */
-            #chat-container {
-                margin-top: 60px; margin-bottom: 70px; padding: 15px;
-                overflow-y: auto; height: 100%; scroll-behavior: smooth;
-            }
+            /* Messages */
+            .msg-row {{ display: flex; gap: 12px; width: 100%; animation: fadeUp 0.3s ease; }}
+            @keyframes fadeUp {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             
-            .message-wrapper { display: flex; width: 100%; margin-bottom: 12px; }
-            .message-wrapper.user { justify-content: flex-end; }
+            .msg-row.user {{ flex-direction: row-reverse; }}
             
-            .message {
-                max-width: 80%; padding: 10px 16px; border-radius: 20px;
-                font-size: 0.95rem; line-height: 1.5; word-wrap: break-word;
-                box-shadow: 0 1px 2px rgba(0,0,0,0.05);
-            }
-            .user .message { background: var(--msg-user); color: var(--text-user); border-bottom-right-radius: 4px; }
-            .bot .message { background: var(--msg-bot); color: var(--text-bot); border-bottom-left-radius: 4px; }
+            .avatar {{
+                width: 38px; height: 38px; border-radius: 12px; display: flex; 
+                align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0;
+            }}
+            .bot-av {{ background: var(--gradient); color: white; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }}
+            .user-av {{ background: var(--text); color: var(--bg); }}
             
-            .message p { margin: 0; }
+            .msg-bubble {{
+                max-width: 85%; padding: 12px 18px; border-radius: 18px;
+                font-size: 0.95rem; line-height: 1.6; position: relative;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.03);
+            }}
+            .bot .msg-bubble {{ background: var(--msg-bot); border-bottom-left-radius: 4px; }}
+            .user .msg-bubble {{ background: var(--msg-user); color: var(--text-user); border-bottom-right-radius: 4px; background: var(--gradient); }}
             
-            /* ইনপুট এরিয়া */
-            #input-area {
-                position: fixed; bottom: 0; left: 0; right: 0; height: 70px;
-                background: var(--bg); border-top: 1px solid rgba(0,0,0,0.05);
-                display: flex; align-items: center; gap: 10px; padding: 0 15px;
-                z-index: 100;
-            }
-            body.theme-dark #input-area { border-top: 1px solid rgba(255,255,255,0.1); }
-            
-            input {
-                flex: 1; padding: 12px 20px; border-radius: 25px; border: none; 
-                background: var(--gray); color: var(--text); font-size: 1rem; outline: none;
-            }
-            
-            button.send-btn {
-                background: var(--primary); color: white; border: none; 
-                width: 45px; height: 45px; border-radius: 50%; 
-                cursor: pointer; display: flex; align-items: center; justify-content: center;
-                font-size: 1.1rem; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            }
+            /* Code Styling */
+            pre {{ background: #282c34; padding: 15px; border-radius: 10px; overflow-x: auto; color: #fff; margin: 10px 0; }}
+            code {{ font-family: 'Consolas', monospace; font-size: 0.9em; }}
+            p {{ margin: 0 0 8px 0; }}
+            p:last-child {{ margin: 0; }}
+
+            /* Input Area */
+            #input-area {{
+                position: fixed; bottom: 0; left: 0; right: 0; padding: 15px;
+                background: var(--bg); border-top: 1px solid var(--border);
+                display: flex; justify-content: center;
+            }}
+            .input-box {{
+                width: 100%; max-width: 800px;
+                display: flex; align-items: center; background: var(--msg-bot);
+                border-radius: 25px; padding: 8px 15px; border: 1px solid var(--border);
+                box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            }}
+            textarea {{
+                flex: 1; background: transparent; border: none; outline: none;
+                color: var(--text); padding: 10px 5px; font-size: 1rem; resize: none; rows: 1; height: 24px; font-family: inherit;
+            }}
+            .send-btn {{
+                width: 42px; height: 42px; background: var(--gradient); color: white;
+                border-radius: 50%; border: none; cursor: pointer; display: flex;
+                align-items: center; justify-content: center; margin-left: 10px;
+                transition: transform 0.2s;
+            }}
+            .send-btn:active {{ transform: scale(0.9); }}
+
         </style>
     </head>
-    <body class="theme-blue">
+    <body>
+    
+        <div class="overlay" onclick="toggleMenu()"></div>
+        <div id="sidebar">
+            <h2 style="margin: 0 0 20px 0; font-weight: 700;">Menu</h2>
+            <div class="menu-btn" onclick="clearChat()"><i class="fas fa-broom"></i> Clear History</div>
+            <div class="menu-btn" onclick="toggleTheme()"><i class="fas fa-adjust"></i> Change Theme</div>
+            <div class="menu-btn"><i class="fas fa-info-circle"></i> About Flux</div>
+            <div style="margin-top: auto; font-size: 0.8rem; opacity: 0.6;">v2.0 Pro</div>
+        </div>
+
         <header>
-            <div class="brand"><i class="fas fa-robot" style="color: var(--primary)"></i> AI Buddy</div>
-            <div class="controls">
-                <span id="lang-badge" onclick="toggleLang()">BN</span>
-                <button class="icon-btn" onclick="toggleTheme()"><i class="fas fa-palette"></i></button>
-            </div>
+            <i class="fas fa-bars" style="font-size: 1.3rem; cursor: pointer;" onclick="toggleMenu()"></i>
+            <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
+            <div style="width: 24px;"></div>
         </header>
 
         <div id="chat-container">
-            <div class="message-wrapper bot">
-                <div class="message">
-                    হ্যালো! আমি তৈরি। আমাকে যা খুশি জিজ্ঞেস করতে পারেন। 👇
+            <div id="welcome-screen">
+                <div class="flux-logo"><i class="fas fa-bolt"></i></div>
+                <h2 style="margin:0;">I am {APP_NAME}</h2>
+                <p style="opacity: 0.7;">Capable. Dynamic. Intelligent.</p>
+                
+                <div class="suggestions">
+                    <div class="chip" onclick="sendChip('Write python code for a calculator')">💻 Write Code</div>
+                    <div class="chip" onclick="sendChip('Give me a creative caption for FB')">📸 Social Caption</div>
+                    <div class="chip" onclick="sendChip('Solve this math: 2x + 5 = 15')">🧮 Solve Math</div>
+                    <div class="chip" onclick="sendChip('Explain Quantum Physics simply')">🔬 Explain Science</div>
                 </div>
             </div>
         </div>
 
         <div id="input-area">
-            <input id="msg" placeholder="মেসেজ লিখুন..." autocomplete="off">
-            <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            <div class="input-box">
+                <textarea id="msg" placeholder="Ask Flux anything..." oninput="autoResize(this)"></textarea>
+                <button class="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            </div>
         </div>
 
         <script>
             const chat = document.getElementById('chat-container');
+            const welcome = document.getElementById('welcome-screen');
             const input = document.getElementById('msg');
-            const langBadge = document.getElementById('lang-badge');
+            let isDark = false;
+
+            // Theme Toggle
+            function toggleTheme() {{
+                isDark = !isDark;
+                document.body.classList.toggle('dark');
+                toggleMenu();
+            }}
+
+            // Sidebar Toggle
+            function toggleMenu() {{
+                document.getElementById('sidebar').classList.toggle('open');
+                document.querySelector('.overlay').classList.toggle('open');
+            }}
             
-            // ৩. থিম এবং ভাষা সেটআপ
-            const themes = ['theme-blue', 'theme-green', 'theme-purple', 'theme-orange', 'theme-dark'];
-            let currentThemeIdx = 0;
-            let currentLang = 'bn'; // 'bn' or 'en'
+            // Clear Chat
+            function clearChat() {{
+                if(confirm("Start a new conversation?")) {{
+                    location.reload();
+                }}
+            }}
 
-            // থিম পরিবর্তন ফাংশন
-            function toggleTheme() {
-                document.body.classList.remove(themes[currentThemeIdx]);
-                currentThemeIdx = (currentThemeIdx + 1) % themes.length;
-                document.body.classList.add(themes[currentThemeIdx]);
-            }
+            function autoResize(el) {{
+                el.style.height = 'auto';
+                el.style.height = Math.min(el.scrollHeight, 150) + 'px';
+                if(el.value === '') el.style.height = '24px';
+            }}
 
-            // ভাষা পরিবর্তন ফাংশন
-            function toggleLang() {
-                currentLang = currentLang === 'bn' ? 'en' : 'bn';
-                langBadge.innerText = currentLang.toUpperCase();
-                langBadge.style.background = currentLang === 'bn' ? '#d1fae5' : '#e0f2fe';
-                langBadge.style.color = currentLang === 'bn' ? '#065f46' : '#075985';
-            }
+            function sendChip(text) {{
+                input.value = text;
+                sendMessage();
+            }}
 
-            function appendMessage(text, isUser) {
-                const wrapper = document.createElement('div');
-                wrapper.className = `message-wrapper ${isUser ? 'user' : 'bot'}`;
-                wrapper.innerHTML = `<div class="message">${marked.parse(text)}</div>`;
-                chat.appendChild(wrapper);
+            function appendMessage(text, isUser) {{
+                if(welcome) welcome.style.display = 'none';
+
+                const row = document.createElement('div');
+                row.className = `msg-row ${{isUser ? 'user' : 'bot'}}`;
+                
+                const av = isUser ? 'user-av' : 'bot-av';
+                const icon = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>';
+                
+                // Markdown parse with highlight
+                const content = isUser ? text : marked.parse(text);
+                
+                row.innerHTML = `
+                    <div class="avatar ${{av}}">${{icon}}</div>
+                    <div class="msg-bubble">${{content}}</div>
+                `;
+                chat.appendChild(row);
                 chat.scrollTop = chat.scrollHeight;
-            }
+                
+                // Apply syntax highlighting
+                if(!isUser) hljs.highlightAll();
+            }}
 
-            async function sendMessage() {
+            async function sendMessage() {{
                 const text = input.value.trim();
                 if (!text) return;
                 
-                appendMessage(text, true);
                 input.value = '';
-                
-                try {
-                    // ল্যাঙ্গুয়েজ প্যারামিটার পাঠানো হচ্ছে
-                    const res = await fetch(`/chat?prompt=${encodeURIComponent(text)}&lang=${currentLang}`);
+                input.style.height = '24px';
+                appendMessage(text, true);
+
+                try {{
+                    const res = await fetch(`/chat?prompt=${{encodeURIComponent(text)}}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
-                    let fullResponse = '';
+                    let full = '';
                     
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper bot';
-                    const msgDiv = document.createElement('div');
-                    msgDiv.className = 'message';
-                    wrapper.appendChild(msgDiv);
-                    chat.appendChild(wrapper);
+                    if(welcome) welcome.style.display = 'none';
+                    const row = document.createElement('div');
+                    row.className = 'msg-row bot';
+                    row.innerHTML = `
+                        <div class="avatar bot-av"><i class="fas fa-bolt"></i></div>
+                        <div class="msg-bubble"><i class="fas fa-circle-notch fa-spin"></i> Thinking...</div>
+                    `;
+                    chat.appendChild(row);
+                    const bubble = row.querySelector('.msg-bubble');
 
-                    while (true) {
-                        const { done, value } = await reader.read();
+                    while (true) {{
+                        const {{ done, value }} = await reader.read();
                         if (done) break;
-                        fullResponse += decoder.decode(value);
-                        msgDiv.innerHTML = marked.parse(fullResponse);
+                        full += decoder.decode(value);
+                        bubble.innerHTML = marked.parse(full);
                         chat.scrollTop = chat.scrollHeight;
-                    }
-                } catch (e) {
-                    appendMessage("⚠️ Connection error!", false);
-                }
-            }
+                    }}
+                    hljs.highlightAll();
+                }} catch (e) {{
+                    appendMessage("⚠️ Flux is offline. Check internet.", false);
+                }}
+            }}
             
-            input.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+            input.addEventListener('keydown', e => {{
+                if(e.key === 'Enter' && !e.shiftKey) {{
+                    e.preventDefault();
+                    sendMessage();
+                }}
+            }});
         </script>
     </body>
     </html>
@@ -246,66 +354,50 @@ def home():
 @app.route("/chat")
 def chat():
     prompt = request.args.get("prompt")
-    lang_pref = request.args.get("lang", "bn") # ফ্রন্টএন্ড থেকে ভাষা আসছে
-    
     if not prompt: return "No prompt", 400
     
-    # ইউজার ID (APK-তে প্রতিবার অ্যাপ ওপেন করলে নতুন সেশন হতে পারে, তাই কুকি ইউজ করছি)
     if 'user_id' not in session: session['user_id'] = str(uuid.uuid4())
-    user_id = session['user_id']
+    uid = session['user_id']
     
-    # বর্তমান সঠিক সময় (Render এর সার্ভার টাইম নয়, বাংলাদেশ টাইম)
-    time_str = get_bd_time()
-    date_str = get_bd_date()
+    if uid not in user_chats: user_chats[uid] = []
     
-    if user_id not in user_chats: user_chats[user_id] = []
-    
-    # ৪. স্মার্ট এবং শর্ট সিস্টেম প্রম্পট (বেশি কথা বলবে না)
-    # ভাষা অনুযায়ী ইনস্ট্রাকশন সেট করা
-    lang_instruction = "Reply in Bangla." if lang_pref == 'bn' else "Reply in English."
-    
-    system_prompt = {
-        "role": "system",
+    # 🧠 Flux Brain (উন্নত ব্রেইন)
+    # এখানে তাকে বলা হয়েছে রিপিট না করতে এবং সব ধরনের কাজ করতে।
+    sys = {
+        "role": "system", 
         "content": f"""
-        You are Smart AI Buddy. 
-        Current Time: {time_str} (Bangladesh Time).
-        Current Date: {date_str}.
-        Owner: KAWCHUR (Say ONLY if asked).
+        You are {APP_NAME} (ফ্লাক্স).
+        Current Time: {get_time()}.
+        Owner: {OWNER_NAME} (Do not mention unless asked).
         
-        **STRICT INSTRUCTIONS:**
-        1. {lang_instruction}
-        2. Be CONCISE and SMART like ChatGPT. Do NOT write long essays unless asked.
-        3. Be friendly and witty.
-        4. If asked about time, give the exact time provided above.
+        **YOUR CORE DIRECTIVES:**
+        1. **NO REPETITION:** Never start answers with robotic phrases like "I can help with that" or "Here is the answer". Just answer directly.
+        2. **UNIVERSAL SOLVER:** You are an expert in Coding, Math, Science, Creative Writing, and Life Advice. Never say "I cannot do that" for safe queries.
+        3. **TONE:** Be smart, witty, and confident. Use emojis sparingly but effectively.
+        4. **LANGUAGE:** Detect user language. If Bangla, use natural Bangla. If English, use fluent English.
+        5. **FORMAT:** Use Markdown. Use Code Blocks for code. Use Bold for emphasis.
         """
     }
     
-    # ইউজারের মেসেজ অ্যাড
-    user_chats[user_id].append({"role": "user", "content": prompt})
-    user_chats[user_id] = user_chats[user_id][-8:] # মেমোরি ক্লিন রাখা
+    user_chats[uid].append({"role": "user", "content": prompt})
+    user_chats[uid] = user_chats[uid][-12:] # মেমোরি একটু বাড়ালাম
     
-    messages_final = [system_prompt] + user_chats[user_id]
-
     def generate():
         try:
             client = get_groq_client()
             stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=messages_final,
+                messages=[sys] + user_chats[uid],
                 stream=True,
-                temperature=0.7 
+                temperature=0.8 # সৃজনশীলতা বাড়ানো হয়েছে
             )
-            
-            full_resp = ""
+            resp = ""
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     c = chunk.choices[0].delta.content
-                    full_resp += c
+                    resp += c
                     yield c
-            
-            # গ্লোবাল ভেরিয়েবলে সেভ (Session error fix)
-            user_chats[user_id].append({"role": "assistant", "content": full_resp})
-            
+            user_chats[uid].append({"role": "assistant", "content": resp})
         except Exception as e:
             yield f"Error: {str(e)}"
 
