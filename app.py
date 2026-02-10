@@ -1,19 +1,21 @@
-from flask import Flask, request, Response, session
+from flask import Flask, request, Response, session, jsonify
 from groq import Groq
 import os
 import uuid
 from datetime import datetime
 import pytz
+import json
 
 # ==========================================
-# 🔹 Flux v3.0 Ultimate Configuration
+# 🔹 Flux v4.0 (Final Professional)
 APP_NAME = "Flux"
-OWNER_NAME = "KAWCHUR"
 # ==========================================
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
-user_chats = {}
+
+# মেমোরি স্টোরেজ (প্রোডাকশনে ডাটাবেস ব্যবহার করা উচিত)
+user_chats = {} 
 
 GROQ_KEYS = os.environ.get("GROQ_KEYS", "").split(",")
 current_key_index = 0
@@ -42,224 +44,295 @@ def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>{APP_NAME} Ultimate</title>
+        <title>{APP_NAME} AI</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark-reasonable.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
             :root {{
-                --primary: #6366f1;
-                --gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
                 --bg: #ffffff;
-                --sidebar: #f8fafc;
-                --text: #0f172a;
-                --msg-bot: #f1f5f9;
-                --msg-user: #6366f1;
-                --text-user: #ffffff;
-                --border: #e2e8f0;
+                --sidebar-bg: #f9f9f9;
+                --text: #374151;
+                --border: #e5e7eb;
+                --input-bg: #f3f4f6;
+                --user-msg: #f3f4f6;
+                --bot-msg: transparent;
+                --accent: #10a37f;
             }}
-            body.dark {{
-                --bg: #0f172a; --sidebar: #1e293b; --text: #f8fafc;
-                --msg-bot: #1e293b; --msg-user: #6366f1; --border: #334155;
-            }}
-            * {{ box-sizing: border-box; }}
-            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Outfit', sans-serif; height: 100vh; display: flex; flex-direction: column; overflow: hidden; transition: 0.3s; }}
             
+            body.dark {{
+                --bg: #343541;
+                --sidebar-bg: #202123;
+                --text: #ececf1;
+                --border: #4d4d4f;
+                --input-bg: #40414f;
+                --user-msg: #444654;
+                --bot-msg: transparent;
+                --accent: #19c37d;
+            }}
+
+            * {{ box-sizing: border-box; }}
+            body {{ 
+                margin: 0; background: var(--bg); color: var(--text); 
+                font-family: 'Inter', sans-serif; height: 100vh; display: flex; 
+                flex-direction: column; overflow: hidden; transition: 0.3s;
+            }}
+
             /* Header */
             header {{
-                height: 60px; display: flex; align-items: center; justify-content: space-between;
-                padding: 0 15px; border-bottom: 1px solid var(--border); background: var(--bg); z-index: 50;
+                height: 50px; display: flex; align-items: center; justify-content: space-between;
+                padding: 0 15px; border-bottom: 1px solid var(--border);
+                background: var(--bg); z-index: 50;
             }}
-            .brand {{ font-size: 1.4rem; font-weight: 700; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; display: flex; align-items: center; gap: 8px; }}
+            .header-btn {{ background: none; border: none; color: var(--text); font-size: 1.2rem; cursor: pointer; padding: 5px; }}
+            .model-name {{ font-weight: 600; font-size: 1rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }}
+            
+            /* Sidebar */
+            #sidebar {{
+                position: fixed; top: 0; left: -280px; width: 280px; height: 100%;
+                background: var(--sidebar-bg); z-index: 1000; transition: 0.3s;
+                border-right: 1px solid var(--border); display: flex; flex-direction: column;
+                padding: 10px;
+            }}
+            #sidebar.open {{ left: 0; }}
+            .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 900; display: none; }}
+            .overlay.open {{ display: block; }}
+            
+            .new-chat-btn {{
+                padding: 10px; border: 1px solid var(--border); border-radius: 5px;
+                background: transparent; color: var(--text); cursor: pointer;
+                display: flex; align-items: center; gap: 10px; margin-bottom: 20px;
+                transition: 0.2s;
+            }}
+            .new-chat-btn:hover {{ background: rgba(0,0,0,0.05); }}
+            body.dark .new-chat-btn:hover {{ background: rgba(255,255,255,0.05); }}
+
+            .sidebar-item {{
+                padding: 10px; cursor: pointer; border-radius: 5px; display: flex; align-items: center; gap: 10px;
+                color: var(--text); margin-bottom: 5px;
+            }}
+            .sidebar-item:hover {{ background: rgba(0,0,0,0.05); }}
+            body.dark .sidebar-item:hover {{ background: rgba(255,255,255,0.05); }}
 
             /* Chat Area */
-            #chat-container {{ flex: 1; overflow-y: auto; padding: 20px; padding-bottom: 110px; display: flex; flex-direction: column; gap: 20px; }}
+            #chat-container {{
+                flex: 1; overflow-y: auto; padding: 0 0 120px 0;
+                display: flex; flex-direction: column; align-items: center;
+                scroll-behavior: smooth;
+            }}
             
-            /* Welcome Screen */
-            #welcome-screen {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80%; text-align: center; gap: 20px; }}
-            .flux-logo {{ font-size: 4rem; background: var(--gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; animation: float 3s infinite ease-in-out; }}
-            @keyframes float {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-10px); }} }}
+            .message-row {{
+                width: 100%; padding: 20px; display: flex; justify-content: center;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+            }}
+            body.dark .message-row {{ border-bottom: 1px solid rgba(255,255,255,0.05); }}
             
-            .chips {{ display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }}
-            .chip {{ padding: 10px 18px; border: 1px solid var(--border); border-radius: 25px; font-size: 0.9rem; cursor: pointer; background: var(--bg); color: var(--text); transition: 0.2s; }}
-            .chip:hover {{ border-color: var(--primary); color: var(--primary); transform: translateY(-3px); box-shadow: 0 5px 15px rgba(99, 102, 241, 0.2); }}
+            .message-row.user {{ background: var(--bg); }}
+            .message-row.bot {{ background: var(--bot-msg); }}
+            body.dark .message-row.bot {{ background: #444654; }} /* ChatGPT style bot bg */
 
-            /* Messages */
-            .msg-row {{ display: flex; gap: 12px; width: 100%; animation: fadeUp 0.3s ease; }}
-            @keyframes fadeUp {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-            .msg-row.user {{ flex-direction: row-reverse; }}
+            .message-content {{
+                width: 100%; max-width: 800px; display: flex; gap: 20px;
+            }}
             
-            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.1rem; flex-shrink: 0; }}
-            .bot-av {{ background: var(--gradient); color: white; box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }}
-            .user-av {{ background: var(--text); color: var(--bg); }}
+            .avatar {{
+                width: 30px; height: 30px; border-radius: 2px; flex-shrink: 0;
+                display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
+            }}
+            .user-av {{ background: #5436DA; border-radius: 5px; color: white; font-size: 0.9rem; }}
+            .bot-av {{ background: #10a37f; border-radius: 5px; color: white; font-size: 0.9rem; }}
             
-            .msg-bubble {{ max-width: 85%; padding: 12px 18px; border-radius: 18px; font-size: 0.95rem; line-height: 1.6; position: relative; }}
-            .bot .msg-bubble {{ background: var(--msg-bot); border-bottom-left-radius: 4px; }}
-            .user .msg-bubble {{ background: var(--msg-user); color: var(--text-user); border-bottom-right-radius: 4px; background: var(--gradient); }}
-
-            /* Image Generation Style */
-            .generated-image {{ max-width: 100%; border-radius: 12px; margin-top: 10px; box-shadow: 0 5px 15px rgba(0,0,0,0.2); border: 2px solid var(--border); }}
+            .text-content {{
+                flex: 1; font-size: 1rem; line-height: 1.6; overflow-x: hidden;
+                word-wrap: break-word; /* Fix text overflow */
+            }}
+            .text-content p {{ margin-top: 0; }}
             
-            /* Code Block & Copy Button */
-            pre {{ position: relative; background: #282c34; padding: 15px; border-radius: 10px; overflow-x: auto; color: #fff; margin: 10px 0; }}
-            .copy-btn {{ position: absolute; top: 5px; right: 5px; background: rgba(255,255,255,0.1); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 0.8rem; }}
-            .copy-btn:hover {{ background: rgba(255,255,255,0.2); }}
+            /* Typing Animation */
+            .typing-indicator {{ display: flex; gap: 5px; padding: 10px 0; }}
+            .dot {{ width: 6px; height: 6px; background: var(--text); border-radius: 50%; opacity: 0.6; animation: bounce 1.4s infinite ease-in-out both; }}
+            .dot:nth-child(1) {{ animation-delay: -0.32s; }}
+            .dot:nth-child(2) {{ animation-delay: -0.16s; }}
+            @keyframes bounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
 
             /* Input Area */
-            #input-area {{ position: fixed; bottom: 0; left: 0; right: 0; padding: 15px; background: var(--bg); border-top: 1px solid var(--border); display: flex; justify-content: center; }}
-            .input-box {{ width: 100%; max-width: 800px; display: flex; align-items: center; background: var(--msg-bot); border-radius: 25px; padding: 8px 10px; border: 1px solid var(--border); box-shadow: 0 5px 20px rgba(0,0,0,0.05); }}
-            textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); padding: 10px; font-size: 1rem; resize: none; rows: 1; height: 24px; font-family: inherit; }}
-            
-            .action-btn {{ width: 40px; height: 40px; border-radius: 50%; border: none; background: transparent; color: #64748b; cursor: pointer; font-size: 1.1rem; transition: 0.2s; display: flex; align-items: center; justify-content: center; }}
-            .action-btn:hover {{ color: var(--primary); background: rgba(99, 102, 241, 0.1); }}
-            .send-btn {{ background: var(--gradient); color: white; margin-left: 5px; }}
-            .send-btn:hover {{ opacity: 0.9; color: white; }}
-            
-            /* Speak Button */
-            .speak-btn {{ margin-left: 8px; font-size: 0.9rem; color: #64748b; cursor: pointer; opacity: 0.7; }}
-            .speak-btn:hover {{ opacity: 1; color: var(--primary); }}
+            #input-area {{
+                position: fixed; bottom: 0; left: 0; right: 0;
+                background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--bg) 20%);
+                padding: 20px; display: flex; justify-content: center; z-index: 40;
+            }}
+            body.dark #input-area {{ background: linear-gradient(180deg, rgba(52,53,65,0) 0%, var(--bg) 20%); }}
 
-            /* Recording Animation */
-            .recording {{ color: #ef4444 !important; animation: pulse-red 1s infinite; }}
-            @keyframes pulse-red {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.1); }} 100% {{ transform: scale(1); }} }}
+            .input-wrapper {{
+                width: 100%; max-width: 800px; position: relative;
+                background: var(--input-bg); border-radius: 12px;
+                border: 1px solid var(--border);
+                box-shadow: 0 0 10px rgba(0,0,0,0.05);
+                display: flex; align-items: flex-end; padding: 10px;
+            }}
+            
+            textarea {{
+                width: 100%; background: transparent; border: none; outline: none;
+                color: var(--text); font-size: 1rem; resize: none; max-height: 200px;
+                padding: 4px; font-family: inherit; line-height: 1.5;
+            }}
+            
+            .send-btn {{
+                background: transparent; border: none; color: var(--text);
+                padding: 5px 10px; cursor: pointer; transition: 0.2s;
+                border-radius: 5px;
+            }}
+            .send-btn:hover {{ background: rgba(0,0,0,0.1); }}
+            .send-btn.active {{ background: var(--accent); color: white; }}
+
+            /* Actions */
+            .msg-actions {{ margin-top: 10px; display: flex; gap: 10px; opacity: 0.7; font-size: 0.9rem; }}
+            .action-icon {{ cursor: pointer; transition: 0.2s; }}
+            .action-icon:hover {{ color: var(--text); opacity: 1; }}
 
         </style>
     </head>
-    <body>
-    
+    <body class="dark"> <div class="overlay" onclick="toggleSidebar()"></div>
+        <div id="sidebar">
+            <button class="new-chat-btn" onclick="location.reload()">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
+            <div style="flex: 1; overflow-y: auto;">
+                <div style="font-size: 0.8rem; font-weight: 500; color: #666; margin-bottom: 10px; padding-left: 10px;">Preferences</div>
+                <div class="sidebar-item" onclick="toggleTheme()"><i class="fas fa-sun"></i> Toggle Theme</div>
+                <div class="sidebar-item" onclick="toggleLang()"><i class="fas fa-globe"></i> Language: <span id="lang-display">EN</span></div>
+            </div>
+            <div class="sidebar-item" style="margin-top: auto;">
+                <i class="fas fa-user"></i> {APP_NAME} User
+            </div>
+        </div>
+
         <header>
-            <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME} <span style="font-size:0.7rem; opacity:0.6; margin-top:5px;">ULTRA</span></div>
-            <button class="action-btn" onclick="toggleTheme()"><i class="fas fa-adjust"></i></button>
+            <button class="header-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+            <div class="model-name" onclick="location.reload()">
+                {APP_NAME} <span style="font-size: 0.8rem; opacity: 0.5; font-weight: 400;">v4.0</span>
+            </div>
+            <button class="header-btn" onclick="location.reload()"><i class="fas fa-plus"></i></button>
         </header>
 
         <div id="chat-container">
-            <div id="welcome-screen">
-                <div class="flux-logo"><i class="fas fa-bolt"></i></div>
-                <h2 style="margin:0;">Flux Ultimate</h2>
-                <p style="opacity: 0.7;">Image Generation • Voice • Coding</p>
-                <div class="chips">
-                    <div class="chip" onclick="sendChip('Draw a futuristic city')">🎨 Draw Image</div>
-                    <div class="chip" onclick="sendChip('Write Python code for Snake game')">🐍 Write Code</div>
-                    <div class="chip" onclick="sendChip('Tell me a mystery story')">📖 Story</div>
-                </div>
+            <div id="welcome-msg" style="margin-top: 30vh; text-align: center; opacity: 0.8;">
+                <h2 style="font-size: 2rem;">{APP_NAME}</h2>
+                <p>Advanced AI Assistant</p>
             </div>
         </div>
 
         <div id="input-area">
-            <div class="input-box">
-                <button class="action-btn" id="mic-btn" onclick="startDictation()"><i class="fas fa-microphone"></i></button>
-                <textarea id="msg" placeholder="Message Flux..." oninput="autoResize(this)"></textarea>
-                <button class="action-btn send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
+            <div class="input-wrapper">
+                <textarea id="msg" placeholder="Send a message..." rows="1" oninput="autoResize(this)"></textarea>
+                <button class="send-btn" id="send-btn" onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
             </div>
         </div>
 
         <script>
             const chat = document.getElementById('chat-container');
-            const welcome = document.getElementById('welcome-screen');
             const input = document.getElementById('msg');
-            let isDark = false;
+            const sendBtn = document.getElementById('send-btn');
+            const welcome = document.getElementById('welcome-msg');
+            let currentLang = 'en';
 
-            function toggleTheme() {{
-                isDark = !isDark;
-                document.body.classList.toggle('dark');
-            }}
-
+            // Auto Resize Textarea
             function autoResize(el) {{
                 el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 150) + 'px';
-                if(el.value === '') el.style.height = '24px';
-            }}
-
-            function sendChip(text) {{
-                input.value = text;
-                sendMessage();
-            }}
-
-            // 🎤 Voice Recognition (Speech to Text)
-            function startDictation() {{
-                if (window.hasOwnProperty('webkitSpeechRecognition')) {{
-                    var recognition = new webkitSpeechRecognition();
-                    recognition.continuous = false;
-                    recognition.interimResults = false;
-                    recognition.lang = "bn-BD"; // Default Bangla, auto-detects English too mostly
-                    
-                    const micBtn = document.getElementById('mic-btn');
-                    micBtn.classList.add('recording');
-                    
-                    recognition.start();
-                    recognition.onresult = function(e) {{
-                        document.getElementById('msg').value = e.results[0][0].transcript;
-                        recognition.stop();
-                        micBtn.classList.remove('recording');
-                        autoResize(input);
-                    }};
-                    recognition.onerror = function(e) {{
-                        recognition.stop();
-                        micBtn.classList.remove('recording');
-                    }};
+                el.style.height = el.scrollHeight + 'px';
+                if(el.value.trim().length > 0) {{
+                    sendBtn.classList.add('active');
                 }} else {{
-                    alert("Voice input not supported in this browser.");
+                    sendBtn.classList.remove('active');
                 }}
             }}
 
-            // 🔊 Text to Speech
-            function speakText(text) {{
-                const utterance = new SpeechSynthesisUtterance(text);
-                window.speechSynthesis.speak(utterance);
+            // Sidebar
+            function toggleSidebar() {{
+                document.getElementById('sidebar').classList.toggle('open');
+                document.querySelector('.overlay').classList.toggle('open');
             }}
 
-            // 📋 Copy Code Function
-            function addCopyButtons() {{
-                document.querySelectorAll('pre').forEach((block) => {{
-                    if (block.querySelector('.copy-btn')) return;
-                    const button = document.createElement('button');
-                    button.innerText = 'Copy';
-                    button.className = 'copy-btn';
-                    button.onclick = () => {{
-                        const code = block.querySelector('code').innerText;
-                        navigator.clipboard.writeText(code);
-                        button.innerText = 'Copied!';
-                        setTimeout(() => {{ button.innerText = 'Copy'; }}, 2000);
-                    }};
-                    block.appendChild(button);
-                }});
+            // Theme
+            function toggleTheme() {{
+                document.body.classList.toggle('dark');
+            }}
+            
+            // Language Toggle
+            function toggleLang() {{
+                currentLang = currentLang === 'en' ? 'bn' : 'en';
+                document.getElementById('lang-display').innerText = currentLang.toUpperCase();
+                alert("Language switched to " + (currentLang === 'en' ? "English" : "Bangla"));
+            }}
+
+            // TTS (Voice Output)
+            function speakText(text) {{
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                // Try to match language
+                if(text.match(/[\u0980-\u09FF]/)) {{
+                    utterance.lang = 'bn-BD';
+                }} else {{
+                    utterance.lang = 'en-US';
+                }}
+                window.speechSynthesis.speak(utterance);
             }}
 
             function appendMessage(text, isUser) {{
                 if(welcome) welcome.style.display = 'none';
 
                 const row = document.createElement('div');
-                row.className = `msg-row ${{isUser ? 'user' : 'bot'}}`;
+                row.className = `message-row ${{isUser ? 'user' : 'bot'}}`;
                 
-                const av = isUser ? 'user-av' : 'bot-av';
-                const icon = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>';
+                const avatar = isUser ? '<div class="avatar user-av">U</div>' : '<div class="avatar bot-av"><i class="fas fa-bolt"></i></div>';
                 
                 let content = isUser ? text : marked.parse(text);
                 
-                // Speak button for bot
-                let actionHTML = '';
-                if (!isUser) {{
-                    actionHTML = `<i class="fas fa-volume-up speak-btn" onclick="speakText(this.parentElement.innerText)"></i>`;
+                // Bot Actions (Voice Icon)
+                let actions = '';
+                if(!isUser) {{
+                    actions = `
+                    <div class="msg-actions">
+                        <i class="fas fa-volume-up action-icon" title="Listen" onclick="speakText(this.parentElement.previousElementSibling.innerText)"></i>
+                        <i class="fas fa-copy action-icon" title="Copy" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.innerText)"></i>
+                    </div>`;
                 }}
 
                 row.innerHTML = `
-                    <div class="avatar ${{av}}">${{icon}}</div>
-                    <div class="msg-bubble">
-                        ${{content}}
-                        ${{actionHTML}}
+                    <div class="message-content">
+                        ${{avatar}}
+                        <div class="text-content">
+                            ${{content}}
+                            ${{actions}}
+                        </div>
                     </div>
                 `;
                 chat.appendChild(row);
-                chat.scrollTop = chat.scrollHeight;
                 
-                if(!isUser) {{
-                    hljs.highlightAll();
-                    addCopyButtons();
-                }}
+                if(!isUser) hljs.highlightAll();
+                window.scrollTo(0, document.body.scrollHeight);
+            }}
+
+            function showTyping() {{
+                const row = document.createElement('div');
+                row.id = 'typing-indicator';
+                row.className = 'message-row bot';
+                row.innerHTML = `
+                    <div class="message-content">
+                        <div class="avatar bot-av"><i class="fas fa-bolt"></i></div>
+                        <div class="text-content">
+                            <div class="typing-indicator">
+                                <div class="dot"></div><div class="dot"></div><div class="dot"></div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                chat.appendChild(row);
+                window.scrollTo(0, document.body.scrollHeight);
             }}
 
             async function sendMessage() {{
@@ -267,36 +340,49 @@ def home():
                 if (!text) return;
                 
                 input.value = '';
-                input.style.height = '24px';
+                input.style.height = 'auto';
+                sendBtn.classList.remove('active');
+                
                 appendMessage(text, true);
+                showTyping();
 
                 try {{
-                    const res = await fetch(`/chat?prompt=${{encodeURIComponent(text)}}`);
+                    const res = await fetch(`/chat?prompt=${{encodeURIComponent(text)}}&lang=${{currentLang}}`);
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
                     let full = '';
                     
-                    if(welcome) welcome.style.display = 'none';
+                    // Remove typing indicator
+                    document.getElementById('typing-indicator').remove();
+                    
+                    // Create bot message container
                     const row = document.createElement('div');
-                    row.className = 'msg-row bot';
+                    row.className = 'message-row bot';
                     row.innerHTML = `
-                        <div class="avatar bot-av"><i class="fas fa-bolt"></i></div>
-                        <div class="msg-bubble"><i class="fas fa-circle-notch fa-spin"></i> Generating...</div>
+                        <div class="message-content">
+                            <div class="avatar bot-av"><i class="fas fa-bolt"></i></div>
+                            <div class="text-content"></div>
+                        </div>
                     `;
                     chat.appendChild(row);
-                    const bubble = row.querySelector('.msg-bubble');
+                    const contentDiv = row.querySelector('.text-content');
 
                     while (true) {{
                         const {{ done, value }} = await reader.read();
                         if (done) break;
                         full += decoder.decode(value);
-                        bubble.innerHTML = marked.parse(full) + `<i class="fas fa-volume-up speak-btn" onclick="speakText(this.parentElement.innerText)"></i>`;
-                        chat.scrollTop = chat.scrollHeight;
+                        contentDiv.innerHTML = marked.parse(full) + `
+                            <div class="msg-actions">
+                                <i class="fas fa-volume-up action-icon" onclick="speakText(this.parentElement.previousElementSibling.innerText)"></i>
+                                <i class="fas fa-copy action-icon" onclick="navigator.clipboard.writeText(this.parentElement.previousElementSibling.innerText)"></i>
+                            </div>`;
+                        window.scrollTo(0, document.body.scrollHeight);
                     }}
                     hljs.highlightAll();
-                    addCopyButtons();
+                    
                 }} catch (e) {{
-                    // Error
+                    document.getElementById('typing-indicator').remove();
+                    appendMessage("⚠️ Network Error. Please try again.", false);
                 }}
             }}
             
@@ -314,26 +400,28 @@ def home():
 @app.route("/chat")
 def chat():
     prompt = request.args.get("prompt")
+    lang = request.args.get("lang", "en")
+    
     if not prompt: return "No prompt", 400
     
     if 'user_id' not in session: session['user_id'] = str(uuid.uuid4())
     uid = session['user_id']
     if uid not in user_chats: user_chats[uid] = []
     
-    # 🧠 SUPER SYSTEM PROMPT (Image Gen Logic)
+    # System Instruction
+    lang_instr = "Reply in fluent English." if lang == 'en' else "Reply in natural Bangla."
+    
     sys = {
         "role": "system", 
         "content": f"""
-        You are {APP_NAME} Ultimate.
-        Time: {get_time()}. Owner: {OWNER_NAME}.
+        You are {APP_NAME}.
+        Time: {get_time()}.
         
-        **CAPABILITIES:**
-        1. **IMAGE GENERATION:** If user asks to "draw", "create image", or "paint" something, you MUST return ONLY this markdown format:
-           ![Generated Image](https://image.pollinations.ai/prompt/DESCRIPTION?width=800&height=600&nologo=true)
-           (Replace 'DESCRIPTION' with the user's request in English). Do not add any other text.
-           
-        2. **CODING:** Use Markdown code blocks.
-        3. **GENERAL:** Smart, witty, short answers.
+        INSTRUCTIONS:
+        1. {lang_instr}
+        2. Be smart, professional, and concise.
+        3. Use Markdown for formatting.
+        4. No images. No extra talk.
         """
     }
     
@@ -347,7 +435,7 @@ def chat():
                 model="llama-3.3-70b-versatile",
                 messages=[sys] + user_chats[uid],
                 stream=True,
-                temperature=0.8
+                temperature=0.7
             )
             resp = ""
             for chunk in stream:
