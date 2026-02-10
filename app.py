@@ -1,19 +1,24 @@
 from flask import Flask, request, Response, session
 from groq import Groq
 import os
+import uuid
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# Render-এর GROQ_KEYS থেকে কি (Key) লোড করা
+# মেমোরিতে চ্যাট হিস্ট্রি রাখার জন্য গ্লোবাল ভেরিয়েবল
+# (এটি কুকি সেশনের সীমাবদ্ধতা বাইপাস করবে)
+user_chats = {}
+
+# Render-এর GROQ_KEYS লোড করা
 GROQ_KEYS = os.environ.get("GROQ_KEYS", "").split(",")
 current_key_index = 0
 
 def get_groq_client():
     global current_key_index
     if not GROQ_KEYS or GROQ_KEYS == ['']:
-        raise ValueError("কোনো Groq key পাওয়া যায়নি! Render-এ GROQ_KEYS সেট করো।")
+        raise ValueError("কোনো Groq key পাওয়া যায়নি!")
 
     for _ in range(len(GROQ_KEYS)):
         key = GROQ_KEYS[current_key_index].strip()
@@ -23,7 +28,7 @@ def get_groq_client():
         try:
             return Groq(api_key=key)
         except Exception as e:
-            print(f"Key {current_key_index} failed: {e}")
+            print(f"Key failed: {e}")
             current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
 
     raise ValueError("সব Groq key invalid!")
@@ -35,6 +40,10 @@ def get_bd_time():
 
 @app.route("/")
 def home():
+    # ইউজারকে একটি ইউনিক ID দেওয়া (যদি না থাকে)
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid.uuid4())
+        
     return """
     <!DOCTYPE html>
     <html lang="bn">
@@ -75,8 +84,8 @@ def home():
             }
             
             #chat-container {
-                margin-top: 60px; /* Header height */
-                margin-bottom: 70px; /* Input area height */
+                margin-top: 60px;
+                margin-bottom: 70px;
                 padding: 20px;
                 overflow-y: auto;
                 height: calc(100vh - 130px);
@@ -125,7 +134,7 @@ def home():
         <div id="chat-container">
             <div class="message-wrapper bot">
                 <div class="message">
-                    হ্যালো! আমি তৈরি। এখন আমাকে মেসেজ পাঠাতে পারবেন! 👇
+                    হ্যালো! আমি তৈরি। আমাকে যা খুশি জিজ্ঞেস করতে পারেন! 👋
                 </div>
             </div>
         </div>
@@ -138,6 +147,9 @@ def home():
         <script>
             const chat = document.getElementById('chat-container');
             const input = document.getElementById('msg');
+
+            // ইউনিক সেশন ID সেট করা (যদি পেজ রিলোড হয়)
+            fetch('/'); 
 
             function toggleTheme() {
                 document.body.classList.toggle('dark');
@@ -195,36 +207,52 @@ def chat():
     prompt = request.args.get("prompt")
     if not prompt: return "No prompt", 400
     
+    # ইউজার সনাক্ত করা
+    if 'user_id' not in session:
+        session['user_id'] = str(uuid.uuid4())
+    user_id = session['user_id']
+    
     bd_time_str = get_bd_time()
     
-    if 'chat_history' not in session: session['chat_history'] = []
+    # এই ইউজারের আগের চ্যাট লোড করা (মেমোরি থেকে)
+    if user_id not in user_chats:
+        user_chats[user_id] = []
     
+    # সিস্টেম প্রম্পট (প্রতিবার লেটেস্ট টাইম সহ)
     system_prompt = {
         "role": "system",
-        "content": f"You are Smart AI Buddy. Current time in Bangladesh: {bd_time_str}. Owner: KAWCHUR (Reveal owner ONLY if asked). Reply in user's language (Bangla/English). Be friendly."
+        "content": f"You are Smart AI Buddy. Current time in Bangladesh: {bd_time_str}. Owner: KAWCHUR (Only reveal if asked). Reply in user's language (Bangla/English). Be friendly."
     }
     
-    history = [msg for msg in session['chat_history'] if msg['role'] != 'system']
-    history.append({"role": "user", "content": prompt})
-    session['chat_history'] = history[-10:]
-    session.modified = True
+    # ইউজারের নতুন মেসেজ মেমোরিতে যোগ করা
+    user_chats[user_id].append({"role": "user", "content": prompt})
     
+    # মেমোরি বেশি বড় হতে না দেওয়া (লাস্ট ১০টা মেসেজ)
+    user_chats[user_id] = user_chats[user_id][-10:]
+    
+    # API-তে পাঠানোর জন্য লিস্ট তৈরি
+    messages_for_groq = [system_prompt] + user_chats[user_id]
+
     def generate():
         try:
             client = get_groq_client()
             stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
-                messages=[system_prompt] + history,
+                messages=messages_for_groq,
                 stream=True
             )
-            resp = ""
+            
+            full_response = ""
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
                     c = chunk.choices[0].delta.content
-                    resp += c
+                    full_response += c
                     yield c
-            session['chat_history'].append({"role": "assistant", "content": resp})
-            session.modified = True
+            
+            # উত্তর শেষ হলে গ্লোবাল মেমোরিতে সেভ করা (Safe Zone!)
+            # এখানে session ব্যবহার করছি না, তাই আর error দেবে না
+            user_chats[user_id].append({"role": "assistant", "content": full_response})
+            
         except Exception as e:
             yield f"Error: {str(e)}"
 
