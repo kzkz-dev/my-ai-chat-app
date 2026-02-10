@@ -1,7 +1,7 @@
 from flask import Flask, request, Response, session
 from groq import Groq
 import os
-import json
+from datetime import datetime, timedelta
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -20,15 +20,19 @@ def get_groq_client():
         if not key:
             current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
             continue
-            
         try:
-            client = Groq(api_key=key)
-            return client
+            return Groq(api_key=key)
         except Exception as e:
             print(f"Key {current_key_index} failed: {e}")
             current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
 
     raise ValueError("সব Groq key invalid!")
+
+# বাংলাদেশের বর্তমান সময় বের করার ফাংশন
+def get_bd_time():
+    utc_now = datetime.utcnow()
+    bd_time = utc_now + timedelta(hours=6) # UTC+6 for Bangladesh
+    return bd_time.strftime("%A, %d %B %Y, %I:%M %p")
 
 @app.route("/")
 def home():
@@ -40,194 +44,133 @@ def home():
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <title>Smart AI Buddy</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github-dark.min.css">
         <style>
             :root {
                 --bg-color: #ffffff;
-                --sidebar-color: #f9f9f9;
-                --text-color: #374151;
-                --input-bg: #f3f4f6;
-                --border-color: #e5e7eb;
-                --user-msg-bg: #f3f4f6;
-                --bot-msg-bg: transparent;
-                --accent-color: #10a37f; /* ChatGPT Greenish */
+                --chat-bg: #ffffff;
+                --input-area-bg: #f0f2f5;
+                --user-msg-bg: #0084ff;
+                --user-text: #ffffff;
+                --bot-msg-bg: #e4e6eb;
+                --bot-text: #050505;
+                --text-color: #050505;
             }
             body.dark {
-                --bg-color: #343541;
-                --sidebar-color: #202123;
-                --text-color: #ececf1;
-                --input-bg: #40414f;
-                --border-color: #565869;
-                --user-msg-bg: #444654;
-                --bot-msg-bg: transparent;
-                --accent-color: #19c37d;
+                --bg-color: #18191a;
+                --chat-bg: #18191a;
+                --input-area-bg: #242526;
+                --user-msg-bg: #0084ff;
+                --user-text: #ffffff;
+                --bot-msg-bg: #3a3b3c;
+                --bot-text: #e4e6eb;
+                --text-color: #e4e6eb;
             }
-            body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Inter', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; transition: background 0.3s; }
+            body { margin: 0; background: var(--bg-color); color: var(--text-color); font-family: 'Roboto', sans-serif; display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
             
             /* Header */
             header {
-                padding: 10px 20px;
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                border-bottom: 1px solid var(--border-color);
-                background: var(--bg-color);
-                z-index: 10;
+                padding: 15px; text-align: center; background: var(--chat-bg);
+                box-shadow: 0 1px 2px rgba(0,0,0,0.1); z-index: 10;
+                display: flex; justify-content: space-between; align-items: center;
             }
-            h1 { font-size: 1.1rem; font-weight: 600; margin: 0; display: flex; align-items: center; gap: 8px; }
-            .theme-toggle { background: none; border: none; color: var(--text-color); cursor: pointer; font-size: 1.2rem; padding: 5px; border-radius: 5px; }
-            .theme-toggle:hover { background: var(--input-bg); }
+            h1 { font-size: 1.2rem; margin: 0; color: var(--text-color); }
+            .theme-btn { background: none; border: none; font-size: 1.2rem; color: var(--text-color); cursor: pointer; }
 
             /* Chat Area */
-            #chat-container { flex: 1; overflow-y: auto; display: flex; flex-direction: column; align-items: center; scroll-behavior: smooth; }
-            #chat-content { width: 100%; max-width: 800px; padding: 20px; padding-bottom: 120px; }
+            #chat-container { flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 10px; scroll-behavior: smooth; }
             
-            .message { display: flex; gap: 16px; padding: 20px 0; border-bottom: 1px solid rgba(0,0,0,0.05); animation: fadeIn 0.3s ease; }
-            body.dark .message { border-bottom: 1px solid rgba(255,255,255,0.05); }
+            .message-wrapper { display: flex; width: 100%; }
+            .message-wrapper.user { justify-content: flex-end; }
+            .message-wrapper.bot { justify-content: flex-start; }
+
+            .message {
+                max-width: 75%; padding: 10px 15px; border-radius: 18px;
+                font-size: 0.95rem; line-height: 1.5; position: relative; word-wrap: break-word;
+            }
+            .user .message { background: var(--user-msg-bg); color: var(--user-text); border-bottom-right-radius: 4px; }
+            .bot .message { background: var(--bot-msg-bg); color: var(--bot-text); border-bottom-left-radius: 4px; }
             
-            .avatar { width: 30px; height: 30px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 14px; flex-shrink: 0; }
-            .user-avatar { background: #5b48d9; color: white; border-radius: 50%; }
-            .bot-avatar { background: #10a37f; color: white; }
+            .message p { margin: 0; }
+            .message ul, .message ol { padding-left: 20px; margin: 5px 0; }
             
-            .msg-text { flex: 1; line-height: 1.7; font-size: 0.95rem; overflow-x: hidden; }
-            .msg-text p { margin-top: 0; }
-            .msg-text pre { background: #000; padding: 15px; border-radius: 8px; overflow-x: auto; color: #fff; }
-            
-            /* Typing Indicator */
-            .typing-indicator span { display: inline-block; width: 6px; height: 6px; background-color: var(--text-color); border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 2px; opacity: 0.6; }
-            .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
-            .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
-            @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
-            @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+            /* Typing Animation */
+            .typing { font-style: italic; opacity: 0.7; font-size: 0.8rem; margin-left: 10px; margin-bottom: 10px; color: var(--text-color); display: none; }
 
             /* Input Area */
-            #input-area {
-                position: fixed; bottom: 0; left: 0; right: 0;
-                background: linear-gradient(180deg, rgba(255,255,255,0) 0%, var(--bg-color) 20%);
-                padding: 20px;
-                display: flex; justify-content: center;
+            #input-area { padding: 10px; background: var(--input-area-bg); display: flex; align-items: center; gap: 10px; }
+            input {
+                flex: 1; padding: 12px 15px; border-radius: 20px; border: none; outline: none;
+                background: var(--chat-bg); color: var(--text-color); font-size: 1rem;
             }
-            body.dark #input-area { background: linear-gradient(180deg, rgba(52,53,65,0) 0%, var(--bg-color) 20%); }
-
-            form {
-                width: 100%; max-width: 768px; position: relative;
-                background: var(--input-bg);
-                border: 1px solid var(--border-color);
-                border-radius: 12px;
-                box-shadow: 0 0 15px rgba(0,0,0,0.1);
-                display: flex; align-items: flex-end;
-                padding: 10px 10px 10px 16px;
-            }
-            form:focus-within { border-color: var(--text-color); box-shadow: 0 0 20px rgba(0,0,0,0.15); }
-            
-            textarea {
-                flex: 1; background: transparent; border: none; color: var(--text-color);
-                font-family: inherit; font-size: 1rem; resize: none; max-height: 200px;
-                padding: 4px 0; outline: none; line-height: 1.5;
-            }
-            
             button {
-                background: var(--accent-color); color: white; border: none;
-                padding: 8px 12px; border-radius: 8px; cursor: pointer;
-                transition: opacity 0.2s; display: flex; align-items: center; justify-content: center;
-                margin-left: 10px; height: 35px; width: 35px;
+                background: #0084ff; color: white; border: none; padding: 10px 15px;
+                border-radius: 50%; cursor: pointer; font-size: 1rem; display: flex; align-items: center; justify-content: center;
+                transition: transform 0.1s;
             }
-            button:disabled { background: var(--border-color); cursor: not-allowed; }
-            button:hover:not(:disabled) { opacity: 0.9; }
+            button:active { transform: scale(0.95); }
 
         </style>
     </head>
     <body>
         <header>
-            <h1><i class="fas fa-robot"></i> Smart AI Buddy</h1>
-            <button class="theme-toggle" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
+            <div style="width: 24px;"></div> <h1>Smart AI Buddy</h1>
+            <button class="theme-btn" onclick="toggleTheme()"><i class="fas fa-moon"></i></button>
         </header>
 
         <div id="chat-container">
-            <div id="chat-content">
+            <div class="message-wrapper bot">
                 <div class="message">
-                    <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
-                    <div class="msg-text">
-                        হ্যালো! আমি তৈরি। তোমার কি সাহায্য লাগবে? <br>
-                        <span style="font-size: 0.85em; opacity: 0.7;">(Ask me anything in Bangla or English)</span>
-                    </div>
+                    হ্যালো! আমি তৈরি। আমি সবকিছু নিয়ে কথা বলতে পারি। আপনার কী সাহায্য লাগবে? 👋
                 </div>
             </div>
         </div>
+        <div class="typing" id="typing-indicator">AI লিখছে...</div>
 
         <div id="input-area">
-            <form id="input-form">
-                <textarea id="msg" rows="1" placeholder="মেসেজ লিখুন..." autofocus></textarea>
-                <button type="submit" id="send-btn"><i class="fas fa-paper-plane"></i></button>
-            </form>
+            <input id="msg" placeholder="এখানে লিখুন..." autocomplete="off">
+            <button onclick="sendMessage()"><i class="fas fa-paper-plane"></i></button>
         </div>
 
         <script>
-            const chatContent = document.getElementById('chat-content');
-            const form = document.getElementById('input-form');
+            const chat = document.getElementById('chat-container');
             const input = document.getElementById('msg');
-            const sendBtn = document.getElementById('send-btn');
+            const typingInd = document.getElementById('typing-indicator');
 
-            // Theme Management
             function toggleTheme() {
                 document.body.classList.toggle('dark');
-                const isDark = document.body.classList.contains('dark');
-                localStorage.setItem('theme', isDark ? 'dark' : 'light');
-                document.querySelector('.theme-toggle i').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
-            }
-            if (localStorage.getItem('theme') === 'dark') toggleTheme();
-
-            // Auto-resize textarea
-            input.addEventListener('input', function() {
-                this.style.height = 'auto';
-                this.style.height = (this.scrollHeight) + 'px';
-                if(this.value === '') this.style.height = 'auto';
-            });
-
-            // Handle Enter key
-            input.addEventListener('keydown', e => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    sendMessage();
+                const btn = document.querySelector('.theme-btn i');
+                if (document.body.classList.contains('dark')) {
+                    btn.classList.remove('fa-moon');
+                    btn.classList.add('fa-sun');
+                } else {
+                    btn.classList.remove('fa-sun');
+                    btn.classList.add('fa-moon');
                 }
-            });
+            }
 
-            function appendMessage(role, text) {
-                const div = document.createElement('div');
-                div.className = 'message';
-                const icon = role === 'user' ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>';
-                const avatarClass = role === 'user' ? 'user-avatar' : 'bot-avatar';
+            function appendMessage(text, isUser) {
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${isUser ? 'user' : 'bot'}`;
                 
-                div.innerHTML = `
-                    <div class="avatar ${avatarClass}">${icon}</div>
-                    <div class="msg-text">${marked.parse(text)}</div>
-                `;
-                chatContent.appendChild(div);
-                window.scrollTo(0, document.body.scrollHeight);
-                hljs.highlightAll();
+                const msgDiv = document.createElement('div');
+                msgDiv.className = 'message';
+                msgDiv.innerHTML = marked.parse(text);
+                
+                wrapper.appendChild(msgDiv);
+                chat.appendChild(wrapper);
+                chat.scrollTop = chat.scrollHeight;
             }
 
             async function sendMessage() {
                 const text = input.value.trim();
                 if (!text) return;
 
-                appendMessage('user', text);
+                appendMessage(text, true);
                 input.value = '';
-                input.style.height = 'auto';
-                sendBtn.disabled = true;
-
-                // Typing indicator
-                const typingDiv = document.createElement('div');
-                typingDiv.className = 'message typing';
-                typingDiv.innerHTML = `
-                    <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
-                    <div class="msg-text typing-indicator"><span></span><span></span><span></span></div>
-                `;
-                chatContent.appendChild(typingDiv);
-                window.scrollTo(0, document.body.scrollHeight);
+                typingInd.style.display = 'block';
+                chat.scrollTop = chat.scrollHeight;
 
                 try {
                     const res = await fetch(`/chat?prompt=${encodeURIComponent(text)}`);
@@ -235,36 +178,32 @@ def home():
                     const decoder = new TextDecoder();
                     let fullResponse = '';
                     
-                    // Remove typing indicator before streaming
-                    typingDiv.remove();
-                    
-                    // Create Bot Message container
-                    const botDiv = document.createElement('div');
-                    botDiv.className = 'message';
-                    botDiv.innerHTML = `
-                        <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
-                        <div class="msg-text"></div>
-                    `;
-                    chatContent.appendChild(botDiv);
-                    const msgTextDiv = botDiv.querySelector('.msg-text');
+                    // Create a placeholder for bot response
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'message-wrapper bot';
+                    const msgDiv = document.createElement('div');
+                    msgDiv.className = 'message';
+                    wrapper.appendChild(msgDiv);
+                    chat.appendChild(wrapper);
+
+                    typingInd.style.display = 'none';
 
                     while (true) {
                         const { done, value } = await reader.read();
                         if (done) break;
-                        const chunk = decoder.decode(value);
-                        fullResponse += chunk;
-                        msgTextDiv.innerHTML = marked.parse(fullResponse);
-                        window.scrollTo(0, document.body.scrollHeight);
+                        fullResponse += decoder.decode(value);
+                        msgDiv.innerHTML = marked.parse(fullResponse);
+                        chat.scrollTop = chat.scrollHeight;
                     }
-                    hljs.highlightAll();
-
                 } catch (e) {
-                    typingDiv.innerHTML = `<div class="msg-text" style="color:red">⚠️ সমস্যা হয়েছে: ${e.message}</div>`;
+                    typingInd.style.display = 'none';
+                    appendMessage("⚠️ একটু সমস্যা হয়েছে, আবার চেষ্টা করুন।", false);
                 }
-                sendBtn.disabled = false;
             }
 
-            form.addEventListener('submit', e => { e.preventDefault(); sendMessage(); });
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') sendMessage();
+            });
         </script>
     </body>
     </html>
@@ -276,37 +215,44 @@ def chat():
     if not prompt:
         return "No prompt", 400
 
-    # ১. স্মার্ট এবং মডার্ন সিস্টেম প্রম্পট (মালিকের নাম লুকানো থাকবে)
-    if 'chat_history' not in session:
-        session['chat_history'] = [
-            {
-                "role": "system",
-                "content": """
-                You are 'Smart AI Buddy', a highly advanced, empathetic, and witty AI assistant.
-                
-                **CORE RULES:**
-                1. **IDENTITY:** Your owner/creator is **KAWCHUR** (কাওছুর). 
-                   - **IMPORTANT:** NEVER mention your owner KAWCHUR unless the user *specifically* asks "Who created you?" or "Who is your owner?". 
-                   - If not asked, keep it secret. Focus purely on helping the user.
-                
-                2. **LANGUAGE & TONE:** - Detect the user's language (Bangla or English).
-                   - If user writes in Bangla -> Reply in **natural, smart, modern Bangla** (avoid robotic/bookish language). Use words like 'ঠিক আছে', 'বুঝতে পেরেছি', 'অবশ্যই'.
-                   - If user writes in English -> Reply in smart, concise English.
-                   - Be conversational, friendly, and helpful. Use emojis occasionally (🙂, 🚀, 💡) to make it feel fresh.
-                
-                3. **BEHAVIOR:**
-                   - Don't repeat "How can I help" in every line.
-                   - If the question is simple ("Hi"), reply simply ("হ্যালো! কেমন আছেন?").
-                   - If the question is complex, give a structured, clear answer.
-                """
-            }
-        ]
+    # বাংলাদেশ সময় আপডেট করা
+    bd_time_str = get_bd_time()
 
-    session['chat_history'].append({"role": "user", "content": prompt})
-    session.modified = True
+    if 'chat_history' not in session:
+        session['chat_history'] = []
+
+    # সিস্টেম প্রম্পট (প্রতিবার লেটেস্ট সময় সহ আপডেট হবে)
+    # আমরা হিস্ট্রির শুরুতে সিস্টেম মেসেজ না রেখে, প্রতি রিকোয়েস্টে ইনজেক্ট করব
+    # এতে সে সময় মনে রাখতে পারবে।
     
-    # কপি তৈরি করা (জেনারেটরের জন্য)
-    messages_for_groq = list(session['chat_history'])
+    current_system_prompt = {
+        "role": "system",
+        "content": f"""
+        You are Smart AI Buddy, a friendly and intelligent assistant.
+        
+        **Your Capabilities:**
+        1. **Current Time & Date:** You know that today is **{bd_time_str}** (Bangladesh Time). If asked about time, tell this.
+        2. **Owner:** Your creator is **KAWCHUR**. 
+           - **RULE:** NEVER mention your owner unless the user specifically asks "Who created you?". Keep it hidden otherwise.
+        3. **Language:** Reply in Bangla if the user speaks Bangla. Reply in English if they speak English.
+        4. **Personality:** Be natural, like a human friend. Don't sound like a robot. Use emojis.
+        
+        Answer short questions shortly. Answer complex questions with details.
+        """
+    }
+
+    # সেশন থেকে আগের মেসেজ নেওয়া (System prompt বাদে)
+    user_history = [msg for msg in session['chat_history'] if msg['role'] != 'system']
+    
+    # নতুন মেসেজ যোগ করা
+    user_history.append({"role": "user", "content": prompt})
+    
+    # গ্রোক-এ পাঠানোর জন্য ফাইনাল লিস্ট (System Prompt + User History)
+    messages_for_groq = [current_system_prompt] + user_history
+
+    # সেশন আপডেট করা (ভবিষ্যতের জন্য)
+    session['chat_history'] = user_history[-10:] # মেমোরি হালকা রাখতে লাস্ট ১০টা মেসেজ রাখি
+    session.modified = True
 
     def generate():
         try:
@@ -314,16 +260,23 @@ def chat():
             stream = client.chat.completions.create(
                 model="llama-3.3-70b-versatile",
                 messages=messages_for_groq,
-                temperature=0.7, # সৃজনশীলতা বাড়ানো হয়েছে
+                temperature=0.8, # সৃজনশীলতার জন্য একটু বাড়ালাম
                 stream=True
             )
             
+            full_response = ""
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content is not None:
-                    yield chunk.choices[0].delta.content
+                    content = chunk.choices[0].delta.content
+                    full_response += content
+                    yield content
+            
+            # অ্যাসিস্ট্যান্টের উত্তর হিস্ট্রিতে যোগ করা (পরের বার মনে রাখার জন্য)
+            session['chat_history'].append({"role": "assistant", "content": full_response})
+            session.modified = True
 
         except Exception as e:
-            yield f"⚠️ দুঃখিত, একটু সমস্যা হচ্ছে: {str(e)}"
+            yield f"⚠️ সমস্যা: {str(e)}"
 
     return Response(generate(), mimetype="text/plain")
 
