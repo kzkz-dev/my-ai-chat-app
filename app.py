@@ -7,12 +7,12 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Stable Premium Edition) ⚡
+# 🔹 Flux AI (Ultra Premium - Build 6.0.0) ⚡
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "8.0.0 (Stable)"
+VERSION = "6.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
@@ -90,49 +90,92 @@ def home():
             ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
             ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
             
-            #sidebar {{ width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3); }}
+            #sidebar {{
+                width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
+                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3);
+            }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ font-size: 1.4rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); letter-spacing: -0.5px; user-select: none; }}
             .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; font-size: 1.6rem; }}
             
-            .new-chat-btn {{ width: 100%; padding: 12px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 12px; font-weight: 500; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 10px; transition: all 0.2s ease; margin-bottom: 20px; }}
+            .new-chat-btn {{
+                width: 100%; padding: 12px; background: transparent; color: var(--text); border: 1px solid var(--border);
+                border-radius: 12px; font-weight: 500; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 10px;
+                transition: all 0.2s ease; margin-bottom: 20px;
+            }}
             .new-chat-btn:active {{ transform: scale(0.95); background: var(--input-bg); }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px; margin-bottom: 10px; }}
-            .history-item {{ padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; font-size: 0.9rem; transition: background 0.2s; user-select: none; }}
+            .history-item {{
+                padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px;
+                font-size: 0.9rem; transition: background 0.2s; user-select: none;
+            }}
             .history-item:active {{ background: var(--input-bg); color: var(--text); transform: scale(0.98); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
+            
             .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 10px; }}
             .theme-btn {{ flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.3s; }}
             .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.15); }}
 
-            .about-section {{ display: none; background: var(--input-bg); padding: 15px; border-radius: 12px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border); }}
+            .about-section {{ 
+                display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
+                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
+            }}
             .about-section.show {{ display: block; animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
             .about-link {{ color: var(--text); font-size: 1.2rem; text-decoration: none; margin: 0 10px; transition: color 0.2s; }}
             .about-link:hover {{ color: var(--accent); transform: scale(1.1); display: inline-block; }}
 
-            header {{ height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; background: rgba(11, 15, 25, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; right: 0; }}
+            header {{
+                height: 60px; display: flex; align-items: center; justify-content: space-between;
+                padding: 0 15px; z-index: 100; background: rgba(11, 15, 25, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+                border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; right: 0;
+            }}
             body.light header {{ background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
+            
+            #chat-box {{ 
+                flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; 
+                display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth;
+            }}
 
-            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
-            .icon-wrapper {{ width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); animation: float 3s ease-in-out infinite; }}
+            /* Welcome Screen Animations */
+            .welcome-container {{
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            }}
+            .icon-wrapper {{ 
+                width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; 
+                display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; 
+                margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+                animation: float 3s ease-in-out infinite;
+            }}
+            
             .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }}
             .welcome-subtitle {{ color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 40px; font-weight: 400; }}
             
             .suggestions {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 550px; }}
-            .chip {{ padding: 16px; background: transparent; border-radius: 18px; cursor: pointer; text-align: left; border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-size: 0.95rem; color: var(--text-secondary); background-color: rgba(255,255,255,0.02); animation: slideUpFade 0.6s ease forwards; opacity: 0; }}
+            .chip {{
+                padding: 16px; background: transparent; border-radius: 18px; cursor: pointer; text-align: left;
+                border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-size: 0.95rem; color: var(--text-secondary);
+                background-color: rgba(255,255,255,0.02);
+                animation: slideUpFade 0.6s ease forwards; opacity: 0;
+            }}
             body.light .chip {{ background-color: rgba(0,0,0,0.02); }}
             .chip:active {{ background: var(--input-bg); border-color: var(--accent); transform: scale(0.95); }}
             .chip i {{ color: var(--text); margin-bottom: 10px; display: block; font-size: 1.3rem; opacity: 0.9; transition: transform 0.3s; }}
             .chip:hover i {{ transform: scale(1.1); }}
-            .chip:nth-child(1) {{ animation-delay: 0.1s; }} .chip:nth-child(2) {{ animation-delay: 0.2s; }} .chip:nth-child(3) {{ animation-delay: 0.3s; }} .chip:nth-child(4) {{ animation-delay: 0.4s; }}
+            
+            .chip:nth-child(1) {{ animation-delay: 0.1s; }}
+            .chip:nth-child(2) {{ animation-delay: 0.2s; }}
+            .chip:nth-child(3) {{ animation-delay: 0.3s; }}
+            .chip:nth-child(4) {{ animation-delay: 0.4s; }}
 
-            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; overflow: hidden; }}
+            /* 🌟 Message Wrapper & Text Wrap Fixes 🌟 */
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
             .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; transition: transform 0.3s; }}
@@ -140,18 +183,21 @@ def home():
             .bot-avatar.thinking {{ animation: pulseGlow 1.5s infinite; }}
             .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
+            /* The FIX for Horizontal Scroll! */
             .bubble-container {{ display: flex; flex-direction: column; width: calc(100% - 50px); }}
+            
             .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
             .user .sender-name {{ display: none; }} 
             
             .bubble {{ font-size: 0.98rem; line-height: 1.6; color: var(--text); word-break: break-word; overflow-wrap: break-word; white-space: normal; width: 100%; }}
-            .bubble * {{ max-width: 100%; }} 
+            .bubble * {{ max-width: 100%; }} /* Ensure children don't overflow */
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
-            .bot .bubble {{ padding: 0 0 5px 0; margin-top: 5px; }}
+            .bot .bubble {{ padding: 0; margin-top: 5px; }}
             .user .bubble {{ background: var(--input-bg); padding: 12px 16px; border-radius: 20px 4px 20px 20px; display: inline-block; max-width: max-content; align-self: flex-end; }}
 
+            /* Beautiful Lists */
             .bubble ul, .bubble ol {{ margin: 8px 0 12px 0; padding-left: 20px; color: var(--text); }}
             .bubble li {{ margin-bottom: 6px; line-height: 1.5; }}
             .bubble strong {{ font-weight: 600; color: var(--accent); }}
@@ -159,30 +205,66 @@ def home():
 
             .typing {{ display: flex; gap: 5px; align-items: center; padding: 10px 0; }}
             .dot {{ width: 7px; height: 7px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .dot:nth-child(1) {{ animation-delay: -0.32s; }} .dot:nth-child(2) {{ animation-delay: -0.16s; }}
+            .dot:nth-child(1) {{ animation-delay: -0.32s; }}
+            .dot:nth-child(2) {{ animation-delay: -0.16s; }}
 
-            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 20px 20px 20px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; z-index: 50; }}
-            .input-box {{ width: 100%; max-width: 750px; display: flex; align-items: flex-end; background: var(--input-bg); border-radius: 24px; padding: 6px 6px 6px 18px; border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }}
+            #input-area {{
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 20px 20px 20px;
+                background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; z-index: 50;
+            }}
+            .input-box {{
+                width: 100%; max-width: 750px; display: flex; align-items: flex-end; 
+                background: var(--input-bg); border-radius: 24px; padding: 6px 6px 6px 18px;
+                border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            }}
             .input-box:focus-within {{ border-color: rgba(59, 130, 246, 0.5); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }}
             
-            textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; line-height: 1.5; }}
-            .send-btn {{ background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 1rem; flex-shrink: 0; margin-bottom: 3px; }}
+            textarea {{
+                flex: 1; background: transparent; border: none; outline: none;
+                color: var(--text); font-size: 1rem; max-height: 150px; resize: none;
+                padding: 12px 0; font-family: inherit; line-height: 1.5;
+            }}
+            .send-btn {{
+                background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px;
+                border-radius: 50%; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center;
+                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 1rem; flex-shrink: 0; margin-bottom: 3px;
+            }}
             .send-btn:active {{ transform: scale(0.85); }}
             .send-btn.active-typing {{ background: var(--accent); color: white; transform: rotate(-10deg) scale(1.05); }}
 
             .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }}
             .overlay.open {{ display: block; animation: fadeIn 0.3s; }}
 
-            pre {{ border-radius: 14px; padding: 40px 15px 15px 15px; background: #0d1117 !important; border: 1px solid rgba(255,255,255,0.08); margin: 15px 0; font-size: 0.85em; overflow-x: auto; max-width: 100%; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }}
-            pre::before {{ content: ''; position: absolute; top: 15px; left: 15px; width: 12px; height: 12px; border-radius: 50%; background: #ff5f56; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f; }}
-            .copy-btn {{ position: absolute; top: 8px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; font-weight: 500; }}
+            /* Code Block Fixes */
+            pre {{ 
+                border-radius: 14px; 
+                padding: 40px 15px 15px 15px;
+                background: #0d1117 !important; 
+                border: 1px solid rgba(255,255,255,0.08); 
+                margin: 15px 0; 
+                font-size: 0.85em; 
+                overflow-x: auto; /* Scroll only inside code */
+                max-width: 100%;
+                position: relative;
+                box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+            }}
+            pre::before {{
+                content: ''; position: absolute; top: 15px; left: 15px; width: 12px; height: 12px; border-radius: 50%;
+                background: #ff5f56; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f;
+            }}
+            .copy-btn {{
+                position: absolute; top: 8px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: none;
+                padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; font-weight: 500;
+            }}
             .copy-btn:hover {{ background: rgba(255,255,255,0.25); transform: translateY(-1px); }}
             
             table {{ border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 0.9em; border-radius: 8px; overflow: hidden; }}
             th, td {{ border: 1px solid var(--border); padding: 12px; text-align: left; }}
             th {{ background: var(--input-bg); font-weight: 600; color: var(--accent); }}
+            
             blockquote {{ border-left: 4px solid var(--accent); margin: 10px 0; padding-left: 15px; color: var(--text-secondary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 12px 15px; border-radius: 0 10px 10px 0; }}
 
+            /* Keyframes */
             @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-8px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.5); }} }}
             @keyframes pulseGlow {{ 0%, 100% {{ box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); transform: scale(1); }} 50% {{ box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); transform: scale(1.05); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
@@ -202,6 +284,7 @@ def home():
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-pen-to-square"></i> New chat
             </button>
+            
             <div style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px; padding-left:5px; text-transform: uppercase; letter-spacing: 1px;">Recent</div>
             <div class="history-list" id="history-list"></div>
             
@@ -210,9 +293,11 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
                 </div>
+
                 <div class="history-item" onclick="toggleAbout()" style="color: var(--text); justify-content: flex-start; margin-top:5px;">
                     <i class="fas fa-info-circle"></i> App Info
                 </div>
+                
                 <div id="about-info" class="about-section">
                     <strong style="color:var(--text); font-size: 1.1rem;">{APP_NAME}</strong><br>
                     <small style="color: var(--text-secondary);">Version {VERSION}</small><br>
@@ -223,6 +308,7 @@ def home():
                     <small style="color:var(--text-secondary);">Developer: {OWNER_NAME}</small><br>
                     <small style="color:var(--text-secondary); font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 5px;">&copy; {datetime.now().year} {OWNER_NAME}. All rights reserved.</small>
                 </div>
+
                 <div class="history-item" onclick="clearHistory()" style="color: #ef4444; justify-content: flex-start; margin-top:5px;">
                     <i class="fas fa-trash-alt"></i> Delete history
                 </div>
@@ -264,10 +350,11 @@ def home():
         </div>
 
         <script>
+            // Enable marked breaks for proper markdown newlines
             marked.use({{ breaks: true, gfm: true }});
-            let chats = JSON.parse(localStorage.getItem('flux_v8_history')) || [];
-            let currentChatId = null;
 
+            let chats = JSON.parse(localStorage.getItem('flux_v6_history')) || [];
+            let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const msgInput = document.getElementById('msg');
@@ -285,8 +372,9 @@ def home():
                 document.getElementById('btn-light').className = mode === 'light' ? 'theme-btn active' : 'theme-btn';
             }}
 
-            function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
-            function toggleSidebar() {{ sidebar.classList.toggle('closed'); document.querySelector('.overlay').classList.toggle('open'); }}
+            function toggleAbout() {{
+                document.getElementById('about-info').classList.toggle('show');
+            }}
 
             function resizeInput(el) {{
                 el.style.height = 'auto';
@@ -296,6 +384,11 @@ def home():
                 }} else {{
                     sendBtn.classList.remove('active-typing');
                 }}
+            }}
+
+            function toggleSidebar() {{
+                sidebar.classList.toggle('closed');
+                document.querySelector('.overlay').classList.toggle('open');
             }}
 
             function startNewChat() {{
@@ -312,7 +405,9 @@ def home():
                 document.querySelector('.overlay').classList.remove('open');
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v8_history', JSON.stringify(chats)); }}
+            function saveData() {{
+                localStorage.setItem('flux_v6_history', JSON.stringify(chats));
+            }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -330,9 +425,14 @@ def home():
                 currentChatId = id;
                 const chat = chats.find(c => c.id === id);
                 if(!chat) return;
+
                 chatBox.innerHTML = '';
                 welcomeScreen.style.display = 'none';
-                chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user'));
+                
+                chat.messages.forEach(msg => {{
+                    appendBubble(msg.text, msg.role === 'user');
+                }});
+                
                 sidebar.classList.add('closed');
                 document.querySelector('.overlay').classList.remove('open');
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
@@ -356,6 +456,7 @@ def home():
 
             function appendBubble(text, isUser) {{
                 welcomeScreen.style.display = 'none';
+                
                 const wrapper = document.createElement('div');
                 wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
                 
@@ -365,6 +466,7 @@ def home():
                 
                 const bubbleContainer = document.createElement('div');
                 bubbleContainer.className = 'bubble-container';
+                
                 const senderName = document.createElement('div');
                 senderName.className = 'sender-name';
                 senderName.innerText = isUser ? 'You' : '{APP_NAME}';
@@ -375,11 +477,15 @@ def home():
                 
                 bubbleContainer.appendChild(senderName);
                 bubbleContainer.appendChild(bubble);
+                
                 wrapper.appendChild(avatar);
                 wrapper.appendChild(bubbleContainer);
                 chatBox.appendChild(wrapper);
                 
-                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); }}
+                if(!isUser) {{
+                    hljs.highlightAll();
+                    addCopyButtons();
+                }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
@@ -392,13 +498,21 @@ def home():
                     <div class="bubble-container">
                         <div class="sender-name">{APP_NAME} is typing...</div>
                         <div class="bubble"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
-                    </div>`;
+                    </div>
+                `;
                 chatBox.appendChild(wrapper);
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
-            function removeTyping() {{ const el = document.getElementById('typing-indicator'); if(el) el.remove(); }}
 
-            function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
+            function removeTyping() {{
+                const el = document.getElementById('typing-indicator');
+                if(el) el.remove();
+            }}
+
+            function sendSuggestion(text) {{
+                msgInput.value = text;
+                sendMessage();
+            }}
 
             async function sendMessage() {{
                 const text = msgInput.value.trim();
@@ -415,9 +529,9 @@ def home():
                 }}
                 saveData();
 
-                appendBubble(text, true);
                 msgInput.value = '';
                 resizeInput(msgInput);
+                appendBubble(text, true);
                 showTyping();
 
                 const context = chat.messages.slice(-15).map(m => ({{ role: m.role, content: m.text }}));
@@ -430,6 +544,7 @@ def home():
                     }});
                     
                     removeTyping();
+
                     if(!res.ok) throw new Error("API Error");
 
                     const reader = res.body.getReader();
@@ -438,14 +553,18 @@ def home():
                     
                     const wrapper = document.createElement('div');
                     wrapper.className = 'message-wrapper bot';
+                    
                     const avatar = document.createElement('div');
                     avatar.className = 'avatar bot-avatar thinking';
                     avatar.innerHTML = '<i class="fas fa-bolt"></i>';
+                    
                     const bubbleContainer = document.createElement('div');
                     bubbleContainer.className = 'bubble-container';
+                    
                     const senderName = document.createElement('div');
                     senderName.className = 'sender-name';
                     senderName.innerText = '{APP_NAME}';
+                    
                     const bubble = document.createElement('div');
                     bubble.className = 'bubble';
                     
@@ -471,13 +590,13 @@ def home():
 
                 }} catch(e) {{
                     removeTyping();
-                    appendBubble(`⚠️ Connection failed. Please check your internet.`, false);
+                    appendBubble("⚠️ Internet connection unstable or API Error.", false);
                 }}
             }}
 
             function clearHistory() {{
                 if(confirm("Clear all conversations permanently?")) {{
-                    localStorage.removeItem('flux_v8_history');
+                    localStorage.removeItem('flux_v6_history');
                     location.reload();
                 }}
             }}
@@ -499,7 +618,7 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE ULTIMATE SUPER BRAIN (TEXT ONLY) 🧠
+    # 🧠 THE ULTIMATE SUPER BRAIN 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
@@ -516,11 +635,12 @@ def chat():
         - Date: {ctx['date']}
         - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
         
-        🧠 BEHAVIORAL MASTERY:
+        🧠 BEHAVIORAL MASTERY (Strict Rules):
         1. NO WALLS OF TEXT: Do NOT write long, horizontal paragraphs. Always use short, readable paragraphs (1-3 sentences max). Break lines logically.
-        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like. If a user asks "How are you?", respond like a joyful friend.
-        3. FLAWLESS FORMATTING: Use Markdown perfectly. Make it visually stunning.
-        4. LANGUAGE: Perfectly mirror the user's language and vibe.
+        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like. If a user asks "How are you?", respond like a joyful friend (e.g., "I'm doing absolutely great! 🌟 Thanks for asking. How is your day going?"). Never sound robotic.
+        3. FLAWLESS FORMATTING: Use Markdown properly. Bullet points, bold texts, and emojis are your best friends. Make it visually stunning.
+        4. INTELLIGENCE: Double-check your logic internally for math or coding. Provide clean, unbreakable code blocks.
+        5. LANGUAGE: Perfectly mirror the user's language and vibe.
         """
     }
 
@@ -540,7 +660,7 @@ def chat():
                     model="llama-3.3-70b-versatile",
                     messages=[sys_prompt] + messages,
                     stream=True,
-                    temperature=0.75,
+                    temperature=0.75, # Slight increase for better conversational tone
                     max_tokens=2048
                 )
                 for chunk in stream:
