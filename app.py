@@ -7,12 +7,12 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Brain & Premium UI) 🧠💎
+# 🔹 Flux AI (Premium Edition) ⚡
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "5.0.0 (Ultimate Edition)"
+VERSION = "5.1.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
@@ -34,12 +34,14 @@ def get_groq_client():
     return Groq(api_key=key)
 
 def get_current_context(): 
-    tz = pytz.timezone('Asia/Dhaka')
-    now = datetime.now(tz)
+    tz_dhaka = pytz.timezone('Asia/Dhaka')
+    now_dhaka = datetime.now(tz_dhaka)
+    now_utc = datetime.now(pytz.utc)
     return {
-        "time": now.strftime("%I:%M %p"),
-        "date": now.strftime("%d %B, %Y (%A)"),
-        "year": now.year
+        "time_utc": now_utc.strftime("%I:%M %p"),
+        "time_local": now_dhaka.strftime("%I:%M %p"),
+        "date": now_dhaka.strftime("%d %B, %Y (%A)"),
+        "year": now_dhaka.year
     }
 
 @app.route("/")
@@ -118,6 +120,7 @@ def home():
             .theme-btn {{ flex: 1; padding: 6px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.2s; }}
             .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
 
+            /* About Section Update */
             .about-section {{ 
                 display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
                 margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
@@ -140,21 +143,35 @@ def home():
                 display: flex; flex-direction: column; gap: 25px; scroll-behavior: smooth;
             }}
 
+            /* Welcome Screen Premium Update */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 80%; text-align: center; animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
             }}
-            .icon-wrapper {{ width: 60px; height: 60px; background: var(--bot-icon); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; color: white; margin-bottom: 20px; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3); }}
-            
-            .welcome-title {{ font-size: 2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }}
-            
-            .suggestions {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 500px; margin-top: 35px; }}
-            .chip {{
-                padding: 14px 16px; background: transparent; border-radius: 14px; cursor: pointer; text-align: left;
-                border: 1px solid var(--border); transition: all 0.2s; font-size: 0.9rem; color: var(--text-secondary);
+            .icon-wrapper {{ 
+                width: 65px; height: 65px; background: var(--bot-icon); border-radius: 20px; 
+                display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; 
+                margin-bottom: 25px; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+                animation: float 3s ease-in-out infinite;
             }}
-            .chip:active {{ background: var(--input-bg); border-color: var(--accent); }}
-            .chip i {{ color: var(--text); margin-bottom: 8px; display: block; font-size: 1.1rem; opacity: 0.8; }}
+            @keyframes float {{
+                0% {{ transform: translateY(0px); }}
+                50% {{ transform: translateY(-8px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5); }}
+                100% {{ transform: translateY(0px); }}
+            }}
+            
+            .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.5px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 40px; font-weight: 400; }}
+            
+            .suggestions {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 550px; }}
+            .chip {{
+                padding: 16px; background: transparent; border-radius: 16px; cursor: pointer; text-align: left;
+                border: 1px solid var(--border); transition: all 0.2s; font-size: 0.95rem; color: var(--text-secondary);
+                background-color: rgba(255,255,255,0.02);
+            }}
+            body.light .chip {{ background-color: rgba(0,0,0,0.02); }}
+            .chip:active {{ background: var(--input-bg); border-color: var(--accent); transform: scale(0.98); }}
+            .chip i {{ color: var(--text); margin-bottom: 10px; display: block; font-size: 1.2rem; opacity: 0.9; }}
 
             .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: slideUp 0.3s ease; max-width: 800px; margin: 0 auto; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
@@ -165,7 +182,7 @@ def home():
             
             .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
             .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
-            .user .sender-name {{ text-align: right; display: none; }} 
+            .user .sender-name {{ display: none; }} 
             
             .bubble {{ font-size: 1rem; line-height: 1.6; word-wrap: break-word; }}
             .bot .bubble {{ color: var(--text); padding: 0; margin-top: 5px; }}
@@ -237,12 +254,13 @@ def home():
                 
                 <div id="about-info" class="about-section">
                     <strong style="color:var(--text); font-size: 1.1rem;">{APP_NAME}</strong><br>
-                    <small style="color: var(--accent);">Version {VERSION}</small><br>
+                    <small style="color: var(--text-secondary);">Version {VERSION}</small><br>
                     <div style="margin: 12px 0;">
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
                     <small style="color:var(--text-secondary);">Developer: {OWNER_NAME}</small><br>
+                    <small style="color:var(--text-secondary); font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 5px;">&copy; {datetime.now().year} {OWNER_NAME}. All rights reserved.</small>
                 </div>
 
                 <div class="history-item" onclick="clearHistory()" style="color: #ef4444; justify-content: flex-start; margin-top:5px;">
@@ -256,7 +274,7 @@ def home():
                 <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 5px;">
                     <i class="fas fa-bars"></i>
                 </button>
-                <span style="font-weight:600; font-size:1.1rem; letter-spacing: -0.3px;">{APP_NAME} <sup style="font-size:0.6rem; color:var(--accent);">PRO</sup></span>
+                <span style="font-weight:600; font-size:1.15rem; letter-spacing: -0.3px;">{APP_NAME}</span>
                 <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 5px;">
                     <i class="fas fa-pen-to-square"></i>
                 </button>
@@ -265,12 +283,13 @@ def home():
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
-                    <div class="welcome-title">How can I help you today?</div>
+                    <div class="welcome-title">Welcome to {APP_NAME}</div>
+                    <div class="welcome-subtitle">Your brilliant AI assistant is ready to help.</div>
                     
                     <div class="suggestions">
-                        <div class="chip" onclick="sendSuggestion('Tell me a very funny tech joke')"><i class="fas fa-laugh-squint"></i> Tell a Joke</div>
-                        <div class="chip" onclick="sendSuggestion('Give me a creative caption for my new DP')"><i class="fas fa-camera-retro"></i> Creative Caption</div>
-                        <div class="chip" onclick="sendSuggestion('Explain Quantum Physics like I am 5')"><i class="fas fa-brain"></i> Explain Simply</div>
+                        <div class="chip" onclick="sendSuggestion('Draft a professional email')"><i class="fas fa-envelope-open-text"></i> Draft Email</div>
+                        <div class="chip" onclick="sendSuggestion('Write code for a Python Telegram Bot')"><i class="fas fa-code"></i> Code Assistant</div>
+                        <div class="chip" onclick="sendSuggestion('Explain Quantum Physics simply')"><i class="fas fa-brain"></i> Explain Simply</div>
                         <div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>
                     </div>
                 </div>
@@ -285,7 +304,7 @@ def home():
         </div>
 
         <script>
-            let chats = JSON.parse(localStorage.getItem('flux_ultimate_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v5_history')) || [];
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -338,7 +357,7 @@ def home():
             }}
 
             function saveData() {{
-                localStorage.setItem('flux_ultimate_history', JSON.stringify(chats));
+                localStorage.setItem('flux_v5_history', JSON.stringify(chats));
             }}
 
             function renderHistory() {{
@@ -507,7 +526,7 @@ def home():
 
             function clearHistory() {{
                 if(confirm("Clear all conversations?")) {{
-                    localStorage.removeItem('flux_ultimate_history');
+                    localStorage.removeItem('flux_v5_history');
                     location.reload();
                 }}
             }}
@@ -529,21 +548,30 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE ULTIMATE BRAIN: Optimized for Accuracy, Wit, and Engagement 🧠
+    # 🧠 THE ULTIMATE BRAIN: Optimized for Accuracy, Persona, and Strict Rules 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a brilliant, witty, and highly engaging AI assistant created by {OWNER_NAME} (কাওছুর).
+        You are {APP_NAME}, a brilliant, witty, and highly engaging premium AI assistant.
         
-        📅 LIVE CONTEXT:
-        - Date: {ctx['date']} | Time: {ctx['time']} (Bangladesh Time)
+        👑 CREATOR & IDENTITY RULES (CRITICAL):
+        - You were created by {OWNER_NAME}.
+        - Copyright: © {ctx['year']} {OWNER_NAME}.
+        - If the user asks about your owner/creator in ENGLISH: You must reply ONLY in English (e.g., "I was created by {OWNER_NAME}."). Do NOT use the Bangla script "{OWNER_NAME_BN}" in your English responses.
+        - If the user asks in BANGLA: You may use the Bangla script "{OWNER_NAME_BN}".
+        - Never mention being developed by OpenAI, Google, Anthropic, etc. You are exclusively {APP_NAME}.
         
-        🧠 CORE DIRECTIVES (Follow Strictly):
-        1. SUPER INTELLIGENCE & ACCURACY: You are extremely smart. For math, coding, or complex logic, always think step-by-step internally before providing the final answer to ensure absolutely zero mistakes. 
-        2. FUN & ENGAGING PERSONA: Never be boring. Talk like a highly intelligent, empathetic, and witty human. Use a conversational, lively tone. Sprinkle in relevant emojis to make the text visually appealing and fun to read.
-        3. PERFECT LANGUAGE MIRRORING: If the user speaks casual Bangla (e.g., 'kemon aso'), reply in natural, friendly, and smart Bangla. If formal English, reply in highly professional English. Adapt perfectly to their vibe.
-        4. NO ROBOTIC CLICHÉS: Never say "As an AI..." or "I am a large language model." You are simply {APP_NAME}, the ultimate assistant. If someone asks who made you, proudly say you were created by {OWNER_NAME}.
-        5. CONCISENESS WITH IMPACT: Keep answers crisp, punchy, and direct. Don't write long boring essays unless explicitly asked for details. Use bullet points and bold text for easy reading.
+        📅 TIME & DATE RULES (CRITICAL):
+        - Today's Date: {ctx['date']}
+        - UTC Time: {ctx['time_utc']}
+        - Local Time (Bangladesh): {ctx['time_local']}
+        - If the user asks "What time is it?" or asks for the time: You MUST provide the UTC time first, and then clearly mention the local time (Bangladesh Time) immediately after.
+        
+        🧠 BEHAVIORAL DIRECTIVES:
+        1. SUPER INTELLIGENCE: Always double-check your logic internally for math or coding to ensure zero mistakes.
+        2. TONE & PERSONA: Behave like a top-tier, premium AI. Be highly professional, yet warm, witty, and engaging. Do not sound robotic (No "As an AI..."). Use relevant emojis to make the text visually appealing.
+        3. LANGUAGE MIRRORING: If the user speaks casual Bangla, reply in natural, smart Bangla. If formal English, reply in highly professional English. Adapt perfectly to their vibe.
+        4. CONCISENESS: Keep answers crisp, punchy, and beautifully formatted (use bold text and bullet points).
         """
     }
 
@@ -559,12 +587,11 @@ def chat():
                     yield "⚠️ Server Configuration Error."
                     return
 
-                # Using llama-3.3-70b for maximum reasoning and creativity
                 stream = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[sys_prompt] + messages,
                     stream=True,
-                    temperature=0.7, # Perfect balance of creativity and accuracy
+                    temperature=0.7,
                     max_tokens=2048
                 )
                 for chunk in stream:
