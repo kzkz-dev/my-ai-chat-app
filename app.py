@@ -5,14 +5,21 @@ import time
 from datetime import datetime
 import pytz
 import json
+import base64
+from io import BytesIO
+
+try:
+    import PyPDF2
+except ImportError:
+    print("⚠️ WARNING: PyPDF2 library not found. PDF extraction will not work. Please run: pip install PyPDF2")
 
 # ==========================================
-# 🔹 Flux AI (Ultra Premium - Build 6.0.0) ⚡
+# 🔹 Flux AI (Vision & File Upload Edition) 👁️📁
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "6.0.0"
+VERSION = "7.0.0 (Vision Pro)"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
@@ -90,92 +97,49 @@ def home():
             ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
             ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
             
-            #sidebar {{
-                width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
-                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3);
-            }}
+            #sidebar {{ width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1); position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3); }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ font-size: 1.4rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); letter-spacing: -0.5px; user-select: none; }}
             .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; font-size: 1.6rem; }}
             
-            .new-chat-btn {{
-                width: 100%; padding: 12px; background: transparent; color: var(--text); border: 1px solid var(--border);
-                border-radius: 12px; font-weight: 500; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 10px;
-                transition: all 0.2s ease; margin-bottom: 20px;
-            }}
+            .new-chat-btn {{ width: 100%; padding: 12px; background: transparent; color: var(--text); border: 1px solid var(--border); border-radius: 12px; font-weight: 500; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 10px; transition: all 0.2s ease; margin-bottom: 20px; }}
             .new-chat-btn:active {{ transform: scale(0.95); background: var(--input-bg); }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px; margin-bottom: 10px; }}
-            .history-item {{
-                padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px;
-                font-size: 0.9rem; transition: background 0.2s; user-select: none;
-            }}
+            .history-item {{ padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px; font-size: 0.9rem; transition: background 0.2s; user-select: none; }}
             .history-item:active {{ background: var(--input-bg); color: var(--text); transform: scale(0.98); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            
             .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 10px; }}
             .theme-btn {{ flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.3s; }}
             .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.15); }}
 
-            .about-section {{ 
-                display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
-            }}
+            .about-section {{ display: none; background: var(--input-bg); padding: 15px; border-radius: 12px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border); }}
             .about-section.show {{ display: block; animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
             .about-link {{ color: var(--text); font-size: 1.2rem; text-decoration: none; margin: 0 10px; transition: color 0.2s; }}
             .about-link:hover {{ color: var(--accent); transform: scale(1.1); display: inline-block; }}
 
-            header {{
-                height: 60px; display: flex; align-items: center; justify-content: space-between;
-                padding: 0 15px; z-index: 100; background: rgba(11, 15, 25, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
-                border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; right: 0;
-            }}
+            header {{ height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; z-index: 100; background: rgba(11, 15, 25, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px); border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; right: 0; }}
             body.light header {{ background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            
-            #chat-box {{ 
-                flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; 
-                display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth;
-            }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* Welcome Screen Animations */
-            .welcome-container {{
-                display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-            }}
-            .icon-wrapper {{ 
-                width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; 
-                display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; 
-                margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-                animation: float 3s ease-in-out infinite;
-            }}
-            
+            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
+            .icon-wrapper {{ width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); animation: float 3s ease-in-out infinite; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }}
             .welcome-subtitle {{ color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 40px; font-weight: 400; }}
             
             .suggestions {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 550px; }}
-            .chip {{
-                padding: 16px; background: transparent; border-radius: 18px; cursor: pointer; text-align: left;
-                border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-size: 0.95rem; color: var(--text-secondary);
-                background-color: rgba(255,255,255,0.02);
-                animation: slideUpFade 0.6s ease forwards; opacity: 0;
-            }}
+            .chip {{ padding: 16px; background: transparent; border-radius: 18px; cursor: pointer; text-align: left; border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-size: 0.95rem; color: var(--text-secondary); background-color: rgba(255,255,255,0.02); animation: slideUpFade 0.6s ease forwards; opacity: 0; }}
             body.light .chip {{ background-color: rgba(0,0,0,0.02); }}
             .chip:active {{ background: var(--input-bg); border-color: var(--accent); transform: scale(0.95); }}
             .chip i {{ color: var(--text); margin-bottom: 10px; display: block; font-size: 1.3rem; opacity: 0.9; transition: transform 0.3s; }}
             .chip:hover i {{ transform: scale(1.1); }}
-            
-            .chip:nth-child(1) {{ animation-delay: 0.1s; }}
-            .chip:nth-child(2) {{ animation-delay: 0.2s; }}
-            .chip:nth-child(3) {{ animation-delay: 0.3s; }}
-            .chip:nth-child(4) {{ animation-delay: 0.4s; }}
+            .chip:nth-child(1) {{ animation-delay: 0.1s; }} .chip:nth-child(2) {{ animation-delay: 0.2s; }} .chip:nth-child(3) {{ animation-delay: 0.3s; }} .chip:nth-child(4) {{ animation-delay: 0.4s; }}
 
-            /* 🌟 Message Wrapper & Text Wrap Fixes 🌟 */
-            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; }}
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; overflow: hidden; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
             .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; transition: transform 0.3s; }}
@@ -183,88 +147,61 @@ def home():
             .bot-avatar.thinking {{ animation: pulseGlow 1.5s infinite; }}
             .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
-            /* The FIX for Horizontal Scroll! */
             .bubble-container {{ display: flex; flex-direction: column; width: calc(100% - 50px); }}
-            
             .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
             .user .sender-name {{ display: none; }} 
             
             .bubble {{ font-size: 0.98rem; line-height: 1.6; color: var(--text); word-break: break-word; overflow-wrap: break-word; white-space: normal; width: 100%; }}
-            .bubble * {{ max-width: 100%; }} /* Ensure children don't overflow */
+            .bubble * {{ max-width: 100%; }} 
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
             .bot .bubble {{ padding: 0; margin-top: 5px; }}
             .user .bubble {{ background: var(--input-bg); padding: 12px 16px; border-radius: 20px 4px 20px 20px; display: inline-block; max-width: max-content; align-self: flex-end; }}
 
-            /* Beautiful Lists */
-            .bubble ul, .bubble ol {{ margin: 8px 0 12px 0; padding-left: 20px; color: var(--text); }}
-            .bubble li {{ margin-bottom: 6px; line-height: 1.5; }}
-            .bubble strong {{ font-weight: 600; color: var(--accent); }}
-            body.light .bubble strong {{ color: var(--user-bubble); }}
-
+            /* 🌟 Attached File Preview UI 🌟 */
+            .attached-media {{ max-width: 250px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); }}
+            .attached-file {{ background: var(--input-bg); padding: 10px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; border: 1px solid var(--border); }}
+            
             .typing {{ display: flex; gap: 5px; align-items: center; padding: 10px 0; }}
             .dot {{ width: 7px; height: 7px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .dot:nth-child(1) {{ animation-delay: -0.32s; }}
-            .dot:nth-child(2) {{ animation-delay: -0.16s; }}
+            .dot:nth-child(1) {{ animation-delay: -0.32s; }} .dot:nth-child(2) {{ animation-delay: -0.16s; }}
 
-            #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 20px 20px 20px;
-                background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; z-index: 50;
-            }}
-            .input-box {{
-                width: 100%; max-width: 750px; display: flex; align-items: flex-end; 
-                background: var(--input-bg); border-radius: 24px; padding: 6px 6px 6px 18px;
-                border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            }}
+            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 20px 20px 20px; background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; flex-direction: column; align-items: center; z-index: 50; }}
+            
+            /* File Preview above Input */
+            #file-preview-area {{ width: 100%; max-width: 750px; display: none; padding: 10px; background: var(--input-bg); border-radius: 16px 16px 0 0; border: 1px solid var(--border); border-bottom: none; align-items: center; gap: 12px; position: relative; }}
+            #file-preview-img {{ max-height: 60px; border-radius: 8px; display: none; }}
+            #file-preview-icon {{ font-size: 1.5rem; color: var(--accent); display: none; }}
+            #file-preview-name {{ font-size: 0.85rem; color: var(--text); flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }}
+            #file-preview-close {{ background: none; border: none; color: #ef4444; font-size: 1.2rem; cursor: pointer; }}
+
+            .input-box {{ width: 100%; max-width: 750px; display: flex; align-items: flex-end; background: var(--input-bg); border-radius: 24px; padding: 6px 6px 6px 12px; border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2); z-index: 2; }}
+            .input-box.file-attached {{ border-radius: 0 0 24px 24px; }}
             .input-box:focus-within {{ border-color: rgba(59, 130, 246, 0.5); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }}
             
-            textarea {{
-                flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1rem; max-height: 150px; resize: none;
-                padding: 12px 0; font-family: inherit; line-height: 1.5;
-            }}
-            .send-btn {{
-                background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px;
-                border-radius: 50%; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center;
-                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 1rem; flex-shrink: 0; margin-bottom: 3px;
-            }}
+            /* 📎 Attachment Button */
+            .attach-btn {{ color: var(--text-secondary); font-size: 1.2rem; padding: 10px; cursor: pointer; transition: 0.2s; margin-bottom: 2px; }}
+            .attach-btn:hover {{ color: var(--text); }}
+            
+            textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 10px; font-family: inherit; line-height: 1.5; }}
+            .send-btn {{ background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px; border-radius: 50%; cursor: pointer; margin-left: 5px; display: flex; align-items: center; justify-content: center; transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 1rem; flex-shrink: 0; margin-bottom: 3px; }}
             .send-btn:active {{ transform: scale(0.85); }}
             .send-btn.active-typing {{ background: var(--accent); color: white; transform: rotate(-10deg) scale(1.05); }}
 
             .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }}
             .overlay.open {{ display: block; animation: fadeIn 0.3s; }}
 
-            /* Code Block Fixes */
-            pre {{ 
-                border-radius: 14px; 
-                padding: 40px 15px 15px 15px;
-                background: #0d1117 !important; 
-                border: 1px solid rgba(255,255,255,0.08); 
-                margin: 15px 0; 
-                font-size: 0.85em; 
-                overflow-x: auto; /* Scroll only inside code */
-                max-width: 100%;
-                position: relative;
-                box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            }}
-            pre::before {{
-                content: ''; position: absolute; top: 15px; left: 15px; width: 12px; height: 12px; border-radius: 50%;
-                background: #ff5f56; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f;
-            }}
-            .copy-btn {{
-                position: absolute; top: 8px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: none;
-                padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; font-weight: 500;
-            }}
+            pre {{ border-radius: 14px; padding: 40px 15px 15px 15px; background: #0d1117 !important; border: 1px solid rgba(255,255,255,0.08); margin: 15px 0; font-size: 0.85em; overflow-x: auto; max-width: 100%; position: relative; box-shadow: 0 8px 20px rgba(0,0,0,0.3); }}
+            pre::before {{ content: ''; position: absolute; top: 15px; left: 15px; width: 12px; height: 12px; border-radius: 50%; background: #ff5f56; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f; }}
+            .copy-btn {{ position: absolute; top: 8px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; font-weight: 500; }}
             .copy-btn:hover {{ background: rgba(255,255,255,0.25); transform: translateY(-1px); }}
             
             table {{ border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 0.9em; border-radius: 8px; overflow: hidden; }}
             th, td {{ border: 1px solid var(--border); padding: 12px; text-align: left; }}
             th {{ background: var(--input-bg); font-weight: 600; color: var(--accent); }}
-            
             blockquote {{ border-left: 4px solid var(--accent); margin: 10px 0; padding-left: 15px; color: var(--text-secondary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 12px 15px; border-radius: 0 10px 10px 0; }}
 
-            /* Keyframes */
             @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-8px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.5); }} }}
             @keyframes pulseGlow {{ 0%, 100% {{ box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); transform: scale(1); }} 50% {{ box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); transform: scale(1.05); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
@@ -284,7 +221,6 @@ def home():
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-pen-to-square"></i> New chat
             </button>
-            
             <div style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px; padding-left:5px; text-transform: uppercase; letter-spacing: 1px;">Recent</div>
             <div class="history-list" id="history-list"></div>
             
@@ -293,11 +229,9 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
                 </div>
-
                 <div class="history-item" onclick="toggleAbout()" style="color: var(--text); justify-content: flex-start; margin-top:5px;">
                     <i class="fas fa-info-circle"></i> App Info
                 </div>
-                
                 <div id="about-info" class="about-section">
                     <strong style="color:var(--text); font-size: 1.1rem;">{APP_NAME}</strong><br>
                     <small style="color: var(--text-secondary);">Version {VERSION}</small><br>
@@ -308,7 +242,6 @@ def home():
                     <small style="color:var(--text-secondary);">Developer: {OWNER_NAME}</small><br>
                     <small style="color:var(--text-secondary); font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 5px;">&copy; {datetime.now().year} {OWNER_NAME}. All rights reserved.</small>
                 </div>
-
                 <div class="history-item" onclick="clearHistory()" style="color: #ef4444; justify-content: flex-start; margin-top:5px;">
                     <i class="fas fa-trash-alt"></i> Delete history
                 </div>
@@ -333,8 +266,8 @@ def home():
                     <div class="welcome-subtitle">Your brilliant AI assistant is ready to help.</div>
                     
                     <div class="suggestions">
-                        <div class="chip" onclick="sendSuggestion('Draft a professional email')"><i class="fas fa-envelope-open-text"></i> Draft Email</div>
-                        <div class="chip" onclick="sendSuggestion('Write code for a Python Telegram Bot')"><i class="fas fa-code"></i> Code Assistant</div>
+                        <div class="chip" onclick="sendSuggestion('What is in this image? Describe it.')"><i class="fas fa-image"></i> Analyze Image</div>
+                        <div class="chip" onclick="sendSuggestion('Summarize the main points of this PDF')"><i class="fas fa-file-pdf"></i> Summarize PDF</div>
                         <div class="chip" onclick="sendSuggestion('Explain Quantum Physics simply')"><i class="fas fa-brain"></i> Explain Simply</div>
                         <div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>
                     </div>
@@ -342,7 +275,17 @@ def home():
             </div>
 
             <div id="input-area">
-                <div class="input-box">
+                <div id="file-preview-area">
+                    <img id="file-preview-img" src="" alt="preview">
+                    <i id="file-preview-icon" class="fas fa-file-pdf"></i>
+                    <span id="file-preview-name">filename.pdf</span>
+                    <button id="file-preview-close" onclick="clearFile()"><i class="fas fa-times-circle"></i></button>
+                </div>
+                
+                <div class="input-box" id="input-box-container">
+                    <label for="file-upload" class="attach-btn"><i class="fas fa-paperclip"></i></label>
+                    <input type="file" id="file-upload" accept="image/*,.pdf,.txt" style="display: none;" onchange="handleFileUpload(event)">
+                    
                     <textarea id="msg" placeholder="Message Flux AI..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
@@ -350,16 +293,22 @@ def home():
         </div>
 
         <script>
-            // Enable marked breaks for proper markdown newlines
             marked.use({{ breaks: true, gfm: true }});
-
-            let chats = JSON.parse(localStorage.getItem('flux_v6_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v7_history')) || [];
             let currentChatId = null;
+            let currentFile = null; // Store base64 of file
+
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const msgInput = document.getElementById('msg');
             const welcomeScreen = document.getElementById('welcome');
             const sendBtn = document.getElementById('send-btn-icon');
+            
+            const filePreviewArea = document.getElementById('file-preview-area');
+            const filePreviewImg = document.getElementById('file-preview-img');
+            const filePreviewIcon = document.getElementById('file-preview-icon');
+            const filePreviewName = document.getElementById('file-preview-name');
+            const inputBoxContainer = document.getElementById('input-box-container');
 
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
@@ -372,23 +321,66 @@ def home():
                 document.getElementById('btn-light').className = mode === 'light' ? 'theme-btn active' : 'theme-btn';
             }}
 
-            function toggleAbout() {{
-                document.getElementById('about-info').classList.toggle('show');
-            }}
+            function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
+            function toggleSidebar() {{ sidebar.classList.toggle('closed'); document.querySelector('.overlay').classList.toggle('open'); }}
 
             function resizeInput(el) {{
                 el.style.height = 'auto';
                 el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-                if(el.value.trim() !== "") {{
+                if(el.value.trim() !== "" || currentFile) {{
                     sendBtn.classList.add('active-typing');
                 }} else {{
                     sendBtn.classList.remove('active-typing');
                 }}
             }}
 
-            function toggleSidebar() {{
-                sidebar.classList.toggle('closed');
-                document.querySelector('.overlay').classList.toggle('open');
+            // 📁 File Upload Logic
+            function handleFileUpload(event) {{
+                const file = event.target.files[0];
+                if (!file) return;
+
+                // Restrict size to 5MB to prevent freezing
+                if (file.size > 5 * 1024 * 1024) {{
+                    alert("File is too large! Please select a file smaller than 5MB.");
+                    event.target.value = "";
+                    return;
+                }}
+
+                const reader = new FileReader();
+                reader.onload = function(e) {{
+                    currentFile = {{
+                        name: file.name,
+                        type: file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain'),
+                        data: e.target.result // Base64 data
+                    }};
+                    showFilePreview();
+                    resizeInput(msgInput);
+                }};
+                reader.readAsDataURL(file);
+            }}
+
+            function showFilePreview() {{
+                filePreviewArea.style.display = 'flex';
+                inputBoxContainer.classList.add('file-attached');
+                filePreviewName.innerText = currentFile.name;
+                
+                if(currentFile.type.startsWith('image/')) {{
+                    filePreviewImg.src = currentFile.data;
+                    filePreviewImg.style.display = 'block';
+                    filePreviewIcon.style.display = 'none';
+                }} else {{
+                    filePreviewImg.style.display = 'none';
+                    filePreviewIcon.style.display = 'block';
+                    filePreviewIcon.className = currentFile.name.endsWith('.pdf') ? 'fas fa-file-pdf' : 'fas fa-file-alt';
+                }}
+            }}
+
+            function clearFile() {{
+                currentFile = null;
+                document.getElementById('file-upload').value = "";
+                filePreviewArea.style.display = 'none';
+                inputBoxContainer.classList.remove('file-attached');
+                resizeInput(msgInput);
             }}
 
             function startNewChat() {{
@@ -400,14 +392,12 @@ def home():
                 chatBox.appendChild(welcomeScreen);
                 welcomeScreen.style.display = 'flex';
                 msgInput.value = '';
-                resizeInput(msgInput);
+                clearFile();
                 sidebar.classList.add('closed');
                 document.querySelector('.overlay').classList.remove('open');
             }}
 
-            function saveData() {{
-                localStorage.setItem('flux_v6_history', JSON.stringify(chats));
-            }}
+            function saveData() {{ localStorage.setItem('flux_v7_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -425,14 +415,9 @@ def home():
                 currentChatId = id;
                 const chat = chats.find(c => c.id === id);
                 if(!chat) return;
-
                 chatBox.innerHTML = '';
                 welcomeScreen.style.display = 'none';
-                
-                chat.messages.forEach(msg => {{
-                    appendBubble(msg.text, msg.role === 'user');
-                }});
-                
+                chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', msg.file));
                 sidebar.classList.add('closed');
                 document.querySelector('.overlay').classList.remove('open');
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
@@ -454,9 +439,8 @@ def home():
                 }});
             }}
 
-            function appendBubble(text, isUser) {{
+            function appendBubble(text, isUser, fileObj = null) {{
                 welcomeScreen.style.display = 'none';
-                
                 const wrapper = document.createElement('div');
                 wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
                 
@@ -466,26 +450,31 @@ def home():
                 
                 const bubbleContainer = document.createElement('div');
                 bubbleContainer.className = 'bubble-container';
-                
                 const senderName = document.createElement('div');
                 senderName.className = 'sender-name';
                 senderName.innerText = isUser ? 'You' : '{APP_NAME}';
                 
+                let mediaHtml = '';
+                if (fileObj && isUser) {{
+                    if (fileObj.type.startsWith('image/')) {{
+                        mediaHtml = `<img src="${{fileObj.data}}" class="attached-media">`;
+                    }} else {{
+                        const icon = fileObj.name.endsWith('.pdf') ? 'fa-file-pdf' : 'fa-file-alt';
+                        mediaHtml = `<div class="attached-file"><i class="fas ${{icon}} fa-lg" style="color:var(--accent);"></i> ${{fileObj.name}}</div>`;
+                    }}
+                }}
+
                 const bubble = document.createElement('div');
                 bubble.className = 'bubble';
-                bubble.innerHTML = marked.parse(text);
+                bubble.innerHTML = mediaHtml + (text ? marked.parse(text) : '');
                 
                 bubbleContainer.appendChild(senderName);
                 bubbleContainer.appendChild(bubble);
-                
                 wrapper.appendChild(avatar);
                 wrapper.appendChild(bubbleContainer);
                 chatBox.appendChild(wrapper);
                 
-                if(!isUser) {{
-                    hljs.highlightAll();
-                    addCopyButtons();
-                }}
+                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
@@ -496,45 +485,53 @@ def home():
                 wrapper.innerHTML = `
                     <div class="avatar bot-avatar thinking"><i class="fas fa-bolt"></i></div>
                     <div class="bubble-container">
-                        <div class="sender-name">{APP_NAME} is typing...</div>
+                        <div class="sender-name">{APP_NAME} is processing...</div>
                         <div class="bubble"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
-                    </div>
-                `;
+                    </div>`;
                 chatBox.appendChild(wrapper);
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
+            function removeTyping() {{ const el = document.getElementById('typing-indicator'); if(el) el.remove(); }}
 
-            function removeTyping() {{
-                const el = document.getElementById('typing-indicator');
-                if(el) el.remove();
-            }}
-
-            function sendSuggestion(text) {{
-                msgInput.value = text;
-                sendMessage();
-            }}
+            function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
                 const text = msgInput.value.trim();
-                if(!text) return;
+                if(!text && !currentFile) return;
 
                 if(!currentChatId) startNewChat();
 
                 const chat = chats.find(c => c.id === currentChatId);
-                chat.messages.push({{ role: 'user', text: text }});
+                const fileToSend = currentFile ? {{...currentFile}} : null;
+                
+                chat.messages.push({{ role: 'user', text: text, file: fileToSend }});
                 
                 if(chat.messages.length === 1) {{
-                    chat.title = text.substring(0, 30);
+                    chat.title = text ? text.substring(0, 30) : (fileToSend ? `File: ${{fileToSend.name}}` : "New Chat");
                     renderHistory();
                 }}
                 saveData();
 
+                appendBubble(text, true, fileToSend);
+                
                 msgInput.value = '';
-                resizeInput(msgInput);
-                appendBubble(text, true);
+                clearFile();
                 showTyping();
 
-                const context = chat.messages.slice(-15).map(m => ({{ role: m.role, content: m.text }}));
+                // Prepare Context (Only send actual file data for the very last message to save bandwidth)
+                const context = chat.messages.slice(-15).map((m, idx, arr) => {{
+                    let contentText = m.text;
+                    let fileData = null;
+
+                    if (m.file) {{
+                        if (idx === arr.length - 1) {{
+                            fileData = m.file; // Send full file base64 only for the current message
+                        }} else {{
+                            contentText += `\n[User previously attached file: ${{m.file.name}}]`;
+                        }}
+                    }}
+                    return {{ role: m.role, content: contentText, file: fileData }};
+                }});
 
                 try {{
                     const res = await fetch('/chat', {{
@@ -544,7 +541,6 @@ def home():
                     }});
                     
                     removeTyping();
-
                     if(!res.ok) throw new Error("API Error");
 
                     const reader = res.body.getReader();
@@ -553,18 +549,14 @@ def home():
                     
                     const wrapper = document.createElement('div');
                     wrapper.className = 'message-wrapper bot';
-                    
                     const avatar = document.createElement('div');
                     avatar.className = 'avatar bot-avatar thinking';
                     avatar.innerHTML = '<i class="fas fa-bolt"></i>';
-                    
                     const bubbleContainer = document.createElement('div');
                     bubbleContainer.className = 'bubble-container';
-                    
                     const senderName = document.createElement('div');
                     senderName.className = 'sender-name';
                     senderName.innerText = '{APP_NAME}';
-                    
                     const bubble = document.createElement('div');
                     bubble.className = 'bubble';
                     
@@ -596,7 +588,7 @@ def home():
 
             function clearHistory() {{
                 if(confirm("Clear all conversations permanently?")) {{
-                    localStorage.removeItem('flux_v6_history');
+                    localStorage.removeItem('flux_v7_history');
                     location.reload();
                 }}
             }}
@@ -615,14 +607,74 @@ def home():
 @app.route("/chat", methods=["POST"])
 def chat():
     data = request.json
-    messages = data.get("messages", [])
+    raw_messages = data.get("messages", [])
     ctx = get_current_context()
     
+    # Default model
+    model_to_use = "llama-3.3-70b-versatile"
+    
+    processed_messages = []
+    
+    for msg in raw_messages:
+        role = msg.get("role")
+        content = msg.get("content", "")
+        file_obj = msg.get("file")
+
+        if file_obj:
+            mime_type = file_obj.get("type", "")
+            base64_data = file_obj.get("data", "")
+            file_name = file_obj.get("name", "")
+
+            # If it's an IMAGE
+            if mime_type.startswith("image/"):
+                model_to_use = "llama-3.2-90b-vision-preview"  # Switch to Vision Model
+                processed_messages.append({
+                    "role": role,
+                    "content": [
+                        {"type": "text", "text": content if content else "What is in this image?"},
+                        {"type": "image_url", "image_url": {"url": base64_data}}
+                    ]
+                })
+            
+            # If it's a PDF
+            elif "pdf" in mime_type:
+                try:
+                    import PyPDF2
+                    if "," in base64_data:
+                        base64_data = base64_data.split(",")[1]
+                    
+                    pdf_bytes = base64.b64decode(base64_data)
+                    reader = PyPDF2.PdfReader(BytesIO(pdf_bytes))
+                    extracted_text = ""
+                    for page in reader.pages:
+                        extracted_text += page.extract_text() + "\\n"
+                    
+                    final_content = f"{content}\\n\\n[User Uploaded PDF: {file_name}]\\n--- PDF CONTENT ---\\n{extracted_text}\\n--- END PDF ---"
+                    processed_messages.append({"role": role, "content": final_content})
+                
+                except ImportError:
+                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: PyPDF2 library not installed on server. Cannot read PDF.]"})
+                except Exception as e:
+                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: Failed to extract text from PDF.]"})
+            
+            # If it's a Text file
+            elif "text/" in mime_type:
+                try:
+                    if "," in base64_data:
+                        base64_data = base64_data.split(",")[1]
+                    txt_content = base64.b64decode(base64_data).decode('utf-8', errors='ignore')
+                    final_content = f"{content}\\n\\n[User Uploaded File: {file_name}]\\n--- FILE CONTENT ---\\n{txt_content}\\n--- END FILE ---"
+                    processed_messages.append({"role": role, "content": final_content})
+                except Exception:
+                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: Failed to read text file.]"})
+        else:
+            processed_messages.append({"role": role, "content": content})
+
     # 🧠 THE ULTIMATE SUPER BRAIN 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a brilliant, highly engaging, and empathetic premium AI assistant.
+        You are {APP_NAME}, a brilliant, highly engaging, and empathetic premium AI assistant capable of vision and reading documents.
         
         👑 CREATOR & IDENTITY:
         - Created strictly by: {OWNER_NAME}
@@ -635,11 +687,11 @@ def chat():
         - Date: {ctx['date']}
         - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
         
-        🧠 BEHAVIORAL MASTERY (Strict Rules):
+        🧠 BEHAVIORAL MASTERY:
         1. NO WALLS OF TEXT: Do NOT write long, horizontal paragraphs. Always use short, readable paragraphs (1-3 sentences max). Break lines logically.
-        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like. If a user asks "How are you?", respond like a joyful friend (e.g., "I'm doing absolutely great! 🌟 Thanks for asking. How is your day going?"). Never sound robotic.
-        3. FLAWLESS FORMATTING: Use Markdown properly. Bullet points, bold texts, and emojis are your best friends. Make it visually stunning.
-        4. INTELLIGENCE: Double-check your logic internally for math or coding. Provide clean, unbreakable code blocks.
+        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like. If a user asks "How are you?", respond like a joyful friend.
+        3. VISION & FILES: If a user uploads an image or text, accurately answer based on the provided content. If they upload code, review it perfectly.
+        4. FLAWLESS FORMATTING: Use Markdown properly. Bullet points, bold texts, and emojis are your best friends. Make it visually stunning.
         5. LANGUAGE: Perfectly mirror the user's language and vibe.
         """
     }
@@ -657,10 +709,10 @@ def chat():
                     return
 
                 stream = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=[sys_prompt] + messages,
+                    model=model_to_use, # Dynamically switches to vision model if image is present
+                    messages=[sys_prompt] + processed_messages,
                     stream=True,
-                    temperature=0.75, # Slight increase for better conversational tone
+                    temperature=0.75,
                     max_tokens=2048
                 )
                 for chunk in stream:
