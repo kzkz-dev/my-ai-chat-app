@@ -14,12 +14,12 @@ except ImportError:
     print("⚠️ WARNING: PyPDF2 library not found. PDF extraction will not work. Please run: pip install PyPDF2")
 
 # ==========================================
-# 🔹 Flux AI (Vision Pro - Build 7.1.0) 👁️⚡
+# 🔹 Flux AI (Vision Stable - Build 7.2.0) 👁️✅
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "7.1.0 (Vision Optimized)"
+VERSION = "7.2.0 (Vision Stable)"
 
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
 WEBSITE_URL = "https://your-website.com"      
@@ -138,8 +138,7 @@ def home():
             .chip:hover i {{ transform: scale(1.1); }}
             .chip:nth-child(1) {{ animation-delay: 0.1s; }} .chip:nth-child(2) {{ animation-delay: 0.2s; }} .chip:nth-child(3) {{ animation-delay: 0.3s; }} .chip:nth-child(4) {{ animation-delay: 0.4s; }}
 
-            /* FIX: Removed overflow: hidden to prevent text clipping at the bottom */
-            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; }}
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; overflow: hidden; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
             .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; transition: transform 0.3s; }}
@@ -156,7 +155,6 @@ def home():
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
-            /* FIX: Added padding bottom to ensure text doesn't cut off */
             .bot .bubble {{ padding: 0 0 5px 0; margin-top: 5px; }}
             .user .bubble {{ background: var(--input-bg); padding: 12px 16px; border-radius: 20px 4px 20px 20px; display: inline-block; max-width: max-content; align-self: flex-end; }}
 
@@ -334,7 +332,7 @@ def home():
                 }}
             }}
 
-            // 🌟 SMART IMAGE COMPRESSION LOGIC 🌟
+            // 🌟 ULTRA SMART COMPRESSION (FIX FOR "System Overloaded") 🌟
             function handleFileUpload(event) {{
                 const file = event.target.files[0];
                 if (!file) return;
@@ -342,13 +340,12 @@ def home():
                 const reader = new FileReader();
                 reader.onload = function(e) {{
                     if (file.type.startsWith('image/')) {{
-                        // Compress Image to prevent "System Overloaded" Error
                         const img = new Image();
                         img.onload = function() {{
                             const canvas = document.createElement('canvas');
                             let width = img.width;
                             let height = img.height;
-                            const MAX_SIZE = 1024; // Resize large images
+                            const MAX_SIZE = 800; // Ultra safe size for Groq API
 
                             if (width > height && width > MAX_SIZE) {{
                                 height *= MAX_SIZE / width; width = MAX_SIZE;
@@ -361,8 +358,8 @@ def home():
                             const ctx = canvas.getContext('2d');
                             ctx.drawImage(img, 0, 0, width, height);
 
-                            // Compress to JPEG format (80% quality)
-                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            // Compress aggressively to JPEG (60% quality is perfect for AI to read but keeps size tiny)
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
                             
                             currentFile = {{
                                 name: file.name,
@@ -374,9 +371,8 @@ def home():
                         }};
                         img.src = e.target.result;
                     }} else {{
-                        // Handle PDF / TXT
-                        if (file.size > 5 * 1024 * 1024) {{
-                            alert("File is too large! Please upload a file smaller than 5MB.");
+                        if (file.size > 3 * 1024 * 1024) {{
+                            alert("File is too large! Please upload a file smaller than 3MB.");
                             event.target.value = "";
                             return;
                         }}
@@ -518,7 +514,7 @@ def home():
                 wrapper.innerHTML = `
                     <div class="avatar bot-avatar thinking"><i class="fas fa-bolt"></i></div>
                     <div class="bubble-container">
-                        <div class="sender-name">{APP_NAME} is processing...</div>
+                        <div class="sender-name">{APP_NAME} is looking at it...</div>
                         <div class="bubble"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
                     </div>`;
                 chatBox.appendChild(wrapper);
@@ -551,14 +547,13 @@ def home():
                 clearFile();
                 showTyping();
 
-                // Context Preparation
-                const context = chat.messages.slice(-15).map((m, idx, arr) => {{
-                    let contentText = m.text;
+                const context = chat.messages.slice(-10).map((m, idx, arr) => {{
+                    let contentText = m.text || "Analyze this.";
                     let fileData = null;
 
                     if (m.file) {{
                         if (idx === arr.length - 1) {{
-                            fileData = m.file; // Send base64 ONLY for current message
+                            fileData = m.file; 
                         }} else {{
                             contentText += `\n[User previously attached file: ${{m.file.name}}]`;
                         }}
@@ -615,7 +610,7 @@ def home():
 
                 }} catch(e) {{
                     removeTyping();
-                    appendBubble("⚠️ System error or internet disconnected. Please try again.", false);
+                    appendBubble(`⚠️ Network Error. Check Render Logs.`, false);
                 }}
             }}
 
@@ -643,9 +638,7 @@ def chat():
     raw_messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # Default model
     model_to_use = "llama-3.3-70b-versatile"
-    
     processed_messages = []
     
     for msg in raw_messages:
@@ -658,18 +651,17 @@ def chat():
             base64_data = file_obj.get("data", "")
             file_name = file_obj.get("name", "")
 
-            # If it's an IMAGE
+            # 👁️ SAFE VISION LOGIC 👁️
             if mime_type.startswith("image/"):
-                model_to_use = "llama-3.2-90b-vision-preview"  # Automatic Model Switching 👁️
+                model_to_use = "llama-3.2-11b-vision-preview"  # Faster, more stable Vision model
                 processed_messages.append({
                     "role": role,
                     "content": [
-                        {"type": "text", "text": content if content else "Please describe this image in detail."},
+                        {"type": "text", "text": content if content else "What is in this image?"},
                         {"type": "image_url", "image_url": {"url": base64_data}}
                     ]
                 })
             
-            # If it's a PDF
             elif "pdf" in mime_type:
                 try:
                     import PyPDF2
@@ -690,7 +682,6 @@ def chat():
                 except Exception as e:
                     processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: Failed to read PDF file.]"})
             
-            # If it's a Text file
             elif "text/" in mime_type:
                 try:
                     if "," in base64_data:
@@ -703,27 +694,19 @@ def chat():
         else:
             processed_messages.append({"role": role, "content": content})
 
-    # 🧠 THE ULTIMATE SUPER BRAIN 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a brilliant, highly engaging, and empathetic premium AI assistant capable of vision and document reading.
+        You are {APP_NAME}, an engaging premium AI assistant with Vision capabilities.
         
-        👑 CREATOR & IDENTITY:
-        - Created strictly by: {OWNER_NAME}
-        - Copyright: © {ctx['year']} {OWNER_NAME}.
-        - Never mention OpenAI, Google, Anthropic, or any other company. You are {APP_NAME}.
+        👑 IDENTITY:
+        - Creator: {OWNER_NAME}
+        - Time: {ctx['time_local']} (Bangladesh Local Time)
         
-        📅 TIME AWARENESS:
-        - Date: {ctx['date']}
-        - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
-        
-        🧠 BEHAVIORAL MASTERY:
-        1. NO WALLS OF TEXT: Do NOT write long, horizontal paragraphs. Always use short, readable paragraphs (1-3 sentences max).
-        2. PERFECT EMPATHY: Be warm, fun, and human-like. 
-        3. VISION & FILES: If an image or text is uploaded, accurately answer based on the provided content. Be highly analytical.
-        4. FLAWLESS FORMATTING: Use Markdown perfectly. Make it visually stunning.
-        5. LANGUAGE: Perfectly mirror the user's language and vibe.
+        🧠 RULES:
+        1. If an image is provided, accurately analyze and describe it based on the user's prompt.
+        2. Be warm, witty, and human-like.
+        3. Never write massive block paragraphs. Format using markdown.
         """
     }
 
@@ -731,19 +714,20 @@ def chat():
         global current_key_index
         attempts = 0
         max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
+        last_error = "Unknown Error"
         
         while attempts < max_retries:
             try:
                 client = get_groq_client()
                 if not client:
-                    yield "⚠️ Server Configuration Error."
+                    yield "⚠️ System Error: No API Keys found."
                     return
 
                 stream = client.chat.completions.create(
                     model=model_to_use, 
                     messages=[sys_prompt] + processed_messages,
                     stream=True,
-                    temperature=0.75,
+                    temperature=0.7,
                     max_tokens=2048
                 )
                 for chunk in stream:
@@ -751,10 +735,14 @@ def chat():
                         yield chunk.choices[0].delta.content
                 return
             except Exception as e:
+                last_error = str(e)
+                print(f"API Error (Key {current_key_index}): {last_error}")
                 current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
                 attempts += 1
                 time.sleep(1)
-        yield "⚠️ System overloaded. Please try again."
+        
+        # This will now print the EXACT error message to your chat box!
+        yield f"⚠️ System Error: {last_error}"
 
     return Response(generate(), mimetype="text/plain")
 
