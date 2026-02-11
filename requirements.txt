@@ -2,3 +2,4 @@ flask
 groq
 pytz
 gunicorn
+PyPDF2
