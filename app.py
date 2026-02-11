@@ -14,14 +14,13 @@ except ImportError:
     print("⚠️ WARNING: PyPDF2 library not found. PDF extraction will not work. Please run: pip install PyPDF2")
 
 # ==========================================
-# 🔹 Flux AI (Vision & File Upload Edition) 👁️📁
+# 🔹 Flux AI (Vision Pro - Build 7.1.0) 👁️⚡
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "7.0.0 (Vision Pro)"
+VERSION = "7.1.0 (Vision Optimized)"
 
-# ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
 WEBSITE_URL = "https://your-website.com"      
 
@@ -139,7 +138,8 @@ def home():
             .chip:hover i {{ transform: scale(1.1); }}
             .chip:nth-child(1) {{ animation-delay: 0.1s; }} .chip:nth-child(2) {{ animation-delay: 0.2s; }} .chip:nth-child(3) {{ animation-delay: 0.3s; }} .chip:nth-child(4) {{ animation-delay: 0.4s; }}
 
-            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; overflow: hidden; }}
+            /* FIX: Removed overflow: hidden to prevent text clipping at the bottom */
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
             .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; transition: transform 0.3s; }}
@@ -156,11 +156,12 @@ def home():
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
-            .bot .bubble {{ padding: 0; margin-top: 5px; }}
+            /* FIX: Added padding bottom to ensure text doesn't cut off */
+            .bot .bubble {{ padding: 0 0 5px 0; margin-top: 5px; }}
             .user .bubble {{ background: var(--input-bg); padding: 12px 16px; border-radius: 20px 4px 20px 20px; display: inline-block; max-width: max-content; align-self: flex-end; }}
 
             /* 🌟 Attached File Preview UI 🌟 */
-            .attached-media {{ max-width: 250px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); }}
+            .attached-media {{ max-width: 250px; border-radius: 12px; margin-bottom: 8px; border: 1px solid var(--border); object-fit: contain; }}
             .attached-file {{ background: var(--input-bg); padding: 10px 15px; border-radius: 10px; display: flex; align-items: center; gap: 10px; margin-bottom: 8px; font-size: 0.85rem; border: 1px solid var(--border); }}
             
             .typing {{ display: flex; gap: 5px; align-items: center; padding: 10px 0; }}
@@ -180,7 +181,6 @@ def home():
             .input-box.file-attached {{ border-radius: 0 0 24px 24px; }}
             .input-box:focus-within {{ border-color: rgba(59, 130, 246, 0.5); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }}
             
-            /* 📎 Attachment Button */
             .attach-btn {{ color: var(--text-secondary); font-size: 1.2rem; padding: 10px; cursor: pointer; transition: 0.2s; margin-bottom: 2px; }}
             .attach-btn:hover {{ color: var(--text); }}
             
@@ -296,7 +296,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             let chats = JSON.parse(localStorage.getItem('flux_v7_history')) || [];
             let currentChatId = null;
-            let currentFile = null; // Store base64 of file
+            let currentFile = null; 
 
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -334,27 +334,60 @@ def home():
                 }}
             }}
 
-            // 📁 File Upload Logic
+            // 🌟 SMART IMAGE COMPRESSION LOGIC 🌟
             function handleFileUpload(event) {{
                 const file = event.target.files[0];
                 if (!file) return;
 
-                // Restrict size to 5MB to prevent freezing
-                if (file.size > 5 * 1024 * 1024) {{
-                    alert("File is too large! Please select a file smaller than 5MB.");
-                    event.target.value = "";
-                    return;
-                }}
-
                 const reader = new FileReader();
                 reader.onload = function(e) {{
-                    currentFile = {{
-                        name: file.name,
-                        type: file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain'),
-                        data: e.target.result // Base64 data
-                    }};
-                    showFilePreview();
-                    resizeInput(msgInput);
+                    if (file.type.startsWith('image/')) {{
+                        // Compress Image to prevent "System Overloaded" Error
+                        const img = new Image();
+                        img.onload = function() {{
+                            const canvas = document.createElement('canvas');
+                            let width = img.width;
+                            let height = img.height;
+                            const MAX_SIZE = 1024; // Resize large images
+
+                            if (width > height && width > MAX_SIZE) {{
+                                height *= MAX_SIZE / width; width = MAX_SIZE;
+                            }} else if (height > MAX_SIZE) {{
+                                width *= MAX_SIZE / height; height = MAX_SIZE;
+                            }}
+
+                            canvas.width = width;
+                            canvas.height = height;
+                            const ctx = canvas.getContext('2d');
+                            ctx.drawImage(img, 0, 0, width, height);
+
+                            // Compress to JPEG format (80% quality)
+                            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+                            
+                            currentFile = {{
+                                name: file.name,
+                                type: 'image/jpeg',
+                                data: dataUrl 
+                            }};
+                            showFilePreview();
+                            resizeInput(msgInput);
+                        }};
+                        img.src = e.target.result;
+                    }} else {{
+                        // Handle PDF / TXT
+                        if (file.size > 5 * 1024 * 1024) {{
+                            alert("File is too large! Please upload a file smaller than 5MB.");
+                            event.target.value = "";
+                            return;
+                        }}
+                        currentFile = {{
+                            name: file.name,
+                            type: file.type || (file.name.endsWith('.pdf') ? 'application/pdf' : 'text/plain'),
+                            data: e.target.result
+                        }};
+                        showFilePreview();
+                        resizeInput(msgInput);
+                    }}
                 }};
                 reader.readAsDataURL(file);
             }}
@@ -518,14 +551,14 @@ def home():
                 clearFile();
                 showTyping();
 
-                // Prepare Context (Only send actual file data for the very last message to save bandwidth)
+                // Context Preparation
                 const context = chat.messages.slice(-15).map((m, idx, arr) => {{
                     let contentText = m.text;
                     let fileData = null;
 
                     if (m.file) {{
                         if (idx === arr.length - 1) {{
-                            fileData = m.file; // Send full file base64 only for the current message
+                            fileData = m.file; // Send base64 ONLY for current message
                         }} else {{
                             contentText += `\n[User previously attached file: ${{m.file.name}}]`;
                         }}
@@ -582,7 +615,7 @@ def home():
 
                 }} catch(e) {{
                     removeTyping();
-                    appendBubble("⚠️ Internet connection unstable or API Error.", false);
+                    appendBubble("⚠️ System error or internet disconnected. Please try again.", false);
                 }}
             }}
 
@@ -627,11 +660,11 @@ def chat():
 
             # If it's an IMAGE
             if mime_type.startswith("image/"):
-                model_to_use = "llama-3.2-90b-vision-preview"  # Switch to Vision Model
+                model_to_use = "llama-3.2-90b-vision-preview"  # Automatic Model Switching 👁️
                 processed_messages.append({
                     "role": role,
                     "content": [
-                        {"type": "text", "text": content if content else "What is in this image?"},
+                        {"type": "text", "text": content if content else "Please describe this image in detail."},
                         {"type": "image_url", "image_url": {"url": base64_data}}
                     ]
                 })
@@ -653,9 +686,9 @@ def chat():
                     processed_messages.append({"role": role, "content": final_content})
                 
                 except ImportError:
-                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: PyPDF2 library not installed on server. Cannot read PDF.]"})
+                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: PyPDF2 library not installed.]"})
                 except Exception as e:
-                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: Failed to extract text from PDF.]"})
+                    processed_messages.append({"role": role, "content": f"{content}\\n\\n[System Error: Failed to read PDF file.]"})
             
             # If it's a Text file
             elif "text/" in mime_type:
@@ -674,24 +707,22 @@ def chat():
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a brilliant, highly engaging, and empathetic premium AI assistant capable of vision and reading documents.
+        You are {APP_NAME}, a brilliant, highly engaging, and empathetic premium AI assistant capable of vision and document reading.
         
         👑 CREATOR & IDENTITY:
         - Created strictly by: {OWNER_NAME}
         - Copyright: © {ctx['year']} {OWNER_NAME}.
         - Never mention OpenAI, Google, Anthropic, or any other company. You are {APP_NAME}.
-        - English queries about creator: Reply using "{OWNER_NAME}".
-        - Bangla queries about creator: You may use "{OWNER_NAME_BN}".
         
         📅 TIME AWARENESS:
         - Date: {ctx['date']}
         - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
         
         🧠 BEHAVIORAL MASTERY:
-        1. NO WALLS OF TEXT: Do NOT write long, horizontal paragraphs. Always use short, readable paragraphs (1-3 sentences max). Break lines logically.
-        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like. If a user asks "How are you?", respond like a joyful friend.
-        3. VISION & FILES: If a user uploads an image or text, accurately answer based on the provided content. If they upload code, review it perfectly.
-        4. FLAWLESS FORMATTING: Use Markdown properly. Bullet points, bold texts, and emojis are your best friends. Make it visually stunning.
+        1. NO WALLS OF TEXT: Do NOT write long, horizontal paragraphs. Always use short, readable paragraphs (1-3 sentences max).
+        2. PERFECT EMPATHY: Be warm, fun, and human-like. 
+        3. VISION & FILES: If an image or text is uploaded, accurately answer based on the provided content. Be highly analytical.
+        4. FLAWLESS FORMATTING: Use Markdown perfectly. Make it visually stunning.
         5. LANGUAGE: Perfectly mirror the user's language and vibe.
         """
     }
@@ -709,7 +740,7 @@ def chat():
                     return
 
                 stream = client.chat.completions.create(
-                    model=model_to_use, # Dynamically switches to vision model if image is present
+                    model=model_to_use, 
                     messages=[sys_prompt] + processed_messages,
                     stream=True,
                     temperature=0.75,
