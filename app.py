@@ -7,12 +7,12 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Premium Edition) ⚡
+# 🔹 Flux AI (Premium Edition - Build 5.2.0) ⚡
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "5.1.0"
+VERSION = "5.2.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
@@ -87,7 +87,7 @@ def home():
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
             body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
 
-            ::-webkit-scrollbar {{ width: 5px; }}
+            ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
             ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
             
             #sidebar {{
@@ -120,7 +120,6 @@ def home():
             .theme-btn {{ flex: 1; padding: 6px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.2s; }}
             .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }}
 
-            /* About Section Update */
             .about-section {{ 
                 display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
                 margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
@@ -143,21 +142,15 @@ def home():
                 display: flex; flex-direction: column; gap: 25px; scroll-behavior: smooth;
             }}
 
-            /* Welcome Screen Premium Update */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 80%; text-align: center; animation: fadeIn 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+                height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             }}
             .icon-wrapper {{ 
                 width: 65px; height: 65px; background: var(--bot-icon); border-radius: 20px; 
                 display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; 
                 margin-bottom: 25px; box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
                 animation: float 3s ease-in-out infinite;
-            }}
-            @keyframes float {{
-                0% {{ transform: translateY(0px); }}
-                50% {{ transform: translateY(-8px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5); }}
-                100% {{ transform: translateY(0px); }}
             }}
             
             .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 10px; letter-spacing: -0.5px; }}
@@ -168,34 +161,41 @@ def home():
                 padding: 16px; background: transparent; border-radius: 16px; cursor: pointer; text-align: left;
                 border: 1px solid var(--border); transition: all 0.2s; font-size: 0.95rem; color: var(--text-secondary);
                 background-color: rgba(255,255,255,0.02);
+                animation: slideUpFade 0.6s ease forwards; opacity: 0;
             }}
             body.light .chip {{ background-color: rgba(0,0,0,0.02); }}
-            .chip:active {{ background: var(--input-bg); border-color: var(--accent); transform: scale(0.98); }}
+            .chip:active {{ background: var(--input-bg); border-color: var(--accent); transform: scale(0.96); }}
             .chip i {{ color: var(--text); margin-bottom: 10px; display: block; font-size: 1.2rem; opacity: 0.9; }}
+            
+            .chip:nth-child(1) {{ animation-delay: 0.1s; }}
+            .chip:nth-child(2) {{ animation-delay: 0.2s; }}
+            .chip:nth-child(3) {{ animation-delay: 0.3s; }}
+            .chip:nth-child(4) {{ animation-delay: 0.4s; }}
 
-            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: slideUp 0.3s ease; max-width: 800px; margin: 0 auto; }}
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: slideUp 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); max-width: 800px; margin: 0 auto; overflow: hidden; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
             .avatar {{ width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; }}
             .bot-avatar {{ background: var(--bot-icon); color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }}
             .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
-            .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
+            /* CSS Fix for Overflow */
+            .bubble-container {{ display: flex; flex-direction: column; max-width: calc(100% - 50px); overflow-x: auto; }}
             .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
             .user .sender-name {{ display: none; }} 
             
-            .bubble {{ font-size: 1rem; line-height: 1.6; word-wrap: break-word; }}
+            .bubble {{ font-size: 1rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: anywhere; max-width: 100%; }}
             .bot .bubble {{ color: var(--text); padding: 0; margin-top: 5px; }}
-            .user .bubble {{ background: var(--input-bg); color: var(--text); padding: 12px 16px; border-radius: 18px 4px 18px 18px; }}
+            .user .bubble {{ background: var(--input-bg); color: var(--text); padding: 12px 16px; border-radius: 18px 4px 18px 18px; display: inline-block; }}
 
             .typing {{ display: flex; gap: 5px; align-items: center; padding: 10px 0; }}
-            .dot {{ width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%; animation: pulse 1.4s infinite; }}
+            .dot {{ width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%; animation: pulse 1.2s infinite; }}
             .dot:nth-child(2) {{ animation-delay: 0.2s; }}
             .dot:nth-child(3) {{ animation-delay: 0.4s; }}
 
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 20px 20px 20px;
-                background: linear-gradient(to top, var(--bg) 70%, transparent); display: flex; justify-content: center; z-index: 50;
+                background: linear-gradient(to top, var(--bg) 75%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 750px; display: flex; align-items: flex-end; 
@@ -220,13 +220,55 @@ def home():
             .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }}
             .overlay.open {{ display: block; animation: fadeIn 0.2s; }}
 
-            pre {{ border-radius: 12px; padding: 15px; background: #161b22 !important; border: 1px solid rgba(255,255,255,0.1); margin: 12px 0; font-size: 0.9em; overflow-x: auto; }}
+            /* =========================================
+               Advanced Markdown & Code Block Styling 
+               ========================================= */
+            pre {{ 
+                border-radius: 12px; 
+                padding: 40px 15px 15px 15px; /* Extra padding on top for mac dots */
+                background: #0d1117 !important; 
+                border: 1px solid rgba(255,255,255,0.1); 
+                margin: 15px 0; 
+                font-size: 0.85em; 
+                overflow-x: auto; 
+                max-width: 100%;
+                position: relative;
+                box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            }}
+            /* macOS style dots */
+            pre::before {{
+                content: '';
+                position: absolute; top: 14px; left: 15px;
+                width: 11px; height: 11px; border-radius: 50%;
+                background: #ff5f56;
+                box-shadow: 18px 0 0 #ffbd2e, 36px 0 0 #27c93f;
+            }}
+            .copy-btn {{
+                position: absolute; top: 8px; right: 10px;
+                background: rgba(255,255,255,0.1); color: #fff; border: none;
+                padding: 5px 10px; border-radius: 6px; font-size: 0.75rem;
+                cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif;
+            }}
+            .copy-btn:hover {{ background: rgba(255,255,255,0.2); }}
+            
             p {{ margin-top: 0; margin-bottom: 12px; }}
             p:last-child {{ margin-bottom: 0; }}
+            
+            /* Tables */
+            table {{ border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 0.9em; }}
+            th, td {{ border: 1px solid var(--border); padding: 10px 12px; text-align: left; }}
+            th {{ background: rgba(255,255,255,0.05); font-weight: 600; color: var(--accent); }}
+            
+            /* Blockquotes */
+            blockquote {{ border-left: 4px solid var(--accent); margin: 10px 0; padding-left: 15px; color: var(--text-secondary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 10px 15px; border-radius: 0 8px 8px 0; }}
 
+            /* Animations */
+            @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-8px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5); }} }}
             @keyframes pulse {{ 0%, 100% {{ transform: scale(0.8); opacity: 0.5; }} 50% {{ transform: scale(1.2); opacity: 1; }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
-            @keyframes slideUp {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes popIn {{ 0% {{ opacity: 0; transform: scale(0.95); }} 100% {{ opacity: 1; transform: scale(1); }} }}
+            @keyframes slideUp {{ 0% {{ opacity: 0; transform: translateY(20px) scale(0.98); }} 100% {{ opacity: 1; transform: translateY(0) scale(1); }} }}
+            @keyframes slideUpFade {{ 0% {{ opacity: 0; transform: translateY(15px); }} 100% {{ opacity: 1; transform: translateY(0); }} }}
         </style>
     </head>
     <body class="dark">
@@ -389,6 +431,23 @@ def home():
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
+            // Add sleek copy buttons to pre blocks
+            function addCopyButtons() {{
+                document.querySelectorAll('pre').forEach(pre => {{
+                    if(pre.querySelector('.copy-btn')) return; // Already added
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.innerHTML = '<i class="far fa-copy"></i> Copy';
+                    btn.onclick = () => {{
+                        const code = pre.querySelector('code').innerText;
+                        navigator.clipboard.writeText(code);
+                        btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                        setTimeout(() => btn.innerHTML = '<i class="far fa-copy"></i> Copy', 2000);
+                    }};
+                    pre.appendChild(btn);
+                }});
+            }}
+
             function appendBubble(text, isUser) {{
                 welcomeScreen.style.display = 'none';
                 
@@ -417,7 +476,10 @@ def home():
                 wrapper.appendChild(bubbleContainer);
                 chatBox.appendChild(wrapper);
                 
-                if(!isUser) hljs.highlightAll();
+                if(!isUser) {{
+                    hljs.highlightAll();
+                    addCopyButtons();
+                }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
@@ -517,6 +579,7 @@ def home():
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData();
                     hljs.highlightAll();
+                    addCopyButtons();
 
                 }} catch(e) {{
                     removeTyping();
@@ -548,7 +611,7 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE ULTIMATE BRAIN: Optimized for Accuracy, Persona, and Strict Rules 🧠
+    # 🧠 THE ULTIMATE BRAIN: Strict Markdown & No Mistakes 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
@@ -571,7 +634,7 @@ def chat():
         1. SUPER INTELLIGENCE: Always double-check your logic internally for math or coding to ensure zero mistakes.
         2. TONE & PERSONA: Behave like a top-tier, premium AI. Be highly professional, yet warm, witty, and engaging. Do not sound robotic (No "As an AI..."). Use relevant emojis to make the text visually appealing.
         3. LANGUAGE MIRRORING: If the user speaks casual Bangla, reply in natural, smart Bangla. If formal English, reply in highly professional English. Adapt perfectly to their vibe.
-        4. CONCISENESS: Keep answers crisp, punchy, and beautifully formatted (use bold text and bullet points).
+        4. FLAWLESS FORMATTING: ALWAYS use proper Markdown formatting. For code, use ` ``` ` code blocks. Ensure code blocks never have broken syntax. Use bold text and bullet points for readability.
         """
     }
 
