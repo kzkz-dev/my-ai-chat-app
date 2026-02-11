@@ -7,12 +7,12 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Premium Edition - Build 5.2.0) ⚡
+# 🔹 Flux AI (Premium Edition - Build 5.3.0) ⚡
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "5.2.0"
+VERSION = "5.3.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "https://www.facebook.com/your.profile" 
@@ -55,7 +55,7 @@ def home():
         <title>{APP_NAME}</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
@@ -85,7 +85,8 @@ def home():
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
+            /* 🌟 Applied Noto Sans Bengali globally for smooth mixed-language text 🌟 */
+            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
 
             ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
             ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
@@ -179,14 +180,22 @@ def home():
             .bot-avatar {{ background: var(--bot-icon); color: white; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2); }}
             .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
-            /* CSS Fix for Overflow */
             .bubble-container {{ display: flex; flex-direction: column; max-width: calc(100% - 50px); overflow-x: auto; }}
             .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
             .user .sender-name {{ display: none; }} 
             
-            .bubble {{ font-size: 1rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: anywhere; max-width: 100%; }}
+            /* 🌟 Typography & Formatting Fixes 🌟 */
+            .bubble {{ font-size: 0.98rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }}
             .bot .bubble {{ color: var(--text); padding: 0; margin-top: 5px; }}
             .user .bubble {{ background: var(--input-bg); color: var(--text); padding: 12px 16px; border-radius: 18px 4px 18px 18px; display: inline-block; }}
+
+            /* 🌟 Beautiful List / Bullet Point Styling 🌟 */
+            .bubble ul, .bubble ol {{ margin: 8px 0 12px 0; padding-left: 22px; color: var(--text); }}
+            .bubble li {{ margin-bottom: 8px; line-height: 1.5; }}
+            .bubble li:last-child {{ margin-bottom: 0; }}
+            
+            .bubble strong {{ font-weight: 600; color: var(--accent); }}
+            body.light .bubble strong {{ color: var(--user-bubble); }}
 
             .typing {{ display: flex; gap: 5px; align-items: center; padding: 10px 0; }}
             .dot {{ width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%; animation: pulse 1.2s infinite; }}
@@ -220,12 +229,9 @@ def home():
             .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); }}
             .overlay.open {{ display: block; animation: fadeIn 0.2s; }}
 
-            /* =========================================
-               Advanced Markdown & Code Block Styling 
-               ========================================= */
             pre {{ 
                 border-radius: 12px; 
-                padding: 40px 15px 15px 15px; /* Extra padding on top for mac dots */
+                padding: 40px 15px 15px 15px;
                 background: #0d1117 !important; 
                 border: 1px solid rgba(255,255,255,0.1); 
                 margin: 15px 0; 
@@ -235,7 +241,6 @@ def home():
                 position: relative;
                 box-shadow: 0 4px 15px rgba(0,0,0,0.2);
             }}
-            /* macOS style dots */
             pre::before {{
                 content: '';
                 position: absolute; top: 14px; left: 15px;
@@ -254,15 +259,12 @@ def home():
             p {{ margin-top: 0; margin-bottom: 12px; }}
             p:last-child {{ margin-bottom: 0; }}
             
-            /* Tables */
             table {{ border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 0.9em; }}
             th, td {{ border: 1px solid var(--border); padding: 10px 12px; text-align: left; }}
             th {{ background: rgba(255,255,255,0.05); font-weight: 600; color: var(--accent); }}
             
-            /* Blockquotes */
             blockquote {{ border-left: 4px solid var(--accent); margin: 10px 0; padding-left: 15px; color: var(--text-secondary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 10px 15px; border-radius: 0 8px 8px 0; }}
 
-            /* Animations */
             @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-8px); box-shadow: 0 10px 25px rgba(59, 130, 246, 0.5); }} }}
             @keyframes pulse {{ 0%, 100% {{ transform: scale(0.8); opacity: 0.5; }} 50% {{ transform: scale(1.2); opacity: 1; }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
@@ -431,10 +433,9 @@ def home():
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
-            // Add sleek copy buttons to pre blocks
             function addCopyButtons() {{
                 document.querySelectorAll('pre').forEach(pre => {{
-                    if(pre.querySelector('.copy-btn')) return; // Already added
+                    if(pre.querySelector('.copy-btn')) return;
                     const btn = document.createElement('button');
                     btn.className = 'copy-btn';
                     btn.innerHTML = '<i class="far fa-copy"></i> Copy';
@@ -611,7 +612,7 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE ULTIMATE BRAIN: Strict Markdown & No Mistakes 🧠
+    # 🧠 THE ULTIMATE BRAIN 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
