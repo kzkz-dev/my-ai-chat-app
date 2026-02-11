@@ -15,8 +15,8 @@ OWNER_NAME_BN = "কাওছুর"
 VERSION = "6.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
-FACEBOOK_URL = "https://www.facebook.com/your.profile" 
-WEBSITE_URL = "https://your-website.com"      
+FACEBOOK_URL = "Not available right now" 
+WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
