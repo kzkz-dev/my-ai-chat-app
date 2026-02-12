@@ -8,18 +8,19 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Final Stable - Build 18.1.0) 🛡️
+# 🔹 Flux AI (Ultimate Fix - Build 18.2.0) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "18.1.0"
-ADMIN_PASSWORD = "7rx9x2c0"  # ⚠️CHANGE THIS PASSWORD⚠️
+OWNER_NAME_BN = "কাওছুর"
+VERSION = "18.2.0"
+ADMIN_PASSWORD = "7rx9x2c0" 
 
-# ⚠️ MISSING LINKS RESTORED HERE ⚠️
-FACEBOOK_URL = "Not available right now" 
+# ⚠️ Links Restored
+FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
-# Global Stats variables
+# Stats
 SERVER_START_TIME = time.time()
 TOTAL_MESSAGES = 0
 SYSTEM_ACTIVE = True 
@@ -72,6 +73,9 @@ SUGGESTION_POOL = [
 @app.route("/")
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
+    
+    # ⚠️ NOTE: Double curly braces {{ }} are used for CSS/JS to avoid Python f-string errors.
+    # Single curly braces { } are used for Python variables.
     
     return f"""
     <!DOCTYPE html>
@@ -390,6 +394,7 @@ def home():
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
+            const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
             const accentColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
@@ -588,6 +593,7 @@ def home():
                 }}
             }}
 
+            // ADMIN & MODAL LOGIC
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
@@ -683,7 +689,7 @@ def chat():
         
         IDENTITY:
         - Name: {APP_NAME}
-        - Developer: {OWNER_NAME}
+        - Developer: {OWNER_NAME} (Bangla spelling: {OWNER_NAME_BN})
         
         CONTEXT:
         - Time: {ctx['time_local']} (Dhaka), {ctx['time_utc']} (UTC)
@@ -693,6 +699,7 @@ def chat():
         1. NO "Generating..." text for images. Just output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
         2. Be concise but helpful.
         3. Use **bold** for important points.
+        4. If speaking Bangla, always spell the creator's name as "{OWNER_NAME_BN}".
         """
     }
 
