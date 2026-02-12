@@ -6,14 +6,16 @@ from datetime import datetime, timedelta
 import pytz
 import json
 import random
+import re      # ➕ Math: Regex এর জন্য
+import math    # ➕ Math: অংকের লাইব্রেরি
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Fix - Build 18.2.1) 🛡️
+# 🔹 Flux AI (Ultimate Fix - Build 18.2.2) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "KAWCHUR" # Fixed capitalization
+OWNER_NAME = "Kawchur"  # Fixed capitalization for better display
 OWNER_NAME_BN = "কাওছুর" # Fixed Bangla spelling
-VERSION = "18.2.1"
+VERSION = "18.2.2"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # ⚠️ Links Restored
@@ -54,6 +56,31 @@ def get_current_context():
         "date": now_dhaka.strftime("%d %B, %Y (%A)"),
         "year": now_dhaka.year
     }
+
+# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - ADDED
+def solve_math_problem(text):
+    try:
+        # ১. নিরাপত্তা: অংক ছাড়া অন্য কিছু থাকলে স্কিপ করবে
+        allowed_chars = set("0123456789.+-*/() xX÷^")
+        if not set(text.replace(" ", "")).issubset(allowed_chars):
+            return None
+        
+        # ২. সাধারণ টেক্সট বা সাল (যেমন 2026) যাতে অংক না ভাবে
+        if len(text) < 4 or not any(op in text for op in ['+', '-', '*', '/', 'x', '÷']):
+            return None
+
+        # ৩. চিহ্ন ঠিক করা (x -> *)
+        expression = text.replace("x", "*").replace("X", "*").replace("÷", "/")
+        
+        # ৪. ক্যালকুলেশন
+        result = eval(expression, {"__builtins__": None}, {"math": math})
+        
+        # ৫. পূর্ণসংখ্যা হলে দশমিক বাদ দেওয়া, নাহলে ফ্লোট রাখা
+        if result == int(result):
+            return f"{int(result):,}" # ১,০০০ ফরম্যাট
+        return f"{result:,}"
+    except:
+        return None
 
 SUGGESTION_POOL = [
     {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
@@ -210,8 +237,13 @@ def home():
             .sender-name {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
+            /* 🔥 CSS FIX FOR OVERFLOW 🔥 */
             .bubble {{ 
-                padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; word-wrap: break-word;
+                padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; 
+                word-wrap: break-word;          /* Old standard */
+                word-break: break-word;         /* Important for long numbers */
+                overflow-wrap: break-word;      /* Modern standard */
+                white-space: pre-wrap;          /* Preserves spaces but wraps */
             }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
             .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }}
@@ -677,6 +709,25 @@ def chat():
     TOTAL_MESSAGES += 1
     data = request.json
     messages = data.get("messages", [])
+    
+    # --- 🔥 FLUX INSTRUMENTS INTEGRATION START 🔥 ---
+    # শেষের মেসেজটা (ইউজারের প্রশ্ন) নিচ্ছি
+    if messages and messages[-1]['role'] == 'user':
+        last_msg = messages[-1]['content']
+        
+        # চেক করছি এটা অংক কিনা
+        math_result = solve_math_problem(last_msg)
+        
+        if math_result:
+            # যদি অংক হয়, তবে আমরা সিস্টেম প্রম্পটে উত্তরটা ঢুকিয়ে দেব
+            # এতে AI আর ভুল করবে না, কারণ উত্তর তার হাতেই আছে!
+            system_note = {
+                "role": "system",
+                "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value. Do not calculate it yourself."
+            }
+            messages.insert(-1, system_note) # ইউজারের মেসেজের ঠিক আগে বসিয়ে দিলাম
+    # --- 🔥 FLUX INSTRUMENTS INTEGRATION END 🔥 ---
+
     ctx = get_current_context()
     
     # 🔥 FIX APPLIED: AI will NOT mention owner unless asked.
