@@ -13,8 +13,8 @@ import math    # ➕ Math: অংকের লাইব্রেরি
 # 🔹 Flux AI (Ultimate Fix - Build 18.2.3) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "KAWCHUR"  # Fixed capitalization for better display
-OWNER_NAME_BN = "কাওছুর" # Fixed Bangla spelling
+OWNER_NAME = "Kawchur"  
+OWNER_NAME_BN = "কাওছুর" 
 VERSION = "18.2.3"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
@@ -61,13 +61,11 @@ def get_current_context():
 def solve_math_problem(text):
     try:
         # ১. চিহ্ন রিপ্লেস করা (যাতে × এবং ÷ চিনতে পারে)
-        # এখানে আমরা × কে * এবং ÷ কে / বানিয়ে দিচ্ছি
         normalized_text = text.replace("×", "*").replace("÷", "/")
         
         # ২. টেক্সট থেকে শুধু অংক বের করা (Regex ব্যবহার করে)
-        # এটি "Please solve" বা "অংক করো" বাদ দিয়ে শুধু সংখ্যা ও চিহ্ন নেবে
-        # আমরা খুঁজছি: সংখ্যা, দশমিক, এবং অপারেটর এর একটি সিকোয়েন্স
-        match = re.search(r'[\d][\d\.\+\-\*\/\(\)\s\^]*[\d]', normalized_text)
+        # এটি =, ?, টেক্সট সব বাদ দিয়ে শুধু গাণিতিক অংশ নেবে
+        match = re.search(r'[\d\.\(][\d\.\+\-\*\/\(\)\s\^]*[\d\.\)]', normalized_text)
         
         if not match:
             return None
@@ -75,17 +73,18 @@ def solve_math_problem(text):
         expression = match.group(0).strip()
         
         # ৩. যদি খুব ছোট কিছু হয় বা কোনো অপারেটর না থাকে, তবে ইগনোর করো
-        # যেমন শুধু "2026" বা ফোন নম্বর যাতে অংক না ভাবে
-        if len(expression) < 3 or not any(op in expression for op in ['+', '-', '*', '/']):
+        if len(expression) < 3 or not any(op in expression for op in ['+', '-', '*', '/', '^']):
             return None
 
-        # ৪. ক্যালকুলেশন (নিরাপদভাবে)
+        # ৪. ক্যালকুলেশন
         result = eval(expression, {"__builtins__": None}, {"math": math})
         
         # ৫. উত্তর সাজানো
-        if result == int(result):
-            return f"{int(result):,}" 
-        return f"{result:,.2f}" # দশমিকের পর ২ ঘর পর্যন্ত দেখাবে
+        if isinstance(result, (int, float)):
+            if result == int(result):
+                return f"{int(result):,}" 
+            return f"{result:,.4f}" # দশমিকের পর ৪ ঘর পর্যন্ত দেখাবে
+        return str(result)
     except:
         return None
 
@@ -108,6 +107,7 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # HTML কোড শুরু (SyntaxError ফিক্স করা হয়েছে)
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -690,3 +690,103 @@ def home():
         </script>
     </body>
     </html>
+    """
+
+# 🛡️ ADMIN API ROUTES
+@app.route("/admin/stats")
+def admin_stats():
+    return jsonify({
+        "uptime": get_uptime(),
+        "total_messages": TOTAL_MESSAGES,
+        "active": SYSTEM_ACTIVE
+    })
+
+@app.route("/admin/toggle_system", methods=["POST"])
+def toggle_system():
+    global SYSTEM_ACTIVE
+    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
+    return jsonify({"active": SYSTEM_ACTIVE})
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    global TOTAL_MESSAGES
+    if not SYSTEM_ACTIVE:
+        return Response("System is currently under maintenance.", status=503)
+
+    TOTAL_MESSAGES += 1
+    data = request.json
+    messages = data.get("messages", [])
+    
+    # --- 🔥 FLUX INSTRUMENTS INTEGRATION START 🔥 ---
+    # শেষের মেসেজটা (ইউজারের প্রশ্ন) নিচ্ছি
+    if messages and messages[-1]['role'] == 'user':
+        last_msg = messages[-1]['content']
+        
+        # চেক করছি এটা অংক কিনা
+        math_result = solve_math_problem(last_msg)
+        
+        if math_result:
+            # যদি অংক হয়, তবে আমরা সিস্টেম প্রম্পটে উত্তরটা ঢুকিয়ে দেব
+            # এতে AI আর ভুল করবে না, কারণ উত্তর তার হাতেই আছে!
+            system_note = {
+                "role": "system",
+                "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value. Do not calculate it yourself."
+            }
+            messages.insert(-1, system_note) # ইউজারের মেসেজের ঠিক আগে বসিয়ে দিলাম
+    # --- 🔥 FLUX INSTRUMENTS INTEGRATION END 🔥 ---
+
+    ctx = get_current_context()
+    
+    # 🔥 FIX APPLIED: AI will NOT mention owner unless asked.
+    # 🔥 FIX APPLIED: Bangla spelling enforced as "কাওছুর".
+    sys_prompt = {
+        "role": "system",
+        "content": f"""
+        You are {APP_NAME}, a friendly and expert AI assistant.
+        
+        IDENTITY & OWNER:
+        - You were created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        - IMPORTANT: Do NOT mention the owner's name spontaneously or in your introduction. Only mention it if the user explicitly asks "Who created you?" or "Who is your owner?".
+        
+        CONTEXT:
+        - Time: {ctx['time_local']} (Dhaka), {ctx['time_utc']} (UTC)
+        - Date: {ctx['date']}
+        
+        RULES:
+        1. NO "Generating..." text for images. Just output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+        2. Be concise but helpful.
+        3. Use **bold** for important points.
+        4. If speaking Bangla, ALWAYS spell the owner's name as "{OWNER_NAME_BN}".
+        """
+    }
+
+    def generate():
+        global current_key_index
+        attempts = 0
+        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
+        
+        while attempts < max_retries:
+            try:
+                client = get_groq_client()
+                if not client: yield "⚠️ Config Error."; return
+                stream = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[sys_prompt] + messages,
+                    stream=True,
+                    temperature=0.7, 
+                    max_tokens=1024
+                )
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
+                return
+            except Exception as e:
+                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+                attempts += 1
+                time.sleep(1)
+        yield "⚠️ System overloaded."
+
+    return Response(generate(), mimetype="text/plain")
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
