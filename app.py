@@ -8,11 +8,11 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Brain Boosted - Build 15.0.0) 🧠
+# 🔹 Flux AI (UI Polish & Full Dynamic - Build 16.0.0) ✨
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "15.0.0"
+VERSION = "16.0.0"
 
 # ⚠️ আপনার লিঙ্কসমূহ
 FACEBOOK_URL = "https://facebook.com" 
@@ -44,18 +44,20 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
-# SUGGESTION POOL
+# 🆕 EXPANDED SUGGESTION POOL (All options are here now)
 SUGGESTION_POOL = [
     {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
     {"icon": "fas fa-code", "text": "Write a Python script"},
-    {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
-    {"icon": "fas fa-dumbbell", "text": "30-minute workout plan"},
-    {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"},
-    {"icon": "fas fa-plane", "text": "Plan a trip to Cox's Bazar"},
-    {"icon": "fas fa-lightbulb", "text": "Creative business ideas"},
-    {"icon": "fas fa-laptop-code", "text": "Explain HTML to a beginner"},
+    {"icon": "fas fa-brain", "text": "Explain Quantum Physics simply"},
+    {"icon": "fas fa-dumbbell", "text": "30-minute home workout plan"},
+    {"icon": "fas fa-utensils", "text": "Suggest a healthy dinner recipe"},
+    {"icon": "fas fa-plane", "text": "Plan a 3-day trip to Cox's Bazar"},
+    {"icon": "fas fa-lightbulb", "text": "Creative business ideas for startups"},
+    {"icon": "fas fa-laptop-code", "text": "Explain HTML & CSS to a beginner"},
     {"icon": "fas fa-guitar", "text": "Write a song lyric about rain"},
-    {"icon": "fas fa-camera", "text": "Photography tips for beginners"}
+    {"icon": "fas fa-camera", "text": "Photography tips for beginners"},
+    {"icon": "fas fa-paint-brush", "text": "Generate a futuristic city image"},
+    {"icon": "fas fa-calculator", "text": "Solve this math puzzle: 2 + 2 * 4"}
 ]
 
 @app.route("/")
@@ -88,6 +90,8 @@ def home():
                 --chat-accent: #3b82f6;
                 --bot-icon: linear-gradient(135deg, #3b82f6, #8b5cf6);
                 --danger: #ef4444;
+                --shadow-sm: 0 4px 12px rgba(0,0,0,0.1);
+                --shadow-md: 0 8px 24px rgba(0,0,0,0.2);
             }}
             body.light {{
                 --bg: #ffffff;
@@ -99,166 +103,181 @@ def home():
                 --accent: #2563eb;
                 --chat-accent: #2563eb;
                 --bot-icon: linear-gradient(135deg, #2563eb, #7c3aed);
+                --shadow-sm: 0 4px 12px rgba(0,0,0,0.05);
+                --shadow-md: 0 8px 24px rgba(0,0,0,0.1);
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
             body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
 
+            /* ✨ SIDEBAR POLISH ✨ */
             #sidebar {{
                 width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
                 padding: 20px; border-right: 1px solid var(--border); transition: transform 0.3s ease;
-                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.5);
+                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: var(--shadow-md);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
-            .brand {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--text); }}
+            .brand {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: -0.5px; }}
             .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 12px; background: transparent; color: var(--text); border: 1px solid var(--border);
-                border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px;
-                margin-bottom: 20px; transition: 0.2s;
+                width: 100%; padding: 12px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border);
+                border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
+                margin-bottom: 20px; transition: all 0.2s ease; box-shadow: var(--shadow-sm);
             }}
-            .new-chat-btn:active {{ background: var(--input-bg); transform: scale(0.98); }}
+            .new-chat-btn:hover {{ border-color: var(--accent); transform: translateY(-2px); }}
+            .new-chat-btn:active {{ transform: scale(0.98); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; padding-right: 5px; }}
             .history-item {{
-                padding: 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); 
+                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem;
+                transition: all 0.2s ease; display: flex; align-items: center; gap: 10px; font-weight: 500;
             }}
-            .history-item:active {{ background: var(--input-bg); color: var(--text); }}
+            .history-item:hover {{ background: var(--input-bg); color: var(--text); }}
+            .history-item:active {{ transform: scale(0.98); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
             
-            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 10px; }}
-            .theme-btn {{ flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; }}
-            .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.2); }}
+            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }}
+            .theme-btn {{ flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: 0.3s; }}
+            .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: var(--shadow-sm); }}
 
             .about-section {{ 
-                display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
+                display: none; background: var(--input-bg); padding: 20px; border-radius: 16px;
+                margin-top: 5px; font-size: 0.9rem; text-align: center; border: 1px solid var(--border);
+                box-shadow: var(--shadow-md); animation: fadeIn 0.3s ease;
             }}
-            .about-section.show {{ display: block; animation: fadeIn 0.3s; }}
-            .about-link {{ color: var(--text); font-size: 1.2rem; margin: 0 10px; }}
+            .about-section.show {{ display: block; }}
+            .about-link {{ color: var(--text); font-size: 1.3rem; margin: 0 12px; transition: 0.2s; display: inline-block; }}
+            .about-link:hover {{ color: var(--accent); transform: scale(1.1); }}
 
             header {{
-                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px;
-                background: rgba(11, 15, 25, 0.8); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-                border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+                background: rgba(11, 15, 25, 0.8); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+                border-bottom: 1px solid var(--border); position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             }}
-            body.light header {{ background: rgba(255, 255, 255, 0.9); border-bottom: 1px solid rgba(0,0,0,0.1); }}
+            body.light header {{ background: rgba(255, 255, 255, 0.9); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 15px 140px 15px; display: flex; flex-direction: column; gap: 20px; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 25px; }}
 
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; 
-                padding-top: 60px; 
-                padding-bottom: 100px;
+                height: 100%; text-align: center; padding-top: 40px; padding-bottom: 80px;
             }}
             .icon-wrapper {{ 
-                width: 80px; height: 80px; background: var(--bot-icon); border-radius: 25px; 
-                display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; 
-                margin-bottom: 20px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
+                width: 85px; height: 85px; background: var(--bot-icon); border-radius: 28px; 
+                display: flex; align-items: center; justify-content: center; font-size: 2.8rem; color: white; 
+                margin-bottom: 25px; box-shadow: 0 15px 35px rgba(59, 130, 246, 0.4);
                 animation: float 4s ease-in-out infinite;
             }}
-            .welcome-title {{ font-size: 2rem; font-weight: 700; margin-bottom: 10px; }}
-            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; }}
+            .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.05rem; font-weight: 500; }}
 
-            .suggestions {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; max-width: 600px; }}
+            /* ✨ SUGGESTIONS POLISH ✨ */
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; width: 100%; max-width: 650px; }}
             .chip {{
-                padding: 15px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 15px;
-                cursor: pointer; text-align: left; color: var(--text-secondary); transition: 0.2s;
+                padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px;
+                cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+                font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 12px;
+                box-shadow: var(--shadow-sm);
             }}
             body.light .chip {{ background: rgba(0,0,0,0.03); }}
+            .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: var(--shadow-md); }}
             .chip:active {{ transform: scale(0.98); background: var(--input-bg); }}
-            .chip i {{ color: var(--text); font-size: 1.2rem; margin-bottom: 8px; display: block; }}
+            .chip i {{ color: var(--text); font-size: 1.2rem; opacity: 0.8; }}
 
-            .message-wrapper {{ display: flex; gap: 12px; width: 100%; max-width: 800px; margin: 0 auto; }}
+            /* MESSAGES */
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s ease; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            
-            .avatar {{ width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
+            .avatar {{ width: 38px; height: 38px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: var(--shadow-sm); }}
             .bot-avatar {{ background: var(--bot-icon); color: white; }}
             .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
-            .bubble-container {{ display: flex; flex-direction: column; max-width: 80%; }}
+            .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
-            
-            .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px; }}
+            .sender-name {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 6px; font-weight: 600; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
             .bubble {{ 
-                padding: 12px 16px; border-radius: 18px; font-size: 1rem; line-height: 1.5; word-wrap: break-word;
+                padding: 14px 18px; border-radius: 20px; font-size: 1.02rem; line-height: 1.6;
             }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
-            .user .bubble {{ background: var(--input-bg); border-radius: 18px 4px 18px 18px; color: var(--text); }}
+            .user .bubble {{ background: var(--input-bg); border-radius: 20px 4px 20px 20px; color: var(--text); box-shadow: var(--shadow-sm); border: 1px solid var(--border); }}
             
             .bubble strong {{ color: var(--chat-accent); font-weight: 700; }}
-            .bubble img {{ max-width: 100%; border-radius: 12px; margin-top: 10px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }}
-            .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; gap: 5px; font-weight: 500; opacity: 0.8; }}
+            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; box-shadow: var(--shadow-md); border: 1px solid var(--border); }}
+            .img-brand {{ font-size: 0.8rem; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.9; }}
 
+            /* ✨ INPUT AREA POLISH ✨ */
             #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 15px;
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
                 background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
-                width: 100%; max-width: 800px; display: flex; align-items: flex-end; 
-                background: var(--input-bg); border-radius: 25px; padding: 8px 8px 8px 20px;
-                border: 1px solid var(--border); box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+                width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
+                background: var(--input-bg); border-radius: 28px; padding: 10px 10px 10px 24px;
+                border: 1px solid var(--border); box-shadow: var(--shadow-md); transition: all 0.3s ease;
             }}
+            .input-box:focus-within {{ border-color: var(--accent); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0,0,0,0.2); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 10px 0;
+                color: var(--text); font-size: 1.05rem; max-height: 180px; resize: none; padding: 12px 0; font-family: inherit;
             }}
             .send-btn {{
-                background: var(--text); color: var(--bg); border: none; width: 40px; height: 40px;
-                border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px;
-                display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+                background: var(--text); color: var(--bg); border: none; width: 45px; height: 45px;
+                border-radius: 50%; cursor: pointer; margin-left: 12px; margin-bottom: 2px;
+                display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s;
             }}
+            .send-btn:hover {{ transform: rotate(-10deg) scale(1.05); background: var(--accent); color: white; }}
+            .send-btn:active {{ transform: scale(0.95); }}
 
             .modal-overlay {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 9999;
+                background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(5px);
             }}
             .modal-box {{
-                background: var(--sidebar); border: 1px solid var(--border); padding: 25px; border-radius: 15px; width: 90%; max-width: 320px; text-align: center;
+                background: var(--sidebar); border: 1px solid var(--border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: var(--shadow-md);
             }}
-            .btn-modal {{ padding: 10px; border-radius: 8px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 5px; }}
-            .btn-cancel {{ background: var(--input-bg); color: var(--text); }}
-            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 700; cursor: pointer; flex: 1; margin: 0 8px; font-size: 0.95rem; transition: 0.2s; }}
+            .btn-cancel {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
+            .btn-delete {{ background: var(--danger); color: white; box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3); }}
+            .btn-modal:hover {{ transform: translateY(-2px); }}
 
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
-            @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-10px); }} }}
-            .typing {{ display: flex; gap: 5px; padding: 10px 0; }}
-            .dot {{ width: 7px; height: 7px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
+            @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-12px); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+            .typing {{ display: flex; gap: 6px; padding: 10px 0; }}
+            .dot {{ width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
             
-            pre {{ background: #111; padding: 15px; border-radius: 10px; overflow-x: auto; border: 1px solid var(--border); }}
-            code {{ font-family: monospace; }}
+            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--border); box-shadow: var(--shadow-sm); }}
+            code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
         </style>
     </head>
     <body class="dark">
         
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
-                <h3 style="margin-top:0; color:var(--text)">Clear History?</h3>
-                <p style="color:var(--text-secondary)">Irreversible action.</p>
+                <h3 style="margin-top:0; color:var(--text); font-size: 1.3rem;">Clear History?</h3>
+                <p style="color:var(--text-secondary); margin-bottom: 25px;">This action is irreversible. All conversations will be lost.</p>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete</button>
+                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete All</button>
                 </div>
             </div>
         </div>
 
-        <div class="overlay" onclick="toggleSidebar()" style="position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:150; display:none;"></div>
+        <div class="overlay" onclick="toggleSidebar()" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:150; display:none;"></div>
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
-                <i class="fas fa-pen-to-square"></i> New Chat
+                <i class="fas fa-plus"></i> New Chat
             </button>
-            <div style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px;">RECENT</div>
+            <div style="font-size:0.8rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px;">RECENT</div>
             <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
@@ -270,13 +289,13 @@ def home():
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
                 
                 <div id="about-info" class="about-section">
-                    <strong>{APP_NAME} v{VERSION}</strong><br>
+                    <strong style="font-size: 1.1rem;">{APP_NAME} v{VERSION}</strong><br>
                     <small style="color:var(--text-secondary)">Dev: {OWNER_NAME}</small><br>
-                    <div style="margin:10px 0;">
+                    <div style="margin:15px 0;">
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px;">All rights reserved by {OWNER_NAME} &copy; 2026</small>
+                    <small style="display:block; margin-top:5px; font-weight:600;">All rights reserved by {OWNER_NAME} &copy; 2026</small>
                 </div>
                 <div class="history-item" onclick="openDeleteModal()" style="color:#ef4444;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -284,16 +303,16 @@ def home():
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer;"><i class="fas fa-bars"></i></button>
-                <span style="font-weight:700; font-size:1.2rem;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.2rem; cursor:pointer;"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 5px;"><i class="fas fa-bars"></i></button>
+                <span style="font-weight:800; font-size:1.3rem; letter-spacing: -0.5px;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 5px;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Your brilliant AI assistant is ready to help.</div>
+                    <div class="welcome-subtitle">Your intelligent AI companion.</div>
                     
                     <div class="suggestions" id="suggestion-box">
                         </div>
@@ -302,7 +321,7 @@ def home():
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Message..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -313,7 +332,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v15_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v16_history')) || [];
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -337,18 +356,18 @@ def home():
             }}
 
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
-            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }}
+            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
 
+            // 🆕 FULLY DYNAMIC SUGGESTIONS (Pick 4 random from all)
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 2);
+                const selected = shuffled.slice(0, 4); // Pick 4 random
                 let html = '';
                 selected.forEach(s => {{
-                    html += `<div class="chip" onclick="sendSuggestion('${{s.text}}')"><i class="${{s.icon}}"></i> ${{s.text}}</div>`;
+                    // FIX: Using icon directly in innerHTML to avoid f-string conflict
+                    html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
-                html += `<div class="chip" onclick="sendSuggestion('Generate a futuristic cyberpunk city image')"><i class="fas fa-paint-brush"></i> Generate Image</div>`;
-                html += `<div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>`;
                 document.getElementById('suggestion-box').innerHTML = html;
             }}
 
@@ -358,7 +377,7 @@ def home():
                 chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [], accent: randomColor }});
                 saveData();
                 renderHistory();
-                renderSuggestions();
+                renderSuggestions(); // Re-roll suggestions
                 
                 chatBox.innerHTML = '';
                 chatBox.appendChild(welcomeScreen);
@@ -366,9 +385,10 @@ def home():
                 sidebar.classList.add('closed');
                 overlay.style.display = 'none';
                 msgInput.value = '';
+                resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v15_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v16_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -376,7 +396,7 @@ def home():
                 chats.forEach(chat => {{
                     const div = document.createElement('div');
                     div.className = 'history-item';
-                    div.innerHTML = '<span>' + (chat.title || 'New Conversation').substring(0, 25) + '</span>';
+                    div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
                     div.onclick = () => loadChat(chat.id);
                     list.appendChild(div);
                 }});
@@ -471,6 +491,7 @@ def home():
                 saveData();
                 
                 msgInput.value = '';
+                resizeInput(msgInput);
                 appendBubble(text, true);
                 showTyping();
 
@@ -522,7 +543,7 @@ def home():
 
             function openDeleteModal() {{ deleteModal.style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal() {{ deleteModal.style.display = 'none'; }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v15_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v16_history'); location.reload(); }}
             
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
@@ -536,7 +557,6 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 BRAIN (EXPERT + TIME AWARE)
     sys_prompt = {
         "role": "system",
         "content": f"""
@@ -547,15 +567,15 @@ def chat():
         - Developer: {OWNER_NAME}
         - Version: {VERSION}
         
-        REAL-TIME CONTEXT (YOU KNOW THIS, DO NOT SAY YOU DON'T):
+        REAL-TIME CONTEXT:
         - Current Date: {ctx['date']}
         - Local Time (Dhaka): {ctx['time_local']}
         - UTC Time: {ctx['time_utc']}
         
         RULES:
-        1. IMAGE GENERATION: If user asks for an image, simply output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-        2. INTELLIGENCE: Be precise, logical, and helpful. Solve math/coding problems step-by-step.
-        3. CONCISENESS: Keep casual conversation short. Expand only when explaining complex topics.
+        1. IMAGE GENERATION: If user asks for an image, output strictly: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+        2. INTELLIGENCE: Be precise, logical, and helpful.
+        3. CONCISENESS: Keep casual conversation short.
         4. FORMATTING: Use **bold** for highlights.
         """
     }
