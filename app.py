@@ -8,12 +8,12 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Fix - Build 18.2.0) 🛡️
+# 🔹 Flux AI (Ultimate Fix - Build 18.2.1) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "KAWCHUR"
-OWNER_NAME_BN = "কাওছুর"
-VERSION = "18.2.0"
+OWNER_NAME = "KAWCHUR" # Fixed capitalization
+OWNER_NAME_BN = "কাওছুর" # Fixed Bangla spelling
+VERSION = "18.2.1"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # ⚠️ Links Restored
@@ -73,9 +73,6 @@ SUGGESTION_POOL = [
 @app.route("/")
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
-    
-    # ⚠️ NOTE: Double curly braces {{ }} are used for CSS/JS to avoid Python f-string errors.
-    # Single curly braces { } are used for Python variables.
     
     return f"""
     <!DOCTYPE html>
@@ -682,14 +679,16 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
+    # 🔥 FIX APPLIED: AI will NOT mention owner unless asked.
+    # 🔥 FIX APPLIED: Bangla spelling enforced as "কাওছুর".
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a friendly and expert AI assistant created by {OWNER_NAME}.
+        You are {APP_NAME}, a friendly and expert AI assistant.
         
-        IDENTITY:
-        - Name: {APP_NAME}
-        - Developer: {OWNER_NAME} (Bangla spelling: {OWNER_NAME_BN})
+        IDENTITY & OWNER:
+        - You were created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        - IMPORTANT: Do NOT mention the owner's name spontaneously or in your introduction. Only mention it if the user explicitly asks "Who created you?" or "Who is your owner?".
         
         CONTEXT:
         - Time: {ctx['time_local']} (Dhaka), {ctx['time_utc']} (UTC)
@@ -699,7 +698,7 @@ def chat():
         1. NO "Generating..." text for images. Just output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
         2. Be concise but helpful.
         3. Use **bold** for important points.
-        4. If speaking Bangla, always spell the creator's name as "{OWNER_NAME_BN}".
+        4. If speaking Bangla, ALWAYS spell the owner's name as "{OWNER_NAME_BN}".
         """
     }
 
