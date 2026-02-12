@@ -93,26 +93,31 @@ def home():
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>{APP_NAME} | Pro</title>
+        <title>{APP_NAME} | Cyberpunk Pro</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Outfit:wght@300;400;500;600&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/tokyo-night-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
             :root {{
-                --bg-deep: #0f0c29;
-                --bg-gradient: linear-gradient(to bottom right, #0f0c29, #302b63, #24243e);
-                --sidebar-glass: rgba(16, 18, 27, 0.4);
-                --panel-glass: rgba(255, 255, 255, 0.05);
-                --border-light: rgba(255, 255, 255, 0.1);
-                --accent-primary: #7c3aed; /* Violet */
-                --accent-secondary: #2dd4bf; /* Teal */
-                --text-main: #ffffff;
+                --bg-dark: #050510;
+                --bg-gradient: linear-gradient(135deg, #050510 0%, #1a1a2e 50%, #0f0c29 100%);
+                --neon-blue: #00f3ff;
+                --neon-purple: #bc13fe;
+                --neon-pink: #ff0055;
+                
+                /* Glassmorphism Variables */
+                --glass-bg: rgba(255, 255, 255, 0.03);
+                --glass-border: rgba(255, 255, 255, 0.08);
+                --glass-blur: blur(20px);
+                
+                --text-main: #e0e0e0;
                 --text-muted: #94a3b8;
-                --neon-glow: 0 0 15px rgba(124, 58, 237, 0.5);
+                --font-tech: 'Orbitron', sans-serif;
+                --font-main: 'Outfit', 'Noto Sans Bengali', sans-serif;
             }}
 
             * {{ box-sizing: border-box; -webkit-tap-highlight-color: transparent; }}
@@ -122,124 +127,180 @@ def home():
                 background: var(--bg-gradient);
                 background-attachment: fixed;
                 color: var(--text-main);
-                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif;
+                font-family: var(--font-main);
                 height: 100vh; 
                 display: flex; 
                 overflow: hidden;
             }}
 
-            /* --- SIDEBAR --- */
+            /* --- SCROLLBAR --- */
+            ::-webkit-scrollbar {{ width: 6px; }}
+            ::-webkit-scrollbar-track {{ background: transparent; }}
+            ::-webkit-scrollbar-thumb {{ background: rgba(0, 243, 255, 0.2); border-radius: 10px; }}
+            ::-webkit-scrollbar-thumb:hover {{ background: var(--neon-purple); }}
+
+            /* --- SIDEBAR (GLASS) --- */
             #sidebar {{
                 width: 280px; height: 100%; display: flex; flex-direction: column;
-                background: var(--sidebar-glass); backdrop-filter: blur(20px);
-                border-right: 1px solid var(--border-light); padding: 20px;
+                background: rgba(5, 5, 16, 0.6); 
+                backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+                border-right: 1px solid var(--glass-border); padding: 20px;
                 position: absolute; z-index: 100; transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 5px 0 30px rgba(0,0,0,0.5);
             }}
-            #sidebar.closed {{ transform: translateX(-105%); }}
+            #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
 
             .brand-logo {{
-                font-size: 1.8rem; font-weight: 700; margin-bottom: 25px;
-                background: linear-gradient(135deg, #fff 0%, #a78bfa 100%);
-                -webkit-background-clip: text; color: transparent;
-                display: flex; align-items: center; gap: 12px;
-                text-shadow: 0 0 20px rgba(167, 139, 250, 0.3);
+                font-family: var(--font-tech);
+                font-size: 1.6rem; font-weight: 700; margin-bottom: 25px;
+                color: white; text-transform: uppercase; letter-spacing: 2px;
+                text-shadow: 0 0 10px var(--neon-blue), 0 0 20px var(--neon-purple);
+                display: flex; align-items: center; gap: 10px;
             }}
             
             .new-chat-btn {{
-                width: 100%; padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);
-                background: linear-gradient(90deg, rgba(124, 58, 237, 0.2), rgba(45, 212, 191, 0.1));
-                color: white; font-weight: 600; cursor: pointer; margin-bottom: 20px;
+                width: 100%; padding: 14px; border-radius: 8px; 
+                border: 1px solid var(--neon-blue);
+                background: rgba(0, 243, 255, 0.1);
+                color: var(--neon-blue); font-family: var(--font-tech);
+                font-weight: 600; cursor: pointer; margin-bottom: 20px;
                 display: flex; align-items: center; justify-content: center; gap: 8px;
-                transition: 0.3s; box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+                transition: 0.3s; box-shadow: 0 0 10px rgba(0, 243, 255, 0.1);
             }}
-            .new-chat-btn:hover {{ transform: translateY(-2px); box-shadow: var(--neon-glow); border-color: var(--accent-primary); }}
+            .new-chat-btn:hover {{ 
+                background: var(--neon-blue); color: #000; 
+                box-shadow: 0 0 20px var(--neon-blue);
+                transform: translateY(-2px);
+            }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; }}
             .history-item {{
-                padding: 12px; border-radius: 10px; color: var(--text-muted); cursor: pointer;
-                font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                padding: 12px; border-radius: 6px; color: var(--text-muted); cursor: pointer;
+                font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                 transition: 0.2s; display: flex; align-items: center; gap: 10px; background: transparent;
+                border: 1px solid transparent;
             }}
-            .history-item:hover {{ background: rgba(255,255,255,0.08); color: white; }}
+            .history-item:hover {{ 
+                background: rgba(255,255,255,0.05); color: white; 
+                border-color: rgba(255,255,255,0.1);
+            }}
 
             /* --- MAIN AREA --- */
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; }}
             
             header {{
                 height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-                background: rgba(15, 12, 41, 0.6); backdrop-filter: blur(10px);
-                border-bottom: 1px solid var(--border-light); z-index: 50;
+                background: rgba(5, 5, 16, 0.4); 
+                backdrop-filter: blur(10px);
+                border-bottom: 1px solid var(--glass-border); z-index: 50;
             }}
             
             #chat-box {{ flex: 1; overflow-y: auto; padding: 20px 20px 140px 20px; scroll-behavior: smooth; }}
 
-            /* --- WELCOME SCREEN (Your Image Style) --- */
+            /* --- ANIMATED WELCOME SCREEN --- */
             .welcome-container {{
                 height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
-                text-align: center; padding-bottom: 60px; animation: fadeInUp 0.8s ease;
+                text-align: center; padding-bottom: 60px;
             }}
+            
             .logo-big {{
-                font-size: 4rem; margin-bottom: 10px;
-                background: linear-gradient(135deg, #a855f7, #3b82f6);
-                -webkit-background-clip: text; color: transparent;
-                filter: drop-shadow(0 0 25px rgba(168, 85, 247, 0.5));
+                font-size: 5rem; margin-bottom: 20px; position: relative;
+                color: transparent; -webkit-text-stroke: 2px var(--neon-purple);
+                animation: pulseGlow 3s infinite alternate;
             }}
-            .welcome-title {{ font-size: 2.5rem; font-weight: 700; margin: 0; color: white; }}
-            .welcome-subtitle {{ color: var(--text-muted); margin-top: 10px; font-size: 1.1rem; }}
+            .logo-big::after {{
+                content: ''; position: absolute; top: 50%; left: 50%;
+                transform: translate(-50%, -50%); width: 120px; height: 120px;
+                background: var(--neon-purple); filter: blur(60px); opacity: 0.4; z-index: -1;
+            }}
+
+            .welcome-title {{ 
+                font-family: var(--font-tech); font-size: 2.8rem; font-weight: 700; margin: 0; 
+                background: linear-gradient(90deg, #fff, var(--neon-blue)); 
+                -webkit-background-clip: text; color: transparent;
+                animation: slideDown 1s ease-out;
+            }}
+            
+            .welcome-subtitle {{ 
+                color: var(--text-muted); margin-top: 15px; font-size: 1.1rem; 
+                animation: fadeIn 1.5s ease-out; letter-spacing: 1px;
+            }}
 
             .suggestions-grid {{
-                display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;
-                width: 100%; max-width: 800px; margin-top: 40px;
+                display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 15px;
+                width: 100%; max-width: 800px; margin-top: 50px;
+                animation: fadeInUp 1s ease-out 0.5s backwards;
             }}
             .suggestion-card {{
-                background: var(--panel-glass); border: 1px solid var(--border-light); padding: 20px;
-                border-radius: 16px; cursor: pointer; text-align: left; transition: 0.3s;
-                display: flex; flex-direction: column; gap: 10px;
+                background: var(--glass-bg); border: 1px solid var(--glass-border); padding: 20px;
+                border-radius: 12px; cursor: pointer; text-align: left; transition: 0.3s;
+                display: flex; flex-direction: column; gap: 10px; position: relative; overflow: hidden;
+            }}
+            .suggestion-card::before {{
+                content: ''; position: absolute; top: 0; left: 0; width: 3px; height: 100%;
+                background: var(--neon-blue); opacity: 0; transition: 0.3s;
             }}
             .suggestion-card:hover {{ 
-                background: rgba(255,255,255,0.1); border-color: var(--accent-primary); 
-                transform: translateY(-5px); box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                background: rgba(255,255,255,0.08); transform: translateY(-5px); 
+                box-shadow: 0 10px 30px rgba(0,0,0,0.5); border-color: var(--neon-blue);
             }}
-            .suggestion-card i {{ color: var(--accent-secondary); font-size: 1.4rem; }}
-            .suggestion-card span {{ font-size: 0.95rem; font-weight: 500; color: #e2e8f0; }}
-
-            /* --- MESSAGES --- */
+            .suggestion-card:hover::before {{ opacity: 1; }}
+            
+            .suggestion-card i {{ color: var(--neon-purple); font-size: 1.4rem; transition: 0.3s; }}
+            .suggestion-card:hover i {{ color: var(--neon-blue); text-shadow: 0 0 10px var(--neon-blue); }}
+            
+            /* --- MESSAGES (CYBER BUBBLES) --- */
             .message-wrapper {{ display: flex; gap: 16px; max-width: 850px; margin: 0 auto 24px auto; animation: popIn 0.3s ease; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
             .avatar {{
-                width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center;
-                flex-shrink: 0; font-size: 1.2rem; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0; font-size: 1.2rem; border: 1px solid var(--glass-border);
+                background: rgba(0,0,0,0.3); backdrop-filter: blur(5px);
             }}
-            .bot-avatar {{ background: linear-gradient(135deg, #6366f1, #a855f7); color: white; }}
-            .user-avatar {{ background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--border-light); }}
+            .bot-avatar {{ color: var(--neon-blue); box-shadow: 0 0 10px rgba(0, 243, 255, 0.2); }}
+            .user-avatar {{ color: var(--neon-pink); box-shadow: 0 0 10px rgba(255, 0, 85, 0.2); }}
 
             .bubble {{
-                padding: 14px 20px; border-radius: 20px; font-size: 1rem; line-height: 1.6;
+                padding: 16px 22px; border-radius: 12px; font-size: 1rem; line-height: 1.6;
                 color: #e2e8f0; max-width: 100%; overflow-wrap: break-word;
+                background: rgba(20, 20, 40, 0.6); border: 1px solid var(--glass-border);
+                backdrop-filter: blur(5px);
             }}
             .user .bubble {{ 
-                background: rgba(124, 58, 237, 0.25); border: 1px solid rgba(124, 58, 237, 0.4);
-                border-radius: 20px 4px 20px 20px; 
+                background: rgba(188, 19, 254, 0.15); 
+                border: 1px solid rgba(188, 19, 254, 0.4);
+                box-shadow: 0 0 15px rgba(188, 19, 254, 0.1);
+                border-radius: 12px 2px 12px 12px;
             }}
-            .bot .bubble {{ background: transparent; padding: 0 10px; }}
+            .bot .bubble {{ 
+                background: rgba(0, 243, 255, 0.05); 
+                border: 1px solid rgba(0, 243, 255, 0.2);
+                border-radius: 2px 12px 12px 12px;
+            }}
             
-            .bubble strong {{ color: var(--accent-secondary); }}
-            pre {{ background: #1e1e2e !important; padding: 15px; border-radius: 12px; border: 1px solid var(--border-light); }}
+            .bubble strong {{ color: var(--neon-blue); }}
+            pre {{ background: #0b0b14 !important; padding: 15px; border-radius: 8px; border: 1px solid #333; }}
 
-            /* --- INPUT AREA --- */
+            /* --- INPUT AREA (GLASS) --- */
             #input-container {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
-                background: linear-gradient(to top, #0f0c29 80%, transparent);
+                background: linear-gradient(to top, #050510 80%, transparent);
                 display: flex; justify-content: center; z-index: 60;
             }}
             .input-box {{
-                width: 100%; max-width: 850px; background: rgba(30, 41, 59, 0.6);
-                backdrop-filter: blur(20px); border: 1px solid var(--border-light);
-                border-radius: 24px; padding: 8px 8px 8px 24px; display: flex; align-items: flex-end;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.4); transition: 0.3s;
+                width: 100%; max-width: 850px; 
+                background: rgba(20, 20, 40, 0.7);
+                backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px);
+                border: 1px solid rgba(0, 243, 255, 0.3);
+                border-radius: 16px; padding: 10px 10px 10px 24px; display: flex; align-items: flex-end;
+                box-shadow: 0 0 20px rgba(0, 243, 255, 0.05); transition: 0.3s;
             }}
-            .input-box:focus-within {{ border-color: var(--accent-primary); box-shadow: 0 0 25px rgba(124, 58, 237, 0.2); }}
+            .input-box:focus-within {{ 
+                border-color: var(--neon-blue); 
+                box-shadow: 0 0 25px rgba(0, 243, 255, 0.15); 
+                background: rgba(20, 20, 40, 0.9);
+            }}
             
             textarea {{
                 flex: 1; background: transparent; border: none; color: white;
@@ -247,63 +308,71 @@ def home():
                 padding: 12px 0; outline: none;
             }}
             .send-btn {{
-                width: 48px; height: 48px; border-radius: 50%; border: none;
-                background: white; color: black; font-size: 1.2rem; cursor: pointer; margin-left: 12px;
+                width: 45px; height: 45px; border-radius: 10px; border: none;
+                background: var(--neon-blue); color: #000; font-size: 1.2rem; cursor: pointer; margin-left: 12px;
                 transition: 0.3s; display: flex; align-items: center; justify-content: center;
             }}
-            .send-btn:hover {{ background: var(--accent-secondary); color: white; transform: rotate(-15deg); }}
+            .send-btn:hover {{ 
+                background: var(--neon-purple); color: white; 
+                box-shadow: 0 0 15px var(--neon-purple);
+            }}
 
             /* --- ANIMATIONS --- */
-            @keyframes fadeInUp {{ from {{ opacity: 0; transform: translateY(20px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+            @keyframes pulseGlow {{ 0% {{ filter: drop-shadow(0 0 5px var(--neon-purple)); }} 100% {{ filter: drop-shadow(0 0 20px var(--neon-purple)); transform: scale(1.05); }} }}
+            @keyframes slideDown {{ from {{ opacity: 0; transform: translateY(-30px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
+            @keyframes fadeInUp {{ from {{ opacity: 0; transform: translateY(30px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.9); }} to {{ opacity: 1; transform: scale(1); }} }}
+            
             .typing span {{
-                width: 6px; height: 6px; background: var(--text-muted); border-radius: 50%;
-                display: inline-block; animation: bounce 1.4s infinite; margin: 0 2px;
+                width: 8px; height: 8px; background: var(--neon-blue); border-radius: 50%;
+                display: inline-block; animation: bounce 1.4s infinite; margin: 0 3px;
+                box-shadow: 0 0 10px var(--neon-blue);
             }}
-            .typing span:nth-child(2) {{ animation-delay: 0.2s; }}
+            .typing span:nth-child(2) {{ animation-delay: 0.2s; background: var(--neon-purple); box-shadow: 0 0 10px var(--neon-purple); }}
             .typing span:nth-child(3) {{ animation-delay: 0.4s; }}
-            @keyframes bounce {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-5px); }} }}
+            @keyframes bounce {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-8px); }} }}
 
             /* Mobile */
             @media (max-width: 768px) {{
-                #sidebar {{ transform: translateX(-105%); box-shadow: none; }}
-                #sidebar.closed {{ transform: translateX(0); box-shadow: 10px 0 30px rgba(0,0,0,0.5); }}
-                .welcome-title {{ font-size: 2rem; }}
+                #sidebar {{ transform: translateX(-105%); width: 85%; }}
+                #sidebar.closed {{ transform: translateX(0); }}
+                .welcome-title {{ font-size: 2.2rem; }}
                 .suggestions-grid {{ grid-template-columns: 1fr 1fr; }}
             }}
         </style>
     </head>
     <body>
         
-        <div class="overlay" onclick="toggleSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7); z-index:90;"></div>
+        <div class="overlay" onclick="toggleSidebar()" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.8); backdrop-filter:blur(3px); z-index:90;"></div>
 
         <div id="sidebar" class="closed">
-            <div class="brand-logo"><i class="fa-solid fa-bolt-lightning"></i> {APP_NAME}</div>
+            <div class="brand-logo"><i class="fa-solid fa-robot"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
-                <i class="fa-solid fa-plus"></i> New Chat
+                <i class="fa-solid fa-plus"></i> New Mission
             </button>
-            <div style="font-size:0.75rem; font-weight:700; color:#64748b; margin-bottom:12px; letter-spacing:1px;">HISTORY</div>
+            <div style="font-size:0.7rem; font-weight:700; color:var(--neon-blue); margin-bottom:12px; letter-spacing:1px; font-family:var(--font-tech);">MEMORY LOGS</div>
             <div class="history-list" id="history-list"></div>
             
-            <div style="margin-top:auto; border-top:1px solid var(--border-light); padding-top:20px;">
+            <div style="margin-top:auto; border-top:1px solid var(--glass-border); padding-top:20px;">
                 <div class="history-item" onclick="window.open('{WEBSITE_URL}', '_blank')"><i class="fa-solid fa-globe"></i> Website</div>
                 <div class="history-item" onclick="window.open('{FACEBOOK_URL}', '_blank')"><i class="fa-brands fa-facebook"></i> Developer</div>
-                <div class="history-item" onclick="confirmDelete()" style="color:#ef4444;"><i class="fa-solid fa-trash-can"></i> Clear History</div>
+                <div class="history-item" onclick="confirmDelete()" style="color:var(--neon-pink);"><i class="fa-solid fa-trash-can"></i> Purge Data</div>
             </div>
         </div>
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.3rem; cursor:pointer;"><i class="fa-solid fa-bars-staggered"></i></button>
-                <div style="font-weight:700; font-size:1.1rem; letter-spacing:0.5px;">{APP_NAME}</div>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.4rem; cursor:pointer;"><i class="fa-solid fa-bars-staggered"></i></button>
+                <div style="font-weight:700; font-size:1.2rem; letter-spacing:1px; font-family:var(--font-tech); text-shadow:0 0 10px var(--neon-blue);">{APP_NAME} <span style="font-size:0.7rem; color:var(--neon-purple);">PRO</span></div>
                 <button onclick="startNewChat()" style="background:none; border:none; color:white; font-size:1.3rem; cursor:pointer;"><i class="fa-regular fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="logo-big"><i class="fa-solid fa-bolt"></i></div>
-                    <h1 class="welcome-title">Welcome to {APP_NAME}</h1>
-                    <p class="welcome-subtitle">Your personal AI assistant, redefined.</p>
+                    <h1 class="welcome-title">SYSTEM ONLINE</h1>
+                    <p class="welcome-subtitle">Welcome back, Commander {OWNER_NAME}. Flux is ready.</p>
                     
                     <div class="suggestions-grid" id="suggestion-box"></div>
                 </div>
@@ -311,8 +380,8 @@ def home():
 
             <div id="input-container">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
-                    <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-arrow-up"></i></button>
+                    <textarea id="msg" placeholder="Enter command..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <button class="send-btn" onclick="sendMessage()"><i class="fa-solid fa-paper-plane"></i></button>
                 </div>
             </div>
         </div>
@@ -352,7 +421,7 @@ def home():
 
             function startNewChat() {{
                 currentChatId = Date.now();
-                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
+                chats.unshift({{ id: currentChatId, title: "New Session", messages: [] }});
                 saveData();
                 renderHistory();
                 chatBox.innerHTML = '';
@@ -395,7 +464,7 @@ def home():
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div');
                 wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}"><i class="${{isUser ? 'fa-regular fa-user' : 'fa-solid fa-bolt'}}"></i></div>`;
+                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}"><i class="${{isUser ? 'fa-solid fa-user-astronaut' : 'fa-solid fa-bolt'}}"></i></div>`;
                 wrapper.innerHTML = `${{avatar}}<div class="bubble-container"><div class="bubble">${{marked.parse(text)}}</div></div>`;
                 chatBox.appendChild(wrapper);
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
@@ -471,7 +540,7 @@ def home():
             }}
             
             function confirmDelete() {{
-                if(confirm("Delete all history?")) {{
+                if(confirm("Purge all system logs?")) {{
                     localStorage.removeItem('flux_v20_history');
                     location.reload();
                 }}
