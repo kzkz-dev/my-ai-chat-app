@@ -10,12 +10,12 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Polished & Fixed - Build 20.1.0) 💎
+# 🔹 Flux AI (Natural Chat Fix - Build 20.2.0) 🗣️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "20.1.0"
+VERSION = "20.2.0"
 ADMIN_PASSWORD = "7rx9x2c0"
 
 # Links
@@ -206,11 +206,11 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* 🌟 WELCOME SCREEN FIXED 🌟 */
+            /* 🌟 WELCOME SCREEN 🌟 */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; 
-                padding-top: 110px; /* 👆 INCREASED to push logo down */
+                padding-top: 110px; /* Fixed Logo Position */
                 padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
@@ -612,6 +612,7 @@ def home():
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
+                // 👇 AI NOW KNOWS THE USER NAME HERE 👇
                 if(userName) context.unshift({{role: "system", content: "User's name is " + userName}});
 
                 try {{
@@ -652,155 +653,4 @@ def home():
                 }}
             }}
 
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
-            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function openDeleteModal(id) {{ openModal(id); }}
-            
-            function confirmDelete() {{ localStorage.removeItem('flux_v20_history'); location.reload(); }}
-
-            async function verifyAdmin() {{
-                const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
-                
-                if(pass === '{ADMIN_PASSWORD}') {{
-                    errorMsg.style.display = 'none';
-                    closeModal('admin-auth-modal');
-                    openModal('admin-panel-modal');
-                    document.getElementById('admin-pass').value = '';
-                    try {{
-                        const res = await fetch('/admin/stats');
-                        const data = await res.json();
-                        document.getElementById('stat-uptime').innerText = data.uptime;
-                        document.getElementById('stat-msgs').innerText = data.total_messages;
-                        updateSysBtn(data.active);
-                    }} catch(e) {{ alert('Error fetching stats'); }}
-                }} else {{
-                    errorMsg.style.display = 'block';
-                    const box = document.querySelector('#admin-auth-modal .modal-box');
-                    box.style.transform = 'translateX(5px)';
-                    setTimeout(() => box.style.transform = 'translateX(0)', 100);
-                }}
-            }}
-
-            async function toggleSystem() {{
-                try {{
-                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
-                    const data = await res.json();
-                    updateSysBtn(data.active);
-                }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-
-            function updateSysBtn(isActive) {{
-                const btn = document.getElementById('btn-toggle-sys');
-                const txt = document.getElementById('system-status-text');
-                if(isActive) {{
-                    btn.innerText = "Turn System OFF";
-                    btn.style.background = "var(--danger)";
-                    btn.style.boxShadow = "0 5px 15px rgba(255, 15, 123, 0.4)";
-                    txt.innerText = "System is ONLINE 🟢";
-                    txt.style.color = "var(--success)";
-                }} else {{
-                    btn.innerText = "Turn System ON";
-                    btn.style.background = "var(--success)";
-                    btn.style.boxShadow = "0 5px 15px rgba(0, 255, 135, 0.4)";
-                    txt.innerText = "System is OFFLINE 🔴";
-                    txt.style.color = "var(--danger)";
-                }}
-            }}
-
-            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
-        </script>
-    </body>
-    </html>
-    """
-
-# 🛡️ ADMIN API ROUTES
-@app.route("/admin/stats")
-def admin_stats():
-    return jsonify({
-        "uptime": get_uptime(),
-        "total_messages": TOTAL_MESSAGES,
-        "active": SYSTEM_ACTIVE
-    })
-
-@app.route("/admin/toggle_system", methods=["POST"])
-def toggle_system():
-    global SYSTEM_ACTIVE
-    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
-    return jsonify({"active": SYSTEM_ACTIVE})
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    global TOTAL_MESSAGES
-    if not SYSTEM_ACTIVE:
-        return Response("System is currently under maintenance.", status=503)
-
-    TOTAL_MESSAGES += 1
-    data = request.json
-    messages = data.get("messages", [])
-    
-    # MATH ENGINE
-    if messages and messages[-1]['role'] == 'user':
-        last_msg = messages[-1]['content']
-        math_result = solve_math_problem(last_msg)
-        if math_result:
-            system_note = {
-                "role": "system",
-                "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value."
-            }
-            messages.insert(-1, system_note)
-
-    ctx = get_current_context()
-    
-    sys_prompt = {
-        "role": "system",
-        "content": f"""
-        You are {APP_NAME}, an expert AI assistant with a futuristic, cyberpunk personality.
-        
-        IDENTITY:
-        - Created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-        - IMPORTANT: Never mention your creator unless asked.
-        
-        CONTEXT:
-        - Time: {ctx['time_local']} (Dhaka)
-        
-        RULES:
-        1. IMAGE: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-        2. SPELLING: In Bangla, ALWAYS write owner's name as "{OWNER_NAME_BN}".
-        3. TONE: Professional, slightly futuristic, helpful.
-        4. OWNER NAME:
-           - If asked in English: {OWNER_NAME}
-           - If asked in Bangla: {OWNER_NAME_BN}
-        """
-    }
-
-    def generate():
-        global current_key_index
-        attempts = 0
-        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
-        
-        while attempts < max_retries:
-            try:
-                client = get_groq_client()
-                if not client: yield "⚠️ Config Error."; return
-                stream = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=[sys_prompt] + messages,
-                    stream=True,
-                    temperature=0.7, 
-                    max_tokens=1024
-                )
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
-                return
-            except Exception as e:
-                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
-                attempts += 1
-                time.sleep(1)
-        yield "⚠️ System overloaded."
-
-    return Response(generate(), mimetype="text/plain")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.
