@@ -16,7 +16,7 @@ APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
 VERSION = "20.1.0"
-ADMIN_PASSWORD = "Flux2026"
+ADMIN_PASSWORD = "7rx9x2c0"
 
 # Links
 FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100024467246473" 
