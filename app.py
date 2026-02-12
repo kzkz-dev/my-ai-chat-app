@@ -8,15 +8,15 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Final Fixed - Build 18.1.0) 🛡️
+# 🔹 Flux AI (Final Stable - Build 18.1.0) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 VERSION = "18.1.0"
-ADMIN_PASSWORD = "Flux2026" 
+ADMIN_PASSWORD = "Flux2026"  # ⚠️CHANGE THIS PASSWORD⚠️
 
 # ⚠️ MISSING LINKS RESTORED HERE ⚠️
-FACEBOOK_URL = "NOT AVAILABLE RIGHT NOW" 
+FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100024467246473" 
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
 # Global Stats variables
@@ -297,7 +297,8 @@ def home():
             <div class="modal-box">
                 <div class="modal-title"><i class="fas fa-shield-alt"></i> Admin Access</div>
                 <div class="modal-desc">Enter authorization code</div>
-                <input type="password" id="admin-pass" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:20px; outline:none;" placeholder="Password">
+                <input type="password" id="admin-pass" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:10px; outline:none;" placeholder="Password">
+                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:15px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
                     <button class="btn-modal btn-confirm" onclick="verifyAdmin()">Login</button>
@@ -309,12 +310,14 @@ def home():
             <div class="modal-box" style="max-width: 400px;">
                 <div class="modal-title">Admin Panel</div>
                 <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-val" id="stat-msgs">0</div><div class="stat-label">Messages</div></div>
-                    <div class="stat-box"><div class="stat-val" id="stat-uptime">0s</div><div class="stat-label">Uptime</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-msgs">0</div><div class="stat-label">Total Messages</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-uptime">0s</div><div class="stat-label">Server Uptime</div></div>
+                    <div class="stat-box"><div class="stat-val" style="font-size:1rem;">{VERSION}</div><div class="stat-label">App Version</div></div>
+                    <div class="stat-box"><div class="stat-val" style="font-size:1rem; color:var(--text);">{OWNER_NAME}</div><div class="stat-label">Developer</div></div>
                 </div>
-                <div class="modal-desc" id="system-status-text">System is currently ONLINE</div>
+                <div class="modal-desc" id="system-status-text" style="font-weight:600;">System is currently ONLINE</div>
                 <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0;">Turn System OFF</button>
-                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:10px 0 0 0;">Close</button>
+                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:10px 0 0 0;">Close Panel</button>
             </div>
         </div>
 
@@ -412,6 +415,7 @@ def home():
                 const selected = shuffled.slice(0, 4);
                 let html = '';
                 selected.forEach(s => {{
+                    // NOTE: Escaped braces properly here
                     html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
@@ -511,6 +515,8 @@ def home():
                 if(text === '!admin') {{
                     msgInput.value = '';
                     openModal('admin-auth-modal');
+                    // Reset Error Msg
+                    document.getElementById('admin-error-msg').style.display = 'none';
                     return;
                 }}
 
@@ -582,7 +588,6 @@ def home():
                 }}
             }}
 
-            // ADMIN & MODAL LOGIC
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
@@ -591,7 +596,10 @@ def home():
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
+                const errorMsg = document.getElementById('admin-error-msg');
+                
                 if(pass === '{ADMIN_PASSWORD}') {{
+                    errorMsg.style.display = 'none';
                     closeModal('admin-auth-modal');
                     openModal('admin-panel-modal');
                     document.getElementById('admin-pass').value = '';
@@ -603,7 +611,12 @@ def home():
                         updateSysBtn(data.active);
                     }} catch(e) {{ alert('Error fetching stats'); }}
                 }} else {{
-                    alert('Invalid Password!');
+                    // 🔒 SECURE ERROR: No alert box, just red text
+                    errorMsg.style.display = 'block';
+                    // Optional: Shake animation
+                    const box = document.querySelector('#admin-auth-modal .modal-box');
+                    box.style.transform = 'translateX(5px)';
+                    setTimeout(() => box.style.transform = 'translateX(0)', 100);
                 }}
             }}
 
