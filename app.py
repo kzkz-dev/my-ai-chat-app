@@ -8,11 +8,11 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Stable - Build 14.0.0) 🚀
+# 🔹 Flux AI (Brain Boosted - Build 15.0.0) 🧠
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "14.0.0"
+VERSION = "15.0.0"
 
 # ⚠️ আপনার লিঙ্কসমূহ
 FACEBOOK_URL = "https://facebook.com" 
@@ -44,7 +44,7 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
-# 🆕 SUGGESTION POOL (Passed to JS for dynamic updates)
+# SUGGESTION POOL
 SUGGESTION_POOL = [
     {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
     {"icon": "fas fa-code", "text": "Write a Python script"},
@@ -60,7 +60,6 @@ SUGGESTION_POOL = [
 
 @app.route("/")
 def home():
-    # Pass suggestions to JS safely
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
     return f"""
@@ -153,18 +152,17 @@ def home():
             
             #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 15px 140px 15px; display: flex; flex-direction: column; gap: 20px; }}
 
-            /* 🌟 WELCOME SCREEN FIXES 🌟 */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; 
-                padding-top: 60px; /* Fixed: Logo wont be cut off */
+                padding-top: 60px; 
                 padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
                 width: 80px; height: 80px; background: var(--bot-icon); border-radius: 25px; 
                 display: flex; align-items: center; justify-content: center; font-size: 2.5rem; color: white; 
                 margin-bottom: 20px; box-shadow: 0 10px 30px rgba(59, 130, 246, 0.3);
-                animation: float 4s ease-in-out infinite; /* Animation */
+                animation: float 4s ease-in-out infinite;
             }}
             .welcome-title {{ font-size: 2rem; font-weight: 700; margin-bottom: 10px; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; }}
@@ -197,7 +195,6 @@ def home():
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
             .user .bubble {{ background: var(--input-bg); border-radius: 18px 4px 18px 18px; color: var(--text); }}
             
-            /* DYNAMIC HIGHLIGHTS */
             .bubble strong {{ color: var(--chat-accent); font-weight: 700; }}
             .bubble img {{ max-width: 100%; border-radius: 12px; margin-top: 10px; cursor: pointer; box-shadow: 0 5px 15px rgba(0,0,0,0.3); }}
             .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 6px; display: flex; align-items: center; gap: 5px; font-weight: 500; opacity: 0.8; }}
@@ -269,15 +266,17 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
                 </div>
+                
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
+                
                 <div id="about-info" class="about-section">
                     <strong>{APP_NAME} v{VERSION}</strong><br>
                     <small style="color:var(--text-secondary)">Dev: {OWNER_NAME}</small><br>
                     <div style="margin:10px 0;">
-                        <a href="{FACEBOOK_URL}" class="about-link"><i class="fab fa-facebook"></i></a>
-                        <a href="{WEBSITE_URL}" class="about-link"><i class="fas fa-globe"></i></a>
+                        <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
+                        <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small>&copy; 2026 {OWNER_NAME}</small>
+                    <small style="display:block; margin-top:5px;">All rights reserved by {OWNER_NAME} &copy; 2026</small>
                 </div>
                 <div class="history-item" onclick="openDeleteModal()" style="color:#ef4444;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -312,10 +311,9 @@ def home():
         <script>
             marked.use({{ breaks: true, gfm: true }});
             
-            // 🆕 LOAD SUGGESTIONS FROM PYTHON
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v14_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v15_history')) || [];
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -324,13 +322,12 @@ def home():
             const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
-            // 🌈 Dynamic Accent Colors
-            const accentColors = ['#3b82f6', '#10b981', '#f59e0b', '#ec4899', '#8b5cf6', '#06b6d4'];
+            const accentColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
 
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
             renderHistory();
-            renderSuggestions(); // Initial load
+            renderSuggestions(); 
 
             function setTheme(mode) {{
                 document.body.className = mode;
@@ -343,20 +340,15 @@ def home():
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
 
-            // 🆕 RANDOM SUGGESTION RENDERER
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
                 const selected = shuffled.slice(0, 2);
-                
                 let html = '';
-                // Dynamic ones
                 selected.forEach(s => {{
                     html += `<div class="chip" onclick="sendSuggestion('${{s.text}}')"><i class="${{s.icon}}"></i> ${{s.text}}</div>`;
                 }});
-                // Fixed ones
                 html += `<div class="chip" onclick="sendSuggestion('Generate a futuristic cyberpunk city image')"><i class="fas fa-paint-brush"></i> Generate Image</div>`;
                 html += `<div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>`;
-                
                 document.getElementById('suggestion-box').innerHTML = html;
             }}
 
@@ -366,20 +358,17 @@ def home():
                 chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [], accent: randomColor }});
                 saveData();
                 renderHistory();
-                
-                // 🆕 RERENDER SUGGESTIONS ON NEW CHAT
                 renderSuggestions();
                 
                 chatBox.innerHTML = '';
                 chatBox.appendChild(welcomeScreen);
                 welcomeScreen.style.display = 'flex';
-                
                 sidebar.classList.add('closed');
                 overlay.style.display = 'none';
                 msgInput.value = '';
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v14_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v15_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -387,7 +376,6 @@ def home():
                 chats.forEach(chat => {{
                     const div = document.createElement('div');
                     div.className = 'history-item';
-                    // FIX: Simple string concatenation to avoid f-string syntax error
                     div.innerHTML = '<span>' + (chat.title || 'New Conversation').substring(0, 25) + '</span>';
                     div.onclick = () => loadChat(chat.id);
                     list.appendChild(div);
@@ -502,7 +490,6 @@ def home():
                     const decoder = new TextDecoder();
                     let botResp = '';
                     
-                    // Streaming Bubble
                     const wrapper = document.createElement('div');
                     wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `
@@ -535,7 +522,7 @@ def home():
 
             function openDeleteModal() {{ deleteModal.style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal() {{ deleteModal.style.display = 'none'; }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v14_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v15_history'); location.reload(); }}
             
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
@@ -549,20 +536,27 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 BRAIN INSTRUCTION: NO "Generating" TEXT
+    # 🧠 BRAIN (EXPERT + TIME AWARE)
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a smart, friendly, and concise AI assistant created by {OWNER_NAME}.
+        You are {APP_NAME}, an advanced, expert-level AI assistant created by {OWNER_NAME}.
+        
+        CORE IDENTITY:
+        - Name: {APP_NAME}
+        - Developer: {OWNER_NAME}
+        - Version: {VERSION}
+        
+        REAL-TIME CONTEXT (YOU KNOW THIS, DO NOT SAY YOU DON'T):
+        - Current Date: {ctx['date']}
+        - Local Time (Dhaka): {ctx['time_local']}
+        - UTC Time: {ctx['time_utc']}
         
         RULES:
-        1. IMAGE GENERATION: If user asks for an image, DO NOT say "Generating..." or "Sure".
-           Just output the Markdown image link directly: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-        2. BE CONCISE: Keep answers short (1-3 sentences) unless asked for details.
-        3. TONE: Warm, human-like, helpful.
-        4. FORMATTING: Use **bold** for key points (it will be colored dynamically).
-        
-        Current Time: {ctx['time_local']}
+        1. IMAGE GENERATION: If user asks for an image, simply output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+        2. INTELLIGENCE: Be precise, logical, and helpful. Solve math/coding problems step-by-step.
+        3. CONCISENESS: Keep casual conversation short. Expand only when explaining complex topics.
+        4. FORMATTING: Use **bold** for highlights.
         """
     }
 
