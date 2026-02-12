@@ -13,10 +13,10 @@ import random
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 VERSION = "18.1.0"
-ADMIN_PASSWORD = "Flux2026"  # ⚠️CHANGE THIS PASSWORD⚠️
+ADMIN_PASSWORD = "7rx9x2c0"  # ⚠️CHANGE THIS PASSWORD⚠️
 
 # ⚠️ MISSING LINKS RESTORED HERE ⚠️
-FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100024467246473" 
+FACEBOOK_URL = "Not available right now" 
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
 # Global Stats variables
