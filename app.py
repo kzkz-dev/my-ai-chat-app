@@ -10,12 +10,12 @@ import re      # ➕ Math: Regex এর জন্য
 import math    # ➕ Math: অংকের লাইব্রেরি
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Fix - Build 18.2.2) 🛡️
+# 🔹 Flux AI (Ultimate Stable - Build 18.2.4) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "KAWCHUR"  # Fixed capitalization for better display
-OWNER_NAME_BN = "কাওছুর" # Fixed Bangla spelling
-VERSION = "18.2.2"
+OWNER_NAME = "KAWCHUR"  
+OWNER_NAME_BN = "কাওছুর" 
+VERSION = "18.2.4"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # ⚠️ Links Restored
@@ -57,28 +57,31 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
-# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - ADDED
+# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - FIXED FOR '?' AND '='
 def solve_math_problem(text):
     try:
-        # ১. নিরাপত্তা: অংক ছাড়া অন্য কিছু থাকলে স্কিপ করবে
-        allowed_chars = set("0123456789.+-*/() xX÷^")
-        if not set(text.replace(" ", "")).issubset(allowed_chars):
+        # ১. ক্লিনিং: স্পেস, সমান চিহ্ন, প্রশ্নবোধক এবং কমা সরিয়ে ফেলা (যাতে এরর না দেয়)
+        clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
+        
+        # ২. নিরাপত্তা: অংক ছাড়া অন্য কোনো অক্ষর থাকলে স্কিপ করবে
+        allowed_chars = set("0123456789.+-*/()xX÷^")
+        if not set(clean_text).issubset(allowed_chars):
             return None
         
-        # ২. সাধারণ টেক্সট বা সাল (যেমন 2026) যাতে অংক না ভাবে
-        if len(text) < 4 or not any(op in text for op in ['+', '-', '*', '/', 'x', '÷']):
+        # ৩. খুব ছোট টেক্সট (যেমন শুধু "2026") হলে স্কিপ
+        if len(clean_text) < 3 or not any(op in clean_text for op in ['+', '-', '*', '/', 'x', '÷', '^']):
             return None
 
-        # ৩. চিহ্ন ঠিক করা (x -> *)
-        expression = text.replace("x", "*").replace("X", "*").replace("÷", "/")
+        # ৪. চিহ্ন ঠিক করা
+        expression = clean_text.replace("x", "*").replace("X", "*").replace("÷", "/").replace("^", "**")
         
-        # ৪. ক্যালকুলেশন
+        # ৫. ক্যালকুলেশন
         result = eval(expression, {"__builtins__": None}, {"math": math})
         
-        # ৫. পূর্ণসংখ্যা হলে দশমিক বাদ দেওয়া, নাহলে ফ্লোট রাখা
+        # ৬. উত্তর সাজানো
         if result == int(result):
-            return f"{int(result):,}" # ১,০০০ ফরম্যাট
-        return f"{result:,}"
+            return f"{int(result):,}" 
+        return f"{result:,.4f}" 
     except:
         return None
 
