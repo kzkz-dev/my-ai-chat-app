@@ -6,16 +6,16 @@ from datetime import datetime, timedelta
 import pytz
 import json
 import random
-import re      # ➕ Math: Regex এর জন্য
-import math    # ➕ Math: অংকের লাইব্রেরি
+import re      
+import math    
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Fix - Build 18.2.2) 🛡️
+# 🔹 Flux AI (Interactive Calc - Build 18.2.3) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "Kawchur"  # Fixed capitalization for better display
-OWNER_NAME_BN = "কাওছুর" # Fixed Bangla spelling
-VERSION = "18.2.2"
+OWNER_NAME = "Kawchur"
+OWNER_NAME_BN = "কাওছুর"
+VERSION = "18.2.3"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # ⚠️ Links Restored
@@ -57,35 +57,76 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
-# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - ADDED
+# 🧮 FLUX INSTRUMENTS (MATH ENGINE)
 def solve_math_problem(text):
     try:
-        # ১. নিরাপত্তা: অংক ছাড়া অন্য কিছু থাকলে স্কিপ করবে
         allowed_chars = set("0123456789.+-*/() xX÷^")
         if not set(text.replace(" ", "")).issubset(allowed_chars):
             return None
         
-        # ২. সাধারণ টেক্সট বা সাল (যেমন 2026) যাতে অংক না ভাবে
         if len(text) < 4 or not any(op in text for op in ['+', '-', '*', '/', 'x', '÷']):
             return None
 
-        # ৩. চিহ্ন ঠিক করা (x -> *)
         expression = text.replace("x", "*").replace("X", "*").replace("÷", "/")
-        
-        # ৪. ক্যালকুলেশন
         result = eval(expression, {"__builtins__": None}, {"math": math})
         
-        # ৫. পূর্ণসংখ্যা হলে দশমিক বাদ দেওয়া, নাহলে ফ্লোট রাখা
         if result == int(result):
-            return f"{int(result):,}" # ১,০০০ ফরম্যাট
+            return f"{int(result):,}" 
         return f"{result:,}"
     except:
         return None
 
+# 📱 INTERACTIVE CALCULATOR WIDGET (HTML)
+def get_calculator_html():
+    return """
+    <div style="background:#1f2937; padding:15px; border-radius:16px; width:100%; max-width:280px; margin:10px auto; border:1px solid #374151; box-shadow:0 10px 25px rgba(0,0,0,0.3);">
+        <div style="margin-bottom:10px; font-size:0.8rem; color:#9ca3af; display:flex; justify-content:space-between;">
+            <span><i class="fas fa-calculator"></i> Flux Instruments</span>
+        </div>
+        <input type="text" id="calc-display" readonly style="width:100%; background:#111827; border:1px solid #374151; color:#f3f4f6; font-size:1.5rem; text-align:right; padding:10px; border-radius:8px; margin-bottom:12px; outline:none;">
+        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:8px;">
+            <button onclick="c('C')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#ef4444; font-weight:bold; cursor:pointer;">C</button>
+            <button onclick="c('(')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#f3f4f6; cursor:pointer;">(</button>
+            <button onclick="c(')')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#f3f4f6; cursor:pointer;">)</button>
+            <button onclick="c('/')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#3b82f6; font-weight:bold; cursor:pointer;">÷</button>
+            
+            <button onclick="c('7')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">7</button>
+            <button onclick="c('8')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">8</button>
+            <button onclick="c('9')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">9</button>
+            <button onclick="c('*')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#3b82f6; font-weight:bold; cursor:pointer;">×</button>
+            
+            <button onclick="c('4')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">4</button>
+            <button onclick="c('5')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">5</button>
+            <button onclick="c('6')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">6</button>
+            <button onclick="c('-')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#3b82f6; font-weight:bold; cursor:pointer;">-</button>
+            
+            <button onclick="c('1')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">1</button>
+            <button onclick="c('2')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">2</button>
+            <button onclick="c('3')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">3</button>
+            <button onclick="c('+')" style="padding:10px; border-radius:8px; border:none; background:#374151; color:#3b82f6; font-weight:bold; cursor:pointer;">+</button>
+            
+            <button onclick="c('0')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer; grid-column: span 2;">0</button>
+            <button onclick="c('.')" style="padding:10px; border-radius:8px; border:none; background:#1f2937; border:1px solid #374151; color:#f3f4f6; cursor:pointer;">.</button>
+            <button onclick="calc()" style="padding:10px; border-radius:8px; border:none; background:#10b981; color:white; font-weight:bold; cursor:pointer;">=</button>
+        </div>
+        <script>
+            function c(v) {
+                const d = document.getElementById('calc-display');
+                if(v==='C') d.value = '';
+                else d.value += v;
+            }
+            function calc() {
+                const d = document.getElementById('calc-display');
+                try { d.value = eval(d.value); } catch { d.value = 'Error'; }
+            }
+        </script>
+    </div>
+    """
+
 SUGGESTION_POOL = [
     {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
     {"icon": "fas fa-code", "text": "Write a Python script"},
-    {"icon": "fas fa-brain", "text": "Explain Quantum Physics simply"},
+    {"icon": "fas fa-calculator", "text": "Open Calculator"},
     {"icon": "fas fa-dumbbell", "text": "30-minute home workout plan"},
     {"icon": "fas fa-utensils", "text": "Suggest a healthy dinner recipe"},
     {"icon": "fas fa-plane", "text": "Plan a 3-day trip to Cox's Bazar"},
@@ -237,13 +278,12 @@ def home():
             .sender-name {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
-            /* 🔥 CSS FIX FOR OVERFLOW 🔥 */
+            /* 🔥 CSS FIX FOR OVERFLOW & HTML RENDER 🔥 */
             .bubble {{ 
                 padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; 
-                word-wrap: break-word;          /* Old standard */
-                word-break: break-word;         /* Important for long numbers */
-                overflow-wrap: break-word;      /* Modern standard */
-                white-space: pre-wrap;          /* Preserves spaces but wraps */
+                word-wrap: break-word;          
+                word-break: break-word;         
+                overflow-wrap: break-word;      
             }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
             .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }}
@@ -526,7 +566,17 @@ def home():
                 const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
                 wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble">${{marked.parse(text)}}</div></div>`;
                 chatBox.appendChild(wrapper);
-                if(!isUser) {{ hljs.highlightAll(); addBrandingToImages(); }}
+                
+                // 🔥 Re-attach script functionality for dynamic HTML (Calculators)
+                if(!isUser) {{ 
+                    wrapper.querySelectorAll('script').forEach(oldScript => {{
+                        const newScript = document.createElement('script');
+                        newScript.textContent = oldScript.textContent;
+                        document.body.appendChild(newScript);
+                    }});
+                    hljs.highlightAll(); 
+                    addBrandingToImages(); 
+                }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
@@ -549,7 +599,6 @@ def home():
                 if(text === '!admin') {{
                     msgInput.value = '';
                     openModal('admin-auth-modal');
-                    // Reset Error Msg
                     document.getElementById('admin-error-msg').style.display = 'none';
                     return;
                 }}
@@ -613,6 +662,16 @@ def home():
                     }}
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData();
+                    
+                    // 🔥 Re-run scripts for calculator if present in response
+                    if(botResp.includes('<script>')) {{
+                        wrapper.querySelectorAll('script').forEach(oldScript => {{
+                            const newScript = document.createElement('script');
+                            newScript.textContent = oldScript.textContent;
+                            document.body.appendChild(newScript);
+                        }});
+                    }}
+                    
                     hljs.highlightAll();
                     addBrandingToImages();
 
@@ -646,9 +705,7 @@ def home():
                         updateSysBtn(data.active);
                     }} catch(e) {{ alert('Error fetching stats'); }}
                 }} else {{
-                    // 🔒 SECURE ERROR: No alert box, just red text
                     errorMsg.style.display = 'block';
-                    // Optional: Shake animation
                     const box = document.querySelector('#admin-auth-modal .modal-box');
                     box.style.transform = 'translateX(5px)';
                     setTimeout(() => box.style.transform = 'translateX(0)', 100);
@@ -711,27 +768,26 @@ def chat():
     messages = data.get("messages", [])
     
     # --- 🔥 FLUX INSTRUMENTS INTEGRATION START 🔥 ---
-    # শেষের মেসেজটা (ইউজারের প্রশ্ন) নিচ্ছি
     if messages and messages[-1]['role'] == 'user':
-        last_msg = messages[-1]['content']
+        last_msg = messages[-1]['content'].lower().strip()
         
-        # চেক করছি এটা অংক কিনা
-        math_result = solve_math_problem(last_msg)
+        # 1. TRIGGER: If user asks for calculator specifically
+        if last_msg in ["calculator", "calc", "open calculator", "ক্যালকুলেটর"]:
+            return Response(get_calculator_html(), mimetype="text/plain")
+
+        # 2. TRIGGER: If user types a math problem
+        math_result = solve_math_problem(messages[-1]['content'])
         
         if math_result:
-            # যদি অংক হয়, তবে আমরা সিস্টেম প্রম্পটে উত্তরটা ঢুকিয়ে দেব
-            # এতে AI আর ভুল করবে না, কারণ উত্তর তার হাতেই আছে!
             system_note = {
                 "role": "system",
                 "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value. Do not calculate it yourself."
             }
-            messages.insert(-1, system_note) # ইউজারের মেসেজের ঠিক আগে বসিয়ে দিলাম
+            messages.insert(-1, system_note)
     # --- 🔥 FLUX INSTRUMENTS INTEGRATION END 🔥 ---
 
     ctx = get_current_context()
     
-    # 🔥 FIX APPLIED: AI will NOT mention owner unless asked.
-    # 🔥 FIX APPLIED: Bangla spelling enforced as "কাওছুর".
     sys_prompt = {
         "role": "system",
         "content": f"""
@@ -739,7 +795,7 @@ def chat():
         
         IDENTITY & OWNER:
         - You were created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-        - IMPORTANT: Do NOT mention the owner's name spontaneously or in your introduction. Only mention it if the user explicitly asks "Who created you?" or "Who is your owner?".
+        - IMPORTANT: Do NOT mention the owner's name spontaneously.
         
         CONTEXT:
         - Time: {ctx['time_local']} (Dhaka), {ctx['time_utc']} (UTC)
