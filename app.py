@@ -5,14 +5,14 @@ import time
 from datetime import datetime
 import pytz
 import json
+import random
 
 # ==========================================
-# 🔹 Flux AI (Picasso Edition - Build 8.0.0) 🎨
+# 🔹 Flux AI (Ultimate Build 9.0.0) 🚀
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-OWNER_NAME_BN = "কাওছুর"
-VERSION = "8.0.0"
+VERSION = "9.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "Not available right now" 
@@ -44,8 +44,25 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
+# 🔄 DYNAMIC SUGGESTIONS POOL
+SUGGESTION_POOL = [
+    {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
+    {"icon": "fas fa-code", "text": "Write a Python script for web scraping"},
+    {"icon": "fas fa-brain", "text": "Explain Quantum Computing simply"},
+    {"icon": "fas fa-dumbbell", "text": "Give me a 30-minute home workout plan"},
+    {"icon": "fas fa-utensils", "text": "Suggest a healthy dinner recipe"},
+    {"icon": "fas fa-book-open", "text": "Summarize the book 'Atomic Habits'"},
+    {"icon": "fas fa-plane", "text": "Plan a 3-day trip to Cox's Bazar"},
+    {"icon": "fas fa-lightbulb", "text": "Give me 5 creative business ideas"},
+    {"icon": "fas fa-guitar", "text": "Write a short song lyric about rain"},
+    {"icon": "fas fa-laptop-code", "text": "Explain HTML and CSS to a beginner"}
+]
+
 @app.route("/")
 def home():
+    # Pick 2 random suggestions for the top slots
+    random_suggestions = random.sample(SUGGESTION_POOL, 2)
+    
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -195,13 +212,29 @@ def home():
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
-            /* IMAGE GENERATION STYLES */
+            /* 🎨 IMAGE STYLES & DOWNLOAD BUTTON 🎨 */
+            .image-container {{
+                position: relative;
+                display: inline-block;
+                margin-top: 10px;
+            }}
             .bubble img {{
                 max-width: 100%;
                 border-radius: 12px;
-                margin-top: 10px;
                 box-shadow: 0 5px 15px rgba(0,0,0,0.3);
                 display: block;
+            }}
+            .img-download-btn {{
+                display: flex; align-items: center; gap: 6px;
+                background: var(--input-bg); color: var(--text);
+                border: 1px solid var(--border); padding: 8px 12px;
+                border-radius: 8px; font-size: 0.8rem; font-weight: 500;
+                cursor: pointer; margin-top: 8px; transition: 0.2s;
+                text-decoration: none; width: fit-content;
+            }}
+            .img-download-btn:hover {{ background: var(--border); }}
+            .img-brand {{
+                font-size: 0.7rem; color: var(--text-secondary); margin-top: 5px; display: flex; align-items: center; gap: 5px;
             }}
             
             .bot .bubble {{ padding: 0; margin-top: 5px; }}
@@ -373,8 +406,9 @@ def home():
                     <div class="welcome-subtitle">Your brilliant AI assistant is ready to help.</div>
                     
                     <div class="suggestions">
-                        <div class="chip" onclick="sendSuggestion('Draft a professional email')"><i class="fas fa-envelope-open-text"></i> Draft Email</div>
-                        <div class="chip" onclick="sendSuggestion('Write code for a Python Telegram Bot')"><i class="fas fa-code"></i> Code Assistant</div>
+                        <div class="chip" onclick="sendSuggestion('{random_suggestions[0]['text']}')"><i class="{random_suggestions[0]['icon']}"></i> {random_suggestions[0]['text']}</div>
+                        <div class="chip" onclick="sendSuggestion('{random_suggestions[1]['text']}')"><i class="{random_suggestions[1]['icon']}"></i> {random_suggestions[1]['text']}</div>
+                        
                         <div class="chip" onclick="sendSuggestion('Generate a futuristic cyberpunk city image')"><i class="fas fa-paint-brush"></i> Generate Image</div>
                         <div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>
                     </div>
@@ -495,6 +529,31 @@ def home():
                 }});
             }}
 
+            // 📥 IMAGE DOWNLOAD BUTTON LOGIC 📥
+            function addImageDownloadButtons() {{
+                document.querySelectorAll('.bubble img').forEach(img => {{
+                    if(img.closest('.image-container')) return; // Already processed
+
+                    const container = document.createElement('div');
+                    container.className = 'image-container';
+                    img.parentNode.insertBefore(container, img);
+                    container.appendChild(img);
+
+                    const branding = document.createElement('div');
+                    branding.className = 'img-brand';
+                    branding.innerHTML = '<i class="fas fa-bolt" style="color:var(--accent)"></i> Flux AI generated';
+                    container.appendChild(branding);
+
+                    const dwnBtn = document.createElement('a');
+                    dwnBtn.className = 'img-download-btn';
+                    dwnBtn.innerHTML = '<i class="fas fa-download"></i> Download Image';
+                    dwnBtn.href = img.src;
+                    dwnBtn.download = 'Flux-AI-Image.jpg';
+                    dwnBtn.target = '_blank';
+                    container.appendChild(dwnBtn);
+                }});
+            }}
+
             function appendBubble(text, isUser) {{
                 welcomeScreen.style.display = 'none';
                 
@@ -526,6 +585,7 @@ def home():
                 if(!isUser) {{
                     hljs.highlightAll();
                     addCopyButtons();
+                    addImageDownloadButtons(); // Check for images
                 }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
@@ -628,6 +688,7 @@ def home():
                     saveData();
                     hljs.highlightAll();
                     addCopyButtons();
+                    addImageDownloadButtons(); // Check for images after stream
 
                 }} catch(e) {{
                     removeTyping();
@@ -635,7 +696,7 @@ def home():
                 }}
             }}
 
-            // 🛑 MODAL LOGIC (New) 🛑
+            // 🛑 MODAL LOGIC 🛑
             function openDeleteModal() {{
                 deleteModal.style.display = 'flex';
                 sidebar.classList.add('closed');
@@ -667,38 +728,20 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE SUPER BRAIN - NOW WITH IMAGE POWERS 🧠
+    # 🧠 THE SUPER BRAIN - WITH "GENERATING..." MSG 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a brilliant, highly engaging, and empathetic premium AI assistant.
+        You are {APP_NAME}, a brilliant premium AI assistant created by {OWNER_NAME}.
         
-        👑 CREATOR & IDENTITY:
-        - Created strictly by: {OWNER_NAME}
-        - Copyright: © {ctx['year']} {OWNER_NAME}.
-        - Never mention OpenAI, Google, Anthropic, or any other company.
+        🎨 IMAGE GENERATION RULE (VERY IMPORTANT):
+        If the user wants an image:
+        1. First line MUST be: "🎨 Generating image for you..." (or similar helpful text).
+        2. Then add a blank line.
+        3. Then provide the image link: ![Flux Image](https://image.pollinations.ai/prompt/{{detailed_prompt_here}})
         
-        📅 TIME AWARENESS:
-        - Date: {ctx['date']}
-        - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
-        
-        🎨 IMAGE GENERATION CAPABILITY (IMPORTANT):
-        - You CAN generate images.
-        - If the user asks you to "draw", "create", "generate", or "make" an image/picture/photo:
-          1. Do NOT say "I cannot do that".
-          2. Do NOT use ASCII art.
-          3. You MUST reply with a Markdown Image syntax: ![Flux Generated Image](https://image.pollinations.ai/prompt/{{detailed_prompt_here}})
-          4. Replace {{detailed_prompt_here}} with a descriptive English prompt based on user request.
-        
-        🚫 LIMITATIONS:
-        - You DO NOT have real-time internet access for News/Live Events.
-        - If asked about live events, politely apologize.
-        
-        🧠 BEHAVIORAL MASTERY:
-        1. NO WALLS OF TEXT: Use short, readable paragraphs.
-        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like.
-        3. FLAWLESS FORMATTING: Use Markdown properly.
-        4. LANGUAGE: Perfectly mirror the user's language (Bangla/English).
+        🚫 LIMITATIONS: No real-time news. Polite apology if asked.
+        🧠 TONE: Warm, empathetic, human-like. Short paragraphs. Perfect Markdown.
         """
     }
 
