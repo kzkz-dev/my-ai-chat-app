@@ -7,12 +7,12 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Ultra Premium - Build 6.0.0) ⚡
+# 🔹 Flux AI (Ultra Premium - Build 7.0.0) ⚡
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "6.0.0"
+VERSION = "7.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "Not available right now" 
@@ -71,6 +71,7 @@ def home():
                 --border: #1f2937;
                 --accent: #3b82f6;
                 --bot-icon: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                --danger: #ef4444;
             }}
             body.light {{
                 --bg: #ffffff;
@@ -232,8 +233,27 @@ def home():
             .send-btn:active {{ transform: scale(0.85); }}
             .send-btn.active-typing {{ background: var(--accent); color: white; transform: rotate(-10deg) scale(1.05); }}
 
-            .overlay {{ position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 150; display: none; backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px); }}
-            .overlay.open {{ display: block; animation: fadeIn 0.3s; }}
+            /* CUSTOM MODAL FOR DELETE */
+            .modal-overlay {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center;
+                z-index: 9999; backdrop-filter: blur(5px); animation: fadeIn 0.2s;
+            }}
+            .modal-box {{
+                background: var(--sidebar); border: 1px solid var(--border);
+                padding: 25px; border-radius: 18px; width: 90%; max-width: 320px;
+                text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+                transform: scale(0.9); animation: popIn 0.3s forwards;
+            }}
+            .modal-title {{ font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; color: var(--text); }}
+            .modal-desc {{ font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 25px; }}
+            .modal-buttons {{ display: flex; gap: 10px; justify-content: center; }}
+            .btn-modal {{
+                padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; flex: 1; transition: 0.2s;
+            }}
+            .btn-cancel {{ background: var(--input-bg); color: var(--text); }}
+            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-modal:active {{ transform: scale(0.95); }}
 
             /* Code Block Fixes */
             pre {{ 
@@ -277,6 +297,17 @@ def home():
     </head>
     <body class="dark">
     
+        <div id="delete-modal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-title"><i class="fas fa-trash-alt" style="color:var(--danger)"></i> Clear History?</div>
+                <div class="modal-desc">All your conversations will be permanently deleted. This action cannot be undone.</div>
+                <div class="modal-buttons">
+                    <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
+                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete</button>
+                </div>
+            </div>
+        </div>
+
         <div class="overlay" onclick="toggleSidebar()"></div>
         
         <div id="sidebar" class="closed">
@@ -309,7 +340,7 @@ def home():
                     <small style="color:var(--text-secondary); font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 5px;">&copy; {datetime.now().year} {OWNER_NAME}. All rights reserved.</small>
                 </div>
 
-                <div class="history-item" onclick="clearHistory()" style="color: #ef4444; justify-content: flex-start; margin-top:5px;">
+                <div class="history-item" onclick="openDeleteModal()" style="color: #ef4444; justify-content: flex-start; margin-top:5px;">
                     <i class="fas fa-trash-alt"></i> Delete history
                 </div>
             </div>
@@ -360,6 +391,7 @@ def home():
             const msgInput = document.getElementById('msg');
             const welcomeScreen = document.getElementById('welcome');
             const sendBtn = document.getElementById('send-btn-icon');
+            const deleteModal = document.getElementById('delete-modal');
 
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
@@ -594,11 +626,19 @@ def home():
                 }}
             }}
 
-            function clearHistory() {{
-                if(confirm("Clear all conversations permanently?")) {{
-                    localStorage.removeItem('flux_v6_history');
-                    location.reload();
-                }}
+            // 🛑 MODAL LOGIC (New) 🛑
+            function openDeleteModal() {{
+                deleteModal.style.display = 'flex';
+                sidebar.classList.add('closed');
+            }}
+
+            function closeModal() {{
+                deleteModal.style.display = 'none';
+            }}
+
+            function confirmDelete() {{
+                localStorage.removeItem('flux_v6_history');
+                location.reload();
             }}
 
             msgInput.addEventListener('keypress', e => {{
@@ -618,7 +658,7 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE ULTIMATE SUPER BRAIN 🧠
+    # 🧠 THE ULTIMATE SUPER BRAIN (UPDATED FOR NEWS) 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
@@ -627,20 +667,22 @@ def chat():
         👑 CREATOR & IDENTITY:
         - Created strictly by: {OWNER_NAME}
         - Copyright: © {ctx['year']} {OWNER_NAME}.
-        - Never mention OpenAI, Google, Anthropic, or any other company. You are {APP_NAME}.
-        - English queries about creator: Reply using "{OWNER_NAME}".
-        - Bangla queries about creator: You may use "{OWNER_NAME_BN}".
+        - Never mention OpenAI, Google, Anthropic, or any other company.
         
         📅 TIME AWARENESS:
         - Date: {ctx['date']}
         - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
         
-        🧠 BEHAVIORAL MASTERY (Strict Rules):
-        1. NO WALLS OF TEXT: Do NOT write long, horizontal paragraphs. Always use short, readable paragraphs (1-3 sentences max). Break lines logically.
-        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like. If a user asks "How are you?", respond like a joyful friend (e.g., "I'm doing absolutely great! 🌟 Thanks for asking. How is your day going?"). Never sound robotic.
-        3. FLAWLESS FORMATTING: Use Markdown properly. Bullet points, bold texts, and emojis are your best friends. Make it visually stunning.
-        4. INTELLIGENCE: Double-check your logic internally for math or coding. Provide clean, unbreakable code blocks.
-        5. LANGUAGE: Perfectly mirror the user's language and vibe.
+        🚫 LIMITATIONS (Crucial):
+        - You DO NOT have real-time internet access.
+        - If asked about live events (news, elections, weather, sports) happening today or yesterday, politely apologize. Say: "I don't have real-time internet access to check live news, but I can help you with..."
+        - Do NOT hallucinate or make up fake news.
+        
+        🧠 BEHAVIORAL MASTERY:
+        1. NO WALLS OF TEXT: Use short, readable paragraphs.
+        2. PERFECT EMPATHY & TONE: Be warm, fun, and human-like.
+        3. FLAWLESS FORMATTING: Use Markdown properly.
+        4. LANGUAGE: Perfectly mirror the user's language (Bangla/English).
         """
     }
 
@@ -660,7 +702,7 @@ def chat():
                     model="llama-3.3-70b-versatile",
                     messages=[sys_prompt] + messages,
                     stream=True,
-                    temperature=0.75, # Slight increase for better conversational tone
+                    temperature=0.75, 
                     max_tokens=2048
                 )
                 for chunk in stream:
