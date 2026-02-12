@@ -10,12 +10,12 @@ import re      # ➕ Math: Regex এর জন্য
 import math    # ➕ Math: অংকের লাইব্রেরি
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Fix - Build 18.2.3) 🛡️
+# 🔹 Flux AI (Ultimate Fix - Build 18.2.2) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "Kawchur"  
-OWNER_NAME_BN = "কাওছুর" 
-VERSION = "18.2.3"
+OWNER_NAME = "KAWCHUR"  # Fixed capitalization for better display
+OWNER_NAME_BN = "কাওছুর" # Fixed Bangla spelling
+VERSION = "18.2.2"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # ⚠️ Links Restored
@@ -57,34 +57,28 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
-# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - INTELLIGENT MODE 🚀
+# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - ADDED
 def solve_math_problem(text):
     try:
-        # ১. চিহ্ন রিপ্লেস করা (যাতে × এবং ÷ চিনতে পারে)
-        normalized_text = text.replace("×", "*").replace("÷", "/")
-        
-        # ২. টেক্সট থেকে শুধু অংক বের করা (Regex ব্যবহার করে)
-        # এটি =, ?, টেক্সট সব বাদ দিয়ে শুধু গাণিতিক অংশ নেবে
-        match = re.search(r'[\d\.\(][\d\.\+\-\*\/\(\)\s\^]*[\d\.\)]', normalized_text)
-        
-        if not match:
+        # ১. নিরাপত্তা: অংক ছাড়া অন্য কিছু থাকলে স্কিপ করবে
+        allowed_chars = set("0123456789.+-*/() xX÷^")
+        if not set(text.replace(" ", "")).issubset(allowed_chars):
             return None
-            
-        expression = match.group(0).strip()
         
-        # ৩. যদি খুব ছোট কিছু হয় বা কোনো অপারেটর না থাকে, তবে ইগনোর করো
-        if len(expression) < 3 or not any(op in expression for op in ['+', '-', '*', '/', '^']):
+        # ২. সাধারণ টেক্সট বা সাল (যেমন 2026) যাতে অংক না ভাবে
+        if len(text) < 4 or not any(op in text for op in ['+', '-', '*', '/', 'x', '÷']):
             return None
 
+        # ৩. চিহ্ন ঠিক করা (x -> *)
+        expression = text.replace("x", "*").replace("X", "*").replace("÷", "/")
+        
         # ৪. ক্যালকুলেশন
         result = eval(expression, {"__builtins__": None}, {"math": math})
         
-        # ৫. উত্তর সাজানো
-        if isinstance(result, (int, float)):
-            if result == int(result):
-                return f"{int(result):,}" 
-            return f"{result:,.4f}" # দশমিকের পর ৪ ঘর পর্যন্ত দেখাবে
-        return str(result)
+        # ৫. পূর্ণসংখ্যা হলে দশমিক বাদ দেওয়া, নাহলে ফ্লোট রাখা
+        if result == int(result):
+            return f"{int(result):,}" # ১,০০০ ফরম্যাট
+        return f"{result:,}"
     except:
         return None
 
@@ -107,7 +101,6 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
-    # HTML কোড শুরু (SyntaxError ফিক্স করা হয়েছে)
     return f"""
     <!DOCTYPE html>
     <html lang="en">
