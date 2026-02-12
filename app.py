@@ -10,7 +10,7 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Natural Chat Fix - Build 20.2.0) 🗣️
+# 🔹 Flux AI (Natural Chat Fix - Build 20.2.0) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
@@ -89,6 +89,7 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # ⚠️ CSS/JS braces must be doubled {{ }}
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -105,54 +106,38 @@ def home():
 
         <style>
             :root {{
-                /* 🌌 CYBERPUNK PALETTE */
                 --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
                 --glass-bg: rgba(20, 20, 35, 0.65);
                 --glass-border: rgba(255, 255, 255, 0.08);
-                
                 --text: #e0e6ed;
                 --text-secondary: #94a3b8;
-                
-                --accent: #00f3ff; /* Cyan Neon */
+                --accent: #00f3ff;
                 --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
-                
                 --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
                 --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
-                
                 --danger: #ff0f7b;
                 --success: #00ff87;
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
             body {{ 
-                margin: 0; 
-                background: var(--bg-gradient); 
-                color: var(--text); 
+                margin: 0; background: var(--bg-gradient); color: var(--text); 
                 font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
-                height: 100vh; 
-                display: flex; 
-                overflow: hidden; 
+                height: 100vh; display: flex; overflow: hidden; 
             }}
 
-            /* 🪟 GLASS EFFECTS */
             .glass {{
-                background: var(--glass-bg);
-                backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px);
-                border: 1px solid var(--glass-border);
+                background: var(--glass-bg); backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
             }}
 
-            /* SIDEBAR */
             #sidebar {{
-                width: 280px; 
-                height: 100%; display: flex; flex-direction: column;
-                padding: 20px; 
-                border-right: 1px solid var(--glass-border);
+                width: 280px; height: 100%; display: flex; flex-direction: column;
+                padding: 20px; border-right: 1px solid var(--glass-border);
                 transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
                 position: absolute; z-index: 200; left: 0; top: 0; 
                 box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-                background: rgba(15, 15, 30, 0.85);
-                backdrop-filter: blur(20px);
+                background: rgba(15, 15, 30, 0.85); backdrop-filter: blur(20px);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
@@ -161,15 +146,11 @@ def home():
                 display: flex; align-items: center; gap: 12px; color: white; 
                 text-shadow: var(--accent-glow);
             }}
-            .brand i {{ 
-                background: var(--bot-grad); -webkit-background-clip: text; color: transparent; 
-            }}
+            .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 14px; 
-                background: rgba(255, 255, 255, 0.05); 
-                color: var(--text); 
-                border: 1px solid var(--glass-border);
+                width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05); 
+                color: var(--text); border: 1px solid var(--glass-border);
                 border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
                 margin-bottom: 20px; transition: all 0.3s ease;
             }}
@@ -194,11 +175,9 @@ def home():
             .about-link {{ color: white; font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
 
-            /* HEADER - GLASSY */
             header {{
                 height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-                background: rgba(15, 15, 30, 0.7);
-                backdrop-filter: blur(15px);
+                background: rgba(15, 15, 30, 0.7); backdrop-filter: blur(15px);
                 border-bottom: 1px solid var(--glass-border); 
                 position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             }}
@@ -206,59 +185,34 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* 🌟 WELCOME SCREEN 🌟 */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; 
-                padding-top: 110px; /* Fixed Logo Position */
-                padding-bottom: 100px;
+                height: 100%; text-align: center; padding-top: 120px; padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
-                width: 90px; height: 90px; 
-                background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(188, 19, 254, 0.1));
-                border: 1px solid rgba(255, 255, 255, 0.1);
-                border-radius: 28px; 
+                width: 90px; height: 90px; background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(188, 19, 254, 0.1));
+                border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; 
                 display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; 
-                margin-bottom: 25px; 
-                box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
+                margin-bottom: 25px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
                 animation: levitate 4s ease-in-out infinite;
             }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            
-            .welcome-title {{ 
-                font-size: 2.4rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px;
-                background: linear-gradient(to right, #fff, #b3b3b3); -webkit-background-clip: text; color: transparent;
-            }}
+            .welcome-title {{ font-size: 2.4rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #b3b3b3); -webkit-background-clip: text; color: transparent; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; max-width: 80%; line-height: 1.5; }}
 
-            /* SUGGESTIONS */
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
             .chip {{
-                padding: 18px 22px; 
-                background: rgba(255, 255, 255, 0.03); 
+                padding: 18px 22px; background: rgba(255, 255, 255, 0.03); 
                 border: 1px solid var(--glass-border); border-radius: 20px;
                 cursor: pointer; text-align: left; color: var(--text-secondary); 
-                transition: all 0.3s;
-                font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 14px;
+                transition: all 0.3s; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 14px;
             }}
-            .chip:hover {{ 
-                transform: translateY(-5px); 
-                background: rgba(255, 255, 255, 0.07);
-                border-color: var(--accent); 
-                color: white; 
-                box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-            }}
+            .chip:hover {{ transform: translateY(-5px); background: rgba(255, 255, 255, 0.07); border-color: var(--accent); color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }}
             .chip i {{ color: var(--accent); font-size: 1.2rem; opacity: 0.9; }}
 
-            /* MESSAGES */
             .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            
-            .avatar {{ 
-                width: 40px; height: 40px; border-radius: 14px; 
-                display: flex; align-items: center; justify-content: center; flex-shrink: 0; 
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 1.1rem;
-            }}
+            .avatar {{ width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 1.1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); }}
             
@@ -267,29 +221,14 @@ def home():
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
-            .bubble {{ 
-                padding: 14px 20px; border-radius: 22px; font-size: 1.02rem; line-height: 1.65; 
-                word-wrap: break-word; position: relative;
-            }}
-            .bot .bubble {{ 
-                background: transparent; 
-                padding: 0; width: 100%; color: var(--text);
-            }}
-            .user .bubble {{ 
-                background: var(--user-grad); 
-                border-radius: 22px 4px 22px 22px; 
-                color: white; 
-                box-shadow: 0 5px 20px rgba(20, 136, 204, 0.3);
-            }}
+            .bubble {{ padding: 14px 20px; border-radius: 22px; font-size: 1.02rem; line-height: 1.65; word-wrap: break-word; position: relative; }}
+            .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
+            .user .bubble {{ background: var(--user-grad); border-radius: 22px 4px 22px 22px; color: white; box-shadow: 0 5px 20px rgba(20, 136, 204, 0.3); }}
             
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
-            .bubble img {{ 
-                max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; 
-                box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); 
-            }}
+            .bubble img {{ max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }}
             .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
 
-            /* INPUT AREA */
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
                 background: linear-gradient(to top, rgb(5, 5, 10) 0%, transparent 100%); 
@@ -297,17 +236,11 @@ def home():
             }}
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: rgba(30, 30, 50, 0.7); 
-                border-radius: 30px; padding: 8px 8px 8px 24px;
-                border: 1px solid var(--glass-border); 
-                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                backdrop-filter: blur(20px);
-                transition: all 0.3s ease;
+                background: rgba(30, 30, 50, 0.7); border-radius: 30px; padding: 8px 8px 8px 24px;
+                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                backdrop-filter: blur(20px); transition: all 0.3s ease;
             }}
-            .input-box:focus-within {{ 
-                border-color: var(--accent); 
-                box-shadow: 0 0 25px rgba(0, 243, 255, 0.15); 
-            }}
+            .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 25px rgba(0, 243, 255, 0.15); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
                 color: white; font-size: 1.05rem; max-height: 160px; resize: none; padding: 14px 0; font-family: inherit;
@@ -319,7 +252,6 @@ def home():
             }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
-            /* MODAL */
             .modal-overlay {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
@@ -338,16 +270,12 @@ def home():
             .btn-delete {{ background: var(--danger); color: white; }}
             .btn-confirm {{ background: var(--success); color: black; }}
 
-            /* ADMIN PANEL */
             .stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }}
             .stat-box {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 14px; border: 1px solid var(--glass-border); }}
             .stat-val {{ font-size: 1.6rem; font-weight: 700; color: var(--accent); }}
             .stat-label {{ font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px; }}
 
-            @keyframes levitate {{
-                0%, 100% {{ transform: translateY(0); }}
-                50% {{ transform: translateY(-15px); }}
-            }}
+            @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
@@ -455,7 +383,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v20_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v20_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
 
@@ -503,7 +431,7 @@ def home():
                 resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v20_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v20_2_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -612,14 +540,14 @@ def home():
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                // 👇 AI NOW KNOWS THE USER NAME HERE 👇
-                if(userName) context.unshift({{role: "system", content: "User's name is " + userName}});
-
+                // 👇 WE ONLY PASS NAME IN THE SYSTEM PROMPT BACKEND NOW TO AVOID TRANSCRIPT ISSUE
+                
                 try {{
                     const res = await fetch('/chat', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context }})
+                        // Sending name separately in body to be cleaner
+                        body: JSON.stringify({{ messages: context, user_name: userName }})
                     }});
                     
                     removeTyping();
@@ -653,4 +581,158 @@ def home():
                 }}
             }}
 
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
+            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
+            function openDeleteModal(id) {{ openModal(id); }}
+            
+            function confirmDelete() {{ localStorage.removeItem('flux_v20_2_history'); location.reload(); }}
+
+            async function verifyAdmin() {{
+                const pass = document.getElementById('admin-pass').value;
+                const errorMsg = document.getElementById('admin-error-msg');
+                
+                if(pass === '{ADMIN_PASSWORD}') {{
+                    errorMsg.style.display = 'none';
+                    closeModal('admin-auth-modal');
+                    openModal('admin-panel-modal');
+                    document.getElementById('admin-pass').value = '';
+                    try {{
+                        const res = await fetch('/admin/stats');
+                        const data = await res.json();
+                        document.getElementById('stat-uptime').innerText = data.uptime;
+                        document.getElementById('stat-msgs').innerText = data.total_messages;
+                        updateSysBtn(data.active);
+                    }} catch(e) {{ alert('Error fetching stats'); }}
+                }} else {{
+                    errorMsg.style.display = 'block';
+                    const box = document.querySelector('#admin-auth-modal .modal-box');
+                    box.style.transform = 'translateX(5px)';
+                    setTimeout(() => box.style.transform = 'translateX(0)', 100);
+                }}
+            }}
+
+            async function toggleSystem() {{
+                try {{
+                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
+                    const data = await res.json();
+                    updateSysBtn(data.active);
+                }} catch(e) {{ alert('Error toggling system'); }}
+            }}
+
+            function updateSysBtn(isActive) {{
+                const btn = document.getElementById('btn-toggle-sys');
+                const txt = document.getElementById('system-status-text');
+                if(isActive) {{
+                    btn.innerText = "Turn System OFF";
+                    btn.style.background = "var(--danger)";
+                    btn.style.boxShadow = "0 5px 15px rgba(255, 15, 123, 0.4)";
+                    txt.innerText = "System is ONLINE 🟢";
+                    txt.style.color = "var(--success)";
+                }} else {{
+                    btn.innerText = "Turn System ON";
+                    btn.style.background = "var(--success)";
+                    btn.style.boxShadow = "0 5px 15px rgba(0, 255, 135, 0.4)";
+                    txt.innerText = "System is OFFLINE 🔴";
+                    txt.style.color = "var(--danger)";
+                }}
+            }}
+
+            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
+        </script>
+    </body>
+    </html>
+    """
+
+# 🛡️ ADMIN API ROUTES
+@app.route("/admin/stats")
+def admin_stats():
+    return jsonify({
+        "uptime": get_uptime(),
+        "total_messages": TOTAL_MESSAGES,
+        "active": SYSTEM_ACTIVE
+    })
+
+@app.route("/admin/toggle_system", methods=["POST"])
+def toggle_system():
+    global SYSTEM_ACTIVE
+    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
+    return jsonify({"active": SYSTEM_ACTIVE})
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    global TOTAL_MESSAGES
+    if not SYSTEM_ACTIVE:
+        return Response("System is currently under maintenance.", status=503)
+
+    TOTAL_MESSAGES += 1
+    data = request.json
+    messages = data.get("messages", [])
+    user_name = data.get("user_name", None) # Get name cleanly
+    
+    # MATH ENGINE
+    if messages and messages[-1]['role'] == 'user':
+        last_msg = messages[-1]['content']
+        math_result = solve_math_problem(last_msg)
+        if math_result:
+            system_note = {
+                "role": "system",
+                "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value."
+            }
+            messages.insert(-1, system_note)
+
+    ctx = get_current_context()
+    
+    # 🔥 ULTIMATE BRAIN FIX: NATURAL CONVERSATION MODE
+    sys_prompt_content = f"""
+        You are {APP_NAME}, a friendly and expert AI assistant.
+        
+        IDENTITY:
+        - Created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        - Never mention your creator unless explicitly asked.
+        
+        CONTEXT:
+        - Time: {ctx['time_local']} (Dhaka)
+    """
+
+    if user_name:
+        sys_prompt_content += f"\n- User's Name: {user_name} (Address them naturally, but not in every sentence)."
+
+    sys_prompt_content += """
+        RULES:
+        1. NATURAL CONVERSATION: Do NOT act like a script. Do NOT use "Flux AI:" or "User:" prefixes. Just reply naturally like a human friend.
+        2. DIRECT ANSWERS: If asked for ideas/solutions, provide them directly (bullet points are good). Do not start with "Sure, here are some ideas...".
+        3. IMAGE: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+    """
+
+    sys_prompt = {"role": "system", "content": sys_prompt_content}
+
+    def generate():
+        global current_key_index
+        attempts = 0
+        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
+        
+        while attempts < max_retries:
+            try:
+                client = get_groq_client()
+                if not client: yield "⚠️ Config Error."; return
+                stream = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[sys_prompt] + messages,
+                    stream=True,
+                    temperature=0.7, 
+                    max_tokens=1024
+                )
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
+                return
+            except Exception as e:
+                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+                attempts += 1
+                time.sleep(1)
+        yield "⚠️ System overloaded."
+
+    return Response(generate(), mimetype="text/plain")
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
