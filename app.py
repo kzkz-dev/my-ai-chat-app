@@ -8,11 +8,11 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Perfect Build 10.0.0) 💎
+# 🔹 Flux AI (Compact & Colorful - Build 11.0.0) 🌈
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "10.0.0"
+VERSION = "11.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "Not available right now" 
@@ -60,7 +60,6 @@ SUGGESTION_POOL = [
 
 @app.route("/")
 def home():
-    # Pick 2 random suggestions
     random_suggestions = random.sample(SUGGESTION_POOL, 2)
     
     return f"""
@@ -86,9 +85,11 @@ def home():
                 --input-bg: #1f2937;
                 --user-bubble: #2563eb;
                 --border: #1f2937;
-                --accent: #3b82f6;
+                --accent: #3b82f6; /* Default accent */
+                --chat-accent: #3b82f6; /* Dynamic accent per chat */
                 --bot-icon: linear-gradient(135deg, #3b82f6, #8b5cf6);
                 --danger: #ef4444;
+                --font-size-base: 14.5px; /* COMPACT FONT SIZE */
             }}
             body.light {{
                 --bg: #ffffff;
@@ -99,294 +100,166 @@ def home():
                 --user-bubble: #2563eb;
                 --border: #e5e7eb;
                 --accent: #2563eb;
+                --chat-accent: #2563eb;
                 --bot-icon: linear-gradient(135deg, #2563eb, #7c3aed);
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
+            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; font-size: var(--font-size-base); }}
 
-            ::-webkit-scrollbar {{ width: 5px; height: 5px; }}
+            ::-webkit-scrollbar {{ width: 4px; height: 4px; }} /* Thinner scrollbar */
             ::-webkit-scrollbar-thumb {{ background: var(--border); border-radius: 10px; }}
             
+            /* COMPACT SIDEBAR */
             #sidebar {{
-                width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+                width: 260px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
+                padding: 16px; border-right: 1px solid var(--border); transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
                 position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
-            .brand {{ font-size: 1.4rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); letter-spacing: -0.5px; user-select: none; }}
-            .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; font-size: 1.6rem; }}
+            .brand {{ font-size: 1.2rem; font-weight: 700; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: -0.5px; user-select: none; }}
+            .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; font-size: 1.4rem; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 12px; background: transparent; color: var(--text); border: 1px solid var(--border);
-                border-radius: 12px; font-weight: 500; font-size: 0.95rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 10px;
-                transition: all 0.2s ease; margin-bottom: 20px;
+                width: 100%; padding: 10px; background: transparent; color: var(--text); border: 1px solid var(--border);
+                border-radius: 10px; font-weight: 500; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; justify-content: flex-start; gap: 8px;
+                transition: all 0.2s ease; margin-bottom: 15px;
             }}
             .new-chat-btn:active {{ transform: scale(0.95); background: var(--input-bg); }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; padding-right: 5px; margin-bottom: 10px; }}
             .history-item {{
-                padding: 10px 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 12px;
-                font-size: 0.9rem; transition: background 0.2s; user-select: none;
+                padding: 8px 10px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); display: flex; align-items: center; gap: 10px;
+                font-size: 0.85rem; transition: background 0.2s; user-select: none;
             }}
             .history-item:active {{ background: var(--input-bg); color: var(--text); transform: scale(0.98); }}
 
-            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
+            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 12px; display: flex; flex-direction: column; gap: 6px; }}
             
-            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 10px; }}
-            .theme-btn {{ flex: 1; padding: 8px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.85rem; font-weight: 500; transition: 0.3s; }}
+            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 4px; border-radius: 8px; }}
+            .theme-btn {{ flex: 1; padding: 6px; border-radius: 6px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-size: 0.8rem; font-weight: 500; transition: 0.3s; }}
             .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 5px rgba(0,0,0,0.15); }}
 
-            .about-section {{ 
-                display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
-            }}
-            .about-section.show {{ display: block; animation: scaleIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
-            .about-link {{ color: var(--text); font-size: 1.2rem; text-decoration: none; margin: 0 10px; transition: color 0.2s; }}
-            .about-link:hover {{ color: var(--accent); transform: scale(1.1); display: inline-block; }}
-
+            /* COMPACT HEADER */
             header {{
-                height: 60px; display: flex; align-items: center; justify-content: space-between;
-                padding: 0 15px; z-index: 100; background: rgba(11, 15, 25, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
+                height: 50px; display: flex; align-items: center; justify-content: space-between;
+                padding: 0 12px; z-index: 100; background: rgba(11, 15, 25, 0.7); backdrop-filter: blur(15px); -webkit-backdrop-filter: blur(15px);
                 border-bottom: 1px solid rgba(255,255,255,0.05); position: absolute; top: 0; left: 0; right: 0;
             }}
             body.light header {{ background: rgba(255, 255, 255, 0.8); border-bottom: 1px solid rgba(0,0,0,0.05); }}
+            header button {{ font-size: 1.1rem !important; }}
+            header span {{ font-size: 1.1rem !important; }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             
             #chat-box {{ 
-                flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; 
-                display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth;
+                flex: 1; overflow-y: auto; padding: 65px 15px 130px 15px; 
+                display: flex; flex-direction: column; gap: 20px; scroll-behavior: smooth;
             }}
 
-            /* Welcome Screen Layout Fix */
+            /* COMPACT WELCOME SCREEN */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                min-height: 80%; /* Changed from height: 80% to allow flex */
-                text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-                padding-top: 60px; /* Added padding to push it down */
-                padding-bottom: 40px;
+                min-height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                padding-top: 40px; padding-bottom: 30px;
             }}
             .icon-wrapper {{ 
-                width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; 
-                display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; 
-                margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-                animation: float 3s ease-in-out infinite; flex-shrink: 0; /* Prevent shrinking */
+                width: 60px; height: 60px; background: var(--bot-icon); border-radius: 18px; 
+                display: flex; align-items: center; justify-content: center; font-size: 2rem; color: white; 
+                margin-bottom: 15px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
+                animation: float 3s ease-in-out infinite; flex-shrink: 0;
             }}
+            .welcome-title {{ font-size: 1.8rem; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.5px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 30px; font-weight: 400; }}
             
-            .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }}
-            .welcome-subtitle {{ color: var(--text-secondary); font-size: 1.05rem; margin-bottom: 40px; font-weight: 400; }}
-            
-            .suggestions {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; width: 100%; max-width: 550px; }}
+            .suggestions {{ display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; width: 100%; max-width: 500px; }}
             .chip {{
-                padding: 16px; background: transparent; border-radius: 18px; cursor: pointer; text-align: left;
-                border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-size: 0.95rem; color: var(--text-secondary);
+                padding: 12px; background: transparent; border-radius: 14px; cursor: pointer; text-align: left;
+                border: 1px solid var(--border); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1); font-size: 0.85rem; color: var(--text-secondary);
                 background-color: rgba(255,255,255,0.02);
-                animation: slideUpFade 0.6s ease forwards; opacity: 0;
             }}
-            body.light .chip {{ background-color: rgba(0,0,0,0.02); }}
-            .chip:active {{ background: var(--input-bg); border-color: var(--accent); transform: scale(0.95); }}
-            .chip i {{ color: var(--text); margin-bottom: 10px; display: block; font-size: 1.3rem; opacity: 0.9; transition: transform 0.3s; }}
-            .chip:hover i {{ transform: scale(1.1); }}
+            .chip i {{ color: var(--text); margin-bottom: 8px; display: block; font-size: 1.1rem; opacity: 0.9; }}
             
-            .chip:nth-child(1) {{ animation-delay: 0.1s; }}
-            .chip:nth-child(2) {{ animation-delay: 0.2s; }}
-            .chip:nth-child(3) {{ animation-delay: 0.3s; }}
-            .chip:nth-child(4) {{ animation-delay: 0.4s; }}
-
-            /* 🌟 Message Wrapper 🌟 */
-            .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; }}
-            .message-wrapper.user {{ flex-direction: row-reverse; }}
+            /* COMPACT MESSAGES */
+            .message-wrapper {{ display: flex; gap: 10px; width: 100%; max-width: 800px; margin: 0 auto; }}
+            .avatar {{ width: 30px; height: 30px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.9rem; flex-shrink: 0; }}
+            .bubble-container {{ display: flex; flex-direction: column; width: calc(100% - 40px); }}
+            .sender-name {{ font-size: 0.7rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 2px; margin-top: 2px; }}
             
-            .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; flex-shrink: 0; transition: transform 0.3s; }}
-            .bot-avatar {{ background: var(--bot-icon); color: white; box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3); }}
-            .bot-avatar.thinking {{ animation: pulseGlow 1.5s infinite; }}
-            .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
+            .bubble {{ font-size: 0.92rem; line-height: 1.5; color: var(--text); word-break: break-word; overflow-wrap: break-word; }}
+            .bubble p {{ margin-bottom: 10px; }}
             
-            .bubble-container {{ display: flex; flex-direction: column; width: calc(100% - 50px); }}
+            /* DYNAMIC COLORED HIGHLIGHTS */
+            .bubble strong {{ font-weight: 600; color: var(--chat-accent); }}
             
-            .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
-            .user .sender-name {{ display: none; }} 
-            
-            .bubble {{ font-size: 0.98rem; line-height: 1.6; color: var(--text); word-break: break-word; overflow-wrap: break-word; white-space: normal; width: 100%; }}
-            .bubble * {{ max-width: 100%; }} 
-            .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
-            .bubble p:last-child {{ margin-bottom: 0; }}
-            
-            /* 🎨 IMAGE STYLES & DOWNLOAD BUTTON 🎨 */
-            .image-container {{
-                position: relative;
-                display: inline-block;
-                margin-top: 10px;
-            }}
+            /* CLEAN IMAGES (No download button) */
             .bubble img {{
-                max-width: 100%;
-                border-radius: 12px;
-                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-                display: block;
+                max-width: 100%; border-radius: 10px; margin-top: 8px;
+                box-shadow: 0 4px 12px rgba(0,0,0,0.2); display: block; cursor: pointer;
             }}
-            /* Initially hidden, shown via JS */
-            .img-download-btn {{
-                display: none; /* HIDDEN BY DEFAULT */
-                align-items: center; gap: 6px;
-                background: var(--input-bg); color: var(--text);
-                border: 1px solid var(--border); padding: 8px 12px;
-                border-radius: 8px; font-size: 0.8rem; font-weight: 500;
-                cursor: pointer; margin-top: 8px; transition: 0.2s;
-                text-decoration: none; width: fit-content;
-            }}
-            .img-download-btn:hover {{ background: var(--border); }}
-            .img-brand {{
-                font-size: 0.7rem; color: var(--text-secondary); margin-top: 5px; display: flex; align-items: center; gap: 5px;
-            }}
-            
-            .bot .bubble {{ padding: 0; margin-top: 5px; }}
-            .user .bubble {{ background: var(--input-bg); padding: 12px 16px; border-radius: 20px 4px 20px 20px; display: inline-block; max-width: max-content; align-self: flex-end; }}
 
-            /* Beautiful Lists */
-            .bubble ul, .bubble ol {{ margin: 8px 0 12px 0; padding-left: 20px; color: var(--text); }}
-            .bubble li {{ margin-bottom: 6px; line-height: 1.5; }}
-            .bubble strong {{ font-weight: 600; color: var(--accent); }}
-            body.light .bubble strong {{ color: var(--user-bubble); }}
+            .bot .bubble {{ padding: 0; margin-top: 4px; }}
+            .user .bubble {{ background: var(--input-bg); padding: 10px 14px; border-radius: 18px 4px 18px 18px; }}
 
-            .typing {{ display: flex; gap: 5px; align-items: center; padding: 10px 0; }}
-            .dot {{ width: 7px; height: 7px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .dot:nth-child(1) {{ animation-delay: -0.32s; }}
-            .dot:nth-child(2) {{ animation-delay: -0.16s; }}
-
+            /* COMPACT INPUT AREA */
             #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 20px 20px 20px;
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 10px 15px 15px 15px;
                 background: linear-gradient(to top, var(--bg) 80%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 750px; display: flex; align-items: flex-end; 
-                background: var(--input-bg); border-radius: 24px; padding: 6px 6px 6px 18px;
-                border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+                background: var(--input-bg); border-radius: 20px; padding: 5px 5px 5px 15px;
+                border: 1px solid var(--border); transition: 0.3s; box-shadow: 0 8px 25px rgba(0,0,0,0.15);
             }}
-            .input-box:focus-within {{ border-color: rgba(59, 130, 246, 0.5); transform: translateY(-2px); box-shadow: 0 15px 35px rgba(0,0,0,0.3); }}
-            
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1rem; max-height: 150px; resize: none;
-                padding: 12px 0; font-family: inherit; line-height: 1.5;
+                color: var(--text); font-size: 0.95rem; max-height: 130px; resize: none;
+                padding: 10px 0; font-family: inherit; line-height: 1.4;
             }}
             .send-btn {{
-                background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px;
-                border-radius: 50%; cursor: pointer; margin-left: 10px; display: flex; align-items: center; justify-content: center;
-                transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); font-size: 1rem; flex-shrink: 0; margin-bottom: 3px;
+                background: var(--text); color: var(--bg); border: none; width: 38px; height: 38px;
+                border-radius: 50%; cursor: pointer; margin-left: 8px; display: flex; align-items: center; justify-content: center;
+                font-size: 0.9rem; flex-shrink: 0; margin-bottom: 2px;
             }}
-            .send-btn:active {{ transform: scale(0.85); }}
-            .send-btn.active-typing {{ background: var(--accent); color: white; transform: rotate(-10deg) scale(1.05); }}
 
-            /* CUSTOM MODAL FOR DELETE */
-            .modal-overlay {{
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.7); display: none; justify-content: center; align-items: center;
-                z-index: 9999; backdrop-filter: blur(5px); animation: fadeIn 0.2s;
-            }}
-            .modal-box {{
-                background: var(--sidebar); border: 1px solid var(--border);
-                padding: 25px; border-radius: 18px; width: 90%; max-width: 320px;
-                text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-                transform: scale(0.9); animation: popIn 0.3s forwards;
-            }}
-            .modal-title {{ font-size: 1.1rem; font-weight: 600; margin-bottom: 10px; color: var(--text); }}
-            .modal-desc {{ font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 25px; }}
-            .modal-buttons {{ display: flex; gap: 10px; justify-content: center; }}
-            .btn-modal {{
-                padding: 10px 20px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; flex: 1; transition: 0.2s;
-            }}
-            .btn-cancel {{ background: var(--input-bg); color: var(--text); }}
-            .btn-delete {{ background: var(--danger); color: white; }}
-            .btn-modal:active {{ transform: scale(0.95); }}
-
-            /* Code Block Fixes */
-            pre {{ 
-                border-radius: 14px; 
-                padding: 40px 15px 15px 15px;
-                background: #0d1117 !important; 
-                border: 1px solid rgba(255,255,255,0.08); 
-                margin: 15px 0; 
-                font-size: 0.85em; 
-                overflow-x: auto; /* Scroll only inside code */
-                max-width: 100%;
-                position: relative;
-                box-shadow: 0 8px 20px rgba(0,0,0,0.3);
-            }}
-            pre::before {{
-                content: ''; position: absolute; top: 15px; left: 15px; width: 12px; height: 12px; border-radius: 50%;
-                background: #ff5f56; box-shadow: 20px 0 0 #ffbd2e, 40px 0 0 #27c93f;
-            }}
-            .copy-btn {{
-                position: absolute; top: 8px; right: 10px; background: rgba(255,255,255,0.1); color: #fff; border: none;
-                padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer; transition: 0.2s; font-family: 'Inter', sans-serif; font-weight: 500;
-            }}
-            .copy-btn:hover {{ background: rgba(255,255,255,0.25); transform: translateY(-1px); }}
-            
-            table {{ border-collapse: collapse; width: 100%; margin: 15px 0; font-size: 0.9em; border-radius: 8px; overflow: hidden; }}
-            th, td {{ border: 1px solid var(--border); padding: 12px; text-align: left; }}
-            th {{ background: var(--input-bg); font-weight: 600; color: var(--accent); }}
-            
-            blockquote {{ border-left: 4px solid var(--accent); margin: 10px 0; padding-left: 15px; color: var(--text-secondary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 12px 15px; border-radius: 0 10px 10px 0; }}
-
-            /* Keyframes */
-            @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-8px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.5); }} }}
-            @keyframes pulseGlow {{ 0%, 100% {{ box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); transform: scale(1); }} 50% {{ box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); transform: scale(1.05); }} }}
+            /* Keyframes & Other styles remain similar but compacted where applicable */
+            @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-6px); box-shadow: 0 12px 25px rgba(59, 130, 246, 0.5); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
-            @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
-            @keyframes popIn {{ 0% {{ opacity: 0; transform: scale(0.9); }} 100% {{ opacity: 1; transform: scale(1); }} }}
-            @keyframes popInChat {{ 0% {{ opacity: 0; transform: translateY(20px) scale(0.95); }} 100% {{ opacity: 1; transform: translateY(0) scale(1); }} }}
-            @keyframes scaleIn {{ 0% {{ opacity: 0; transform: translateY(-10px) scale(0.95); }} 100% {{ opacity: 1; transform: translateY(0) scale(1); }} }}
-            @keyframes slideUpFade {{ 0% {{ opacity: 0; transform: translateY(20px); }} 100% {{ opacity: 1; transform: translateY(0); }} }}
+            .typing {{ display: flex; gap: 4px; align-items: center; padding: 8px 0; }}
+            .dot {{ width: 6px; height: 6px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
+            pre {{ border-radius: 12px; padding: 35px 12px 12px 12px; margin: 12px 0; font-size: 0.8em; }}
+            pre::before {{ top: 12px; left: 12px; width: 10px; height: 10px; }}
+            .copy-btn {{ top: 6px; right: 8px; padding: 4px 10px; font-size: 0.7rem; }}
         </style>
     </head>
     <body class="dark">
-    
-        <div id="delete-modal" class="modal-overlay">
-            <div class="modal-box">
-                <div class="modal-title"><i class="fas fa-trash-alt" style="color:var(--danger)"></i> Clear History?</div>
-                <div class="modal-desc">All your conversations will be permanently deleted. This action cannot be undone.</div>
-                <div class="modal-buttons">
-                    <button class="btn-modal btn-cancel" onclick="closeModal()">Cancel</button>
-                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete</button>
+        <div id="delete-modal" class="modal-overlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:9999; justify-content:center; align-items:center;">
+            <div class="modal-box" style="background:var(--sidebar); border:1px solid var(--border); padding:20px; border-radius:16px; width:85%; max-width:300px; text-align:center;">
+                <div class="modal-title" style="font-size:1rem; font-weight:600; margin-bottom:8px; color:var(--text);"><i class="fas fa-trash-alt" style="color:var(--danger)"></i> Clear History?</div>
+                <div class="modal-desc" style="font-size:0.85rem; color:var(--text-secondary); margin-bottom:20px;">All conversations will be deleted.</div>
+                <div class="modal-buttons" style="display:flex; gap:8px;">
+                    <button class="btn-modal" onclick="closeModal()" style="padding:8px 16px; border-radius:8px; border:none; font-weight:600; cursor:pointer; flex:1; background:var(--input-bg); color:var(--text);">Cancel</button>
+                    <button class="btn-modal" onclick="confirmDelete()" style="padding:8px 16px; border-radius:8px; border:none; font-weight:600; cursor:pointer; flex:1; background:var(--danger); color:white;">Delete</button>
                 </div>
             </div>
         </div>
 
-        <div class="overlay" onclick="toggleSidebar()"></div>
+        <div class="overlay" onclick="toggleSidebar()" style="position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:150; display:none;"></div>
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-pen-to-square"></i> New chat
             </button>
-            
-            <div style="font-size:0.75rem; font-weight:600; color:var(--text-secondary); margin-bottom:10px; padding-left:5px; text-transform: uppercase; letter-spacing: 1px;">Recent</div>
+            <div style="font-size:0.7rem; font-weight:600; color:var(--text-secondary); margin-bottom:8px; padding-left:4px; text-transform: uppercase; letter-spacing: 0.5px;">Recent</div>
             <div class="history-list" id="history-list"></div>
-            
             <div class="menu-section">
                 <div class="theme-toggles">
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
                 </div>
-
-                <div class="history-item" onclick="toggleAbout()" style="color: var(--text); justify-content: flex-start; margin-top:5px;">
-                    <i class="fas fa-info-circle"></i> App Info
-                </div>
-                
-                <div id="about-info" class="about-section">
-                    <strong style="color:var(--text); font-size: 1.1rem;">{APP_NAME}</strong><br>
-                    <small style="color: var(--text-secondary);">Version {VERSION}</small><br>
-                    <div style="margin: 15px 0;">
-                        <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
-                        <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
-                    </div>
-                    <small style="color:var(--text-secondary);">Developer: {OWNER_NAME}</small><br>
-                    <small style="color:var(--text-secondary); font-size: 0.75rem; opacity: 0.8; display: block; margin-top: 5px;">&copy; {datetime.now().year} {OWNER_NAME}. All rights reserved.</small>
-                </div>
-
-                <div class="history-item" onclick="openDeleteModal()" style="color: #ef4444; justify-content: flex-start; margin-top:5px;">
+                <div class="history-item" onclick="openDeleteModal()" style="color: #ef4444; justify-content: flex-start; margin-top:4px;">
                     <i class="fas fa-trash-alt"></i> Delete history
                 </div>
             </div>
@@ -394,25 +267,19 @@ def home():
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 5px; transition: transform 0.2s;">
-                    <i class="fas fa-bars"></i>
-                </button>
-                <span style="font-weight:600; font-size:1.2rem; letter-spacing: -0.5px;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 5px; transition: transform 0.2s;">
-                    <i class="fas fa-pen-to-square"></i>
-                </button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.1rem; cursor:pointer; padding: 4px;"><i class="fas fa-bars"></i></button>
+                <span style="font-weight:600; font-size:1.1rem; letter-spacing: -0.5px;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.1rem; cursor:pointer; padding: 4px;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Your brilliant AI assistant is ready to help.</div>
-                    
+                    <div class="welcome-subtitle">Your brilliant AI assistant is ready.</div>
                     <div class="suggestions">
                         <div class="chip" onclick="sendSuggestion('{random_suggestions[0]['text']}')"><i class="{random_suggestions[0]['icon']}"></i> {random_suggestions[0]['text']}</div>
                         <div class="chip" onclick="sendSuggestion('{random_suggestions[1]['text']}')"><i class="{random_suggestions[1]['icon']}"></i> {random_suggestions[1]['text']}</div>
-                        
                         <div class="chip" onclick="sendSuggestion('Generate a futuristic cyberpunk city image')"><i class="fas fa-paint-brush"></i> Generate Image</div>
                         <div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>
                     </div>
@@ -428,10 +295,8 @@ def home():
         </div>
 
         <script>
-            // Enable marked breaks for proper markdown newlines
             marked.use({{ breaks: true, gfm: true }});
-
-            let chats = JSON.parse(localStorage.getItem('flux_v6_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v11_history')) || [];
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -439,6 +304,10 @@ def home():
             const welcomeScreen = document.getElementById('welcome');
             const sendBtn = document.getElementById('send-btn-icon');
             const deleteModal = document.getElementById('delete-modal');
+            const overlay = document.querySelector('.overlay');
+
+            // 🎨 DYNAMIC ACCENT COLORS 🎨
+            const accentColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#f97316'];
 
             const savedTheme = localStorage.getItem('theme') || 'dark';
             setTheme(savedTheme);
@@ -451,303 +320,104 @@ def home():
                 document.getElementById('btn-light').className = mode === 'light' ? 'theme-btn active' : 'theme-btn';
             }}
 
-            function toggleAbout() {{
-                document.getElementById('about-info').classList.toggle('show');
-            }}
-
             function resizeInput(el) {{
-                el.style.height = 'auto';
-                el.style.height = Math.min(el.scrollHeight, 120) + 'px';
-                if(el.value.trim() !== "") {{
-                    sendBtn.classList.add('active-typing');
-                }} else {{
-                    sendBtn.classList.remove('active-typing');
-                }}
+                el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+                sendBtn.classList.toggle('active-typing', el.value.trim() !== "");
             }}
 
             function toggleSidebar() {{
-                sidebar.classList.toggle('closed');
-                document.querySelector('.overlay').classList.toggle('open');
+                sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block';
             }}
 
             function startNewChat() {{
                 currentChatId = Date.now();
-                chats.unshift({{ id: currentChatId, title: "New conversation", messages: [] }});
-                saveData();
-                renderHistory();
-                chatBox.innerHTML = '';
-                chatBox.appendChild(welcomeScreen);
-                welcomeScreen.style.display = 'flex';
-                msgInput.value = '';
-                resizeInput(msgInput);
-                sidebar.classList.add('closed');
-                document.querySelector('.overlay').classList.remove('open');
+                // Pick random color for new chat
+                const randomColor = accentColors[Math.floor(Math.random() * accentColors.length)];
+                chats.unshift({{ id: currentChatId, title: "New conversation", messages: [], accent: randomColor }});
+                saveData(); renderHistory(); loadChat(currentChatId);
             }}
 
-            function saveData() {{
-                localStorage.setItem('flux_v6_history', JSON.stringify(chats));
-            }}
+            function saveData() {{ localStorage.setItem('flux_v11_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
-                const list = document.getElementById('history-list');
-                list.innerHTML = '';
+                const list = document.getElementById('history-list'); list.innerHTML = '';
                 chats.forEach(chat => {{
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
+                    const div = document.createElement('div'); div.className = 'history-item';
                     div.innerHTML = `<span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${{(chat.title || 'New conversation').substring(0, 25)}}</span>`;
-                    div.onclick = () => loadChat(chat.id);
-                    list.appendChild(div);
+                    div.onclick = () => loadChat(chat.id); list.appendChild(div);
                 }});
             }}
 
             function loadChat(id) {{
-                currentChatId = id;
-                const chat = chats.find(c => c.id === id);
-                if(!chat) return;
-
-                chatBox.innerHTML = '';
-                welcomeScreen.style.display = 'none';
-                
-                chat.messages.forEach(msg => {{
-                    appendBubble(msg.text, msg.role === 'user');
-                }});
-                
-                sidebar.classList.add('closed');
-                document.querySelector('.overlay').classList.remove('open');
+                currentChatId = id; const chat = chats.find(c => c.id === id); if(!chat) return;
+                // Set dynamic accent color
+                document.documentElement.style.setProperty('--chat-accent', chat.accent || 'var(--accent)');
+                chatBox.innerHTML = ''; welcomeScreen.style.display = 'none';
+                chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user'));
+                sidebar.classList.add('closed'); overlay.style.display = 'none';
+                msgInput.value = ''; resizeInput(msgInput);
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
             function addCopyButtons() {{
                 document.querySelectorAll('pre').forEach(pre => {{
                     if(pre.querySelector('.copy-btn')) return;
-                    const btn = document.createElement('button');
-                    btn.className = 'copy-btn';
-                    btn.innerHTML = '<i class="far fa-copy"></i> Copy';
-                    btn.onclick = () => {{
-                        const code = pre.querySelector('code').innerText;
-                        navigator.clipboard.writeText(code);
-                        btn.innerHTML = '<i class="fas fa-check"></i> Copied';
-                        setTimeout(() => btn.innerHTML = '<i class="far fa-copy"></i> Copy', 2000);
-                    }};
+                    const btn = document.createElement('button'); btn.className = 'copy-btn'; btn.innerHTML = '<i class="far fa-copy"></i>';
+                    btn.onclick = () => {{ navigator.clipboard.writeText(pre.querySelector('code').innerText); btn.innerHTML = '<i class="fas fa-check"></i>'; setTimeout(() => btn.innerHTML = '<i class="far fa-copy"></i>', 2000); }};
                     pre.appendChild(btn);
-                }});
-            }}
-
-            // 📥 FORCE DOWNLOAD FUNCTION 📥
-            async function forceDownload(url, filename) {{
-                try {{
-                    const response = await fetch(url);
-                    const blob = await response.blob();
-                    const blobUrl = window.URL.createObjectURL(blob);
-                    
-                    const a = document.createElement('a');
-                    a.href = blobUrl;
-                    a.download = filename;
-                    document.body.appendChild(a);
-                    a.click();
-                    document.body.removeChild(a);
-                    window.URL.revokeObjectURL(blobUrl);
-                }} catch (e) {{
-                    window.open(url, '_blank'); // Fallback if CORS fails
-                }}
-            }}
-
-            // 📥 IMAGE DOWNLOAD BUTTON LOGIC (WITH LOADING FIX) 📥
-            function addImageDownloadButtons() {{
-                document.querySelectorAll('.bubble img').forEach(img => {{
-                    if(img.closest('.image-container')) return; // Already processed
-
-                    const container = document.createElement('div');
-                    container.className = 'image-container';
-                    img.parentNode.insertBefore(container, img);
-                    container.appendChild(img);
-
-                    const branding = document.createElement('div');
-                    branding.className = 'img-brand';
-                    branding.innerHTML = '<i class="fas fa-bolt" style="color:var(--accent)"></i> Flux AI generated';
-                    container.appendChild(branding);
-
-                    const dwnBtn = document.createElement('button');
-                    dwnBtn.className = 'img-download-btn';
-                    dwnBtn.innerHTML = '<i class="fas fa-download"></i> Download Image';
-                    dwnBtn.onclick = () => forceDownload(img.src, 'Flux-AI-Image-' + Date.now() + '.jpg');
-                    
-                    // 🕒 SHOW BUTTON ONLY AFTER IMAGE LOADS 🕒
-                    img.onload = () => {{
-                        dwnBtn.style.display = 'flex';
-                    }};
-                    // If image is already cached/loaded
-                    if(img.complete) {{
-                        dwnBtn.style.display = 'flex';
-                    }}
-
-                    container.appendChild(dwnBtn);
                 }});
             }}
 
             function appendBubble(text, isUser) {{
                 welcomeScreen.style.display = 'none';
-                
-                const wrapper = document.createElement('div');
-                wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                
-                const avatar = document.createElement('div');
-                avatar.className = `avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}`;
-                avatar.innerHTML = isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>';
-                
-                const bubbleContainer = document.createElement('div');
-                bubbleContainer.className = 'bubble-container';
-                
-                const senderName = document.createElement('div');
-                senderName.className = 'sender-name';
-                senderName.innerText = isUser ? 'You' : '{APP_NAME}';
-                
-                const bubble = document.createElement('div');
-                bubble.className = 'bubble';
-                bubble.innerHTML = marked.parse(text);
-                
-                bubbleContainer.appendChild(senderName);
-                bubbleContainer.appendChild(bubble);
-                
-                wrapper.appendChild(avatar);
-                wrapper.appendChild(bubbleContainer);
+                const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
+                wrapper.innerHTML = `
+                    <div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>
+                    <div class="bubble-container">
+                        <div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>
+                        <div class="bubble">${{marked.parse(text)}}</div>
+                    </div>`;
                 chatBox.appendChild(wrapper);
-                
-                if(!isUser) {{
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    addImageDownloadButtons(); // Check for images
-                }}
+                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
             function showTyping() {{
-                const wrapper = document.createElement('div');
-                wrapper.id = 'typing-indicator';
-                wrapper.className = 'message-wrapper bot';
-                wrapper.innerHTML = `
-                    <div class="avatar bot-avatar thinking"><i class="fas fa-bolt"></i></div>
-                    <div class="bubble-container">
-                        <div class="sender-name">{APP_NAME} is typing...</div>
-                        <div class="bubble"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div>
-                    </div>
-                `;
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
+                wrapper.innerHTML = `<div class="avatar bot-avatar thinking"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}...</div><div class="bubble"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
+                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
-
-            function removeTyping() {{
-                const el = document.getElementById('typing-indicator');
-                if(el) el.remove();
-            }}
-
-            function sendSuggestion(text) {{
-                msgInput.value = text;
-                sendMessage();
-            }}
+            function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
+            function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
-                const text = msgInput.value.trim();
-                if(!text) return;
-
+                const text = msgInput.value.trim(); if(!text) return;
                 if(!currentChatId) startNewChat();
-
                 const chat = chats.find(c => c.id === currentChatId);
                 chat.messages.push({{ role: 'user', text: text }});
-                
-                if(chat.messages.length === 1) {{
-                    chat.title = text.substring(0, 30);
-                    renderHistory();
-                }}
-                saveData();
-
-                msgInput.value = '';
-                resizeInput(msgInput);
-                appendBubble(text, true);
-                showTyping();
+                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 30); renderHistory(); }}
+                saveData(); msgInput.value = ''; resizeInput(msgInput);
+                appendBubble(text, true); showTyping();
 
                 const context = chat.messages.slice(-15).map(m => ({{ role: m.role, content: m.text }}));
-
                 try {{
-                    const res = await fetch('/chat', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context }})
-                    }});
+                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ messages: context }}) }});
+                    removeTyping(); if(!res.ok) throw new Error("API Error");
+                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
                     
-                    removeTyping();
+                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
+                    wrapper.innerHTML = `<div class="avatar bot-avatar thinking"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
+                    chatBox.appendChild(wrapper); const bubble = wrapper.querySelector('.bubble'); const avatar = wrapper.querySelector('.avatar');
 
-                    if(!res.ok) throw new Error("API Error");
-
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let botResp = '';
-                    
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper bot';
-                    
-                    const avatar = document.createElement('div');
-                    avatar.className = 'avatar bot-avatar thinking';
-                    avatar.innerHTML = '<i class="fas fa-bolt"></i>';
-                    
-                    const bubbleContainer = document.createElement('div');
-                    bubbleContainer.className = 'bubble-container';
-                    
-                    const senderName = document.createElement('div');
-                    senderName.className = 'sender-name';
-                    senderName.innerText = '{APP_NAME}';
-                    
-                    const bubble = document.createElement('div');
-                    bubble.className = 'bubble';
-                    
-                    bubbleContainer.appendChild(senderName);
-                    bubbleContainer.appendChild(bubble);
-                    wrapper.appendChild(avatar);
-                    wrapper.appendChild(bubbleContainer);
-                    chatBox.appendChild(wrapper);
-
-                    while(true) {{
-                        const {{ done, value }} = await reader.read();
-                        if(done) break;
-                        botResp += decoder.decode(value);
-                        bubble.innerHTML = marked.parse(botResp);
-                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
-                    }}
-                    
-                    avatar.classList.remove('thinking');
-                    chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData();
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    addImageDownloadButtons(); // Check for images after stream
-
-                }} catch(e) {{
-                    removeTyping();
-                    appendBubble("⚠️ Internet connection unstable or API Error.", false);
-                }}
+                    while(true) {{ const {{ done, value }} = await reader.read(); if(done) break; botResp += decoder.decode(value); bubble.innerHTML = marked.parse(botResp); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }}); }}
+                    avatar.classList.remove('thinking'); chat.messages.push({{ role: 'assistant', text: botResp }}); saveData(); hljs.highlightAll(); addCopyButtons();
+                }} catch(e) {{ removeTyping(); appendBubble("⚠️ Connection Error.", false); }}
             }}
 
-            // 🛑 MODAL LOGIC 🛑
-            function openDeleteModal() {{
-                deleteModal.style.display = 'flex';
-                sidebar.classList.add('closed');
-            }}
-
-            function closeModal() {{
-                deleteModal.style.display = 'none';
-            }}
-
-            function confirmDelete() {{
-                localStorage.removeItem('flux_v6_history');
-                location.reload();
-            }}
-
-            msgInput.addEventListener('keypress', e => {{
-                if(e.key === 'Enter' && !e.shiftKey) {{
-                    e.preventDefault();
-                    sendMessage();
-                }}
-            }});
+            function openDeleteModal() {{ deleteModal.style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
+            function closeModal() {{ deleteModal.style.display = 'none'; }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v11_history'); location.reload(); }}
+            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
     </body>
     </html>
@@ -759,20 +429,20 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE SUPER BRAIN - WITH "GENERATING..." MSG 🧠
+    # 🧠 SUPERCHARGED BRAIN PROMPT 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a brilliant premium AI assistant created by {OWNER_NAME}.
+        You are {APP_NAME}, a highly intelligent, expert-level AI assistant created by {OWNER_NAME}.
+        Your responses must be accurate, insightful, and comprehensively detailed when necessary.
         
-        🎨 IMAGE GENERATION RULE (VERY IMPORTANT):
-        If the user wants an image:
-        1. First line MUST be: "🎨 Generating image for you..." (or similar helpful text).
-        2. Then add a blank line.
-        3. Then provide the image link: ![Flux Image](https://image.pollinations.ai/prompt/{{detailed_prompt_here}})
+        🎨 IMAGE GENERATION RULE:
+        If user wants an image, start reply with "🎨 Generating image..." then a blank line, then: ![Flux Image](https://image.pollinations.ai/prompt/{{detailed_prompt_here}})
         
-        🚫 LIMITATIONS: No real-time news. Polite apology if asked.
-        🧠 TONE: Warm, empathetic, human-like. Short paragraphs. Perfect Markdown.
+        🧠 TONE & FORMAT:
+        - Expert, confident, empathetic.
+        - Use extensive Markdown (bold for key terms, lists, tables, code blocks).
+        - No real-time news access.
         """
     }
 
@@ -784,26 +454,22 @@ def chat():
         while attempts < max_retries:
             try:
                 client = get_groq_client()
-                if not client:
-                    yield "⚠️ Server Configuration Error."
-                    return
-
+                if not client: yield "⚠️ Config Error."; return
                 stream = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[sys_prompt] + messages,
                     stream=True,
-                    temperature=0.75, 
+                    temperature=0.6, # Lower temperature for smarter, more focused answers
                     max_tokens=2048
                 )
                 for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
+                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
                 return
             except Exception as e:
                 current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
                 attempts += 1
                 time.sleep(1)
-        yield "⚠️ System overloaded. Please try again."
+        yield "⚠️ System overloaded."
 
     return Response(generate(), mimetype="text/plain")
 
