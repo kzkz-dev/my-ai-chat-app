@@ -7,12 +7,12 @@ import pytz
 import json
 
 # ==========================================
-# 🔹 Flux AI (Ultra Premium - Build 7.0.0) ⚡
+# 🔹 Flux AI (Picasso Edition - Build 8.0.0) 🎨
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "7.0.0"
+VERSION = "8.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "Not available right now" 
@@ -195,6 +195,15 @@ def home():
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
+            /* IMAGE GENERATION STYLES */
+            .bubble img {{
+                max-width: 100%;
+                border-radius: 12px;
+                margin-top: 10px;
+                box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+                display: block;
+            }}
+            
             .bot .bubble {{ padding: 0; margin-top: 5px; }}
             .user .bubble {{ background: var(--input-bg); padding: 12px 16px; border-radius: 20px 4px 20px 20px; display: inline-block; max-width: max-content; align-self: flex-end; }}
 
@@ -366,7 +375,7 @@ def home():
                     <div class="suggestions">
                         <div class="chip" onclick="sendSuggestion('Draft a professional email')"><i class="fas fa-envelope-open-text"></i> Draft Email</div>
                         <div class="chip" onclick="sendSuggestion('Write code for a Python Telegram Bot')"><i class="fas fa-code"></i> Code Assistant</div>
-                        <div class="chip" onclick="sendSuggestion('Explain Quantum Physics simply')"><i class="fas fa-brain"></i> Explain Simply</div>
+                        <div class="chip" onclick="sendSuggestion('Generate a futuristic cyberpunk city image')"><i class="fas fa-paint-brush"></i> Generate Image</div>
                         <div class="chip" onclick="sendSuggestion('Solve this math puzzle: 2 + 2 * 4')"><i class="fas fa-calculator"></i> Solve Math</div>
                     </div>
                 </div>
@@ -658,7 +667,7 @@ def chat():
     messages = data.get("messages", [])
     ctx = get_current_context()
     
-    # 🧠 THE ULTIMATE SUPER BRAIN (UPDATED FOR NEWS) 🧠
+    # 🧠 THE SUPER BRAIN - NOW WITH IMAGE POWERS 🧠
     sys_prompt = {
         "role": "system",
         "content": f"""
@@ -673,10 +682,17 @@ def chat():
         - Date: {ctx['date']}
         - Time: Always provide UTC Time first ({ctx['time_utc']}), followed by Bangladesh Local Time ({ctx['time_local']}) if asked.
         
-        🚫 LIMITATIONS (Crucial):
-        - You DO NOT have real-time internet access.
-        - If asked about live events (news, elections, weather, sports) happening today or yesterday, politely apologize. Say: "I don't have real-time internet access to check live news, but I can help you with..."
-        - Do NOT hallucinate or make up fake news.
+        🎨 IMAGE GENERATION CAPABILITY (IMPORTANT):
+        - You CAN generate images.
+        - If the user asks you to "draw", "create", "generate", or "make" an image/picture/photo:
+          1. Do NOT say "I cannot do that".
+          2. Do NOT use ASCII art.
+          3. You MUST reply with a Markdown Image syntax: ![Flux Generated Image](https://image.pollinations.ai/prompt/{{detailed_prompt_here}})
+          4. Replace {{detailed_prompt_here}} with a descriptive English prompt based on user request.
+        
+        🚫 LIMITATIONS:
+        - You DO NOT have real-time internet access for News/Live Events.
+        - If asked about live events, politely apologize.
         
         🧠 BEHAVIORAL MASTERY:
         1. NO WALLS OF TEXT: Use short, readable paragraphs.
