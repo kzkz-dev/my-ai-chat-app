@@ -8,11 +8,11 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Build 9.0.0) 🚀
+# 🔹 Flux AI (Perfect Build 10.0.0) 💎
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "9.0.0"
+VERSION = "10.0.0"
 
 # ⚠️ আপনার আসল ফেসবুক এবং ওয়েবসাইটের লিঙ্ক দিন ⚠️
 FACEBOOK_URL = "Not available right now" 
@@ -60,7 +60,7 @@ SUGGESTION_POOL = [
 
 @app.route("/")
 def home():
-    # Pick 2 random suggestions for the top slots
+    # Pick 2 random suggestions
     random_suggestions = random.sample(SUGGESTION_POOL, 2)
     
     return f"""
@@ -160,16 +160,19 @@ def home():
                 display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth;
             }}
 
-            /* Welcome Screen Animations */
+            /* Welcome Screen Layout Fix */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                min-height: 80%; /* Changed from height: 80% to allow flex */
+                text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                padding-top: 60px; /* Added padding to push it down */
+                padding-bottom: 40px;
             }}
             .icon-wrapper {{ 
                 width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; 
                 display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; 
                 margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-                animation: float 3s ease-in-out infinite;
+                animation: float 3s ease-in-out infinite; flex-shrink: 0; /* Prevent shrinking */
             }}
             
             .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }}
@@ -192,7 +195,7 @@ def home():
             .chip:nth-child(3) {{ animation-delay: 0.3s; }}
             .chip:nth-child(4) {{ animation-delay: 0.4s; }}
 
-            /* 🌟 Message Wrapper & Text Wrap Fixes 🌟 */
+            /* 🌟 Message Wrapper 🌟 */
             .message-wrapper {{ display: flex; gap: 15px; width: 100%; animation: popInChat 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; max-width: 800px; margin: 0 auto; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             
@@ -201,14 +204,13 @@ def home():
             .bot-avatar.thinking {{ animation: pulseGlow 1.5s infinite; }}
             .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
-            /* The FIX for Horizontal Scroll! */
             .bubble-container {{ display: flex; flex-direction: column; width: calc(100% - 50px); }}
             
             .sender-name {{ font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 4px; margin-top: 2px; }}
             .user .sender-name {{ display: none; }} 
             
             .bubble {{ font-size: 0.98rem; line-height: 1.6; color: var(--text); word-break: break-word; overflow-wrap: break-word; white-space: normal; width: 100%; }}
-            .bubble * {{ max-width: 100%; }} /* Ensure children don't overflow */
+            .bubble * {{ max-width: 100%; }} 
             .bubble p {{ white-space: pre-wrap; margin-top: 0; margin-bottom: 12px; }}
             .bubble p:last-child {{ margin-bottom: 0; }}
             
@@ -224,8 +226,10 @@ def home():
                 box-shadow: 0 5px 15px rgba(0,0,0,0.3);
                 display: block;
             }}
+            /* Initially hidden, shown via JS */
             .img-download-btn {{
-                display: flex; align-items: center; gap: 6px;
+                display: none; /* HIDDEN BY DEFAULT */
+                align-items: center; gap: 6px;
                 background: var(--input-bg); color: var(--text);
                 border: 1px solid var(--border); padding: 8px 12px;
                 border-radius: 8px; font-size: 0.8rem; font-weight: 500;
@@ -529,7 +533,26 @@ def home():
                 }});
             }}
 
-            // 📥 IMAGE DOWNLOAD BUTTON LOGIC 📥
+            // 📥 FORCE DOWNLOAD FUNCTION 📥
+            async function forceDownload(url, filename) {{
+                try {{
+                    const response = await fetch(url);
+                    const blob = await response.blob();
+                    const blobUrl = window.URL.createObjectURL(blob);
+                    
+                    const a = document.createElement('a');
+                    a.href = blobUrl;
+                    a.download = filename;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(blobUrl);
+                }} catch (e) {{
+                    window.open(url, '_blank'); // Fallback if CORS fails
+                }}
+            }}
+
+            // 📥 IMAGE DOWNLOAD BUTTON LOGIC (WITH LOADING FIX) 📥
             function addImageDownloadButtons() {{
                 document.querySelectorAll('.bubble img').forEach(img => {{
                     if(img.closest('.image-container')) return; // Already processed
@@ -544,12 +567,20 @@ def home():
                     branding.innerHTML = '<i class="fas fa-bolt" style="color:var(--accent)"></i> Flux AI generated';
                     container.appendChild(branding);
 
-                    const dwnBtn = document.createElement('a');
+                    const dwnBtn = document.createElement('button');
                     dwnBtn.className = 'img-download-btn';
                     dwnBtn.innerHTML = '<i class="fas fa-download"></i> Download Image';
-                    dwnBtn.href = img.src;
-                    dwnBtn.download = 'Flux-AI-Image.jpg';
-                    dwnBtn.target = '_blank';
+                    dwnBtn.onclick = () => forceDownload(img.src, 'Flux-AI-Image-' + Date.now() + '.jpg');
+                    
+                    // 🕒 SHOW BUTTON ONLY AFTER IMAGE LOADS 🕒
+                    img.onload = () => {{
+                        dwnBtn.style.display = 'flex';
+                    }};
+                    // If image is already cached/loaded
+                    if(img.complete) {{
+                        dwnBtn.style.display = 'flex';
+                    }}
+
                     container.appendChild(dwnBtn);
                 }});
             }}
