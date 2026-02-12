@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Cyberpunk Glass Stable - Build 20.0.0) 💎
+# 🔹 Flux AI (Polished & Fixed - Build 20.1.0) 💎
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "20.0.0"
-ADMIN_PASSWORD = "7rx9x2c0"
+VERSION = "20.1.0"
+ADMIN_PASSWORD = "Flux2026"
 
 # Links
 FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100024467246473" 
@@ -89,7 +89,6 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
-    # ⚠️ CRITICAL: All CSS/JS braces must be {{ }} to avoid Python SyntaxError
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -207,11 +206,12 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* 🌟 WELCOME SCREEN 🌟 */
+            /* 🌟 WELCOME SCREEN FIXED 🌟 */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; 
-                padding-top: 60px; padding-bottom: 100px;
+                padding-top: 110px; /* 👆 INCREASED to push logo down */
+                padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
                 width: 90px; height: 90px; 
@@ -269,7 +269,7 @@ def home():
 
             .bubble {{ 
                 padding: 14px 20px; border-radius: 22px; font-size: 1.02rem; line-height: 1.65; 
-                word-wrap: break-word; 
+                word-wrap: break-word; position: relative;
             }}
             .bot .bubble {{ 
                 background: transparent; 
@@ -402,7 +402,7 @@ def home():
 
         <div class="overlay" onclick="toggleSidebar()"></div>
         
-        <div id="sidebar" class="closed">
+        <div id="sidebar" class="glass closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-plus"></i> New Chat
@@ -464,6 +464,7 @@ def home():
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
+            const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
             const accentColors = ['#00f3ff', '#bc13fe', '#00ff87', '#ff0f7b'];
@@ -480,7 +481,6 @@ def home():
                 const selected = shuffled.slice(0, 4);
                 let html = '';
                 selected.forEach(s => {{
-                    // NOTE: Escaped braces properly here
                     html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
@@ -768,6 +768,9 @@ def chat():
         1. IMAGE: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
         2. SPELLING: In Bangla, ALWAYS write owner's name as "{OWNER_NAME_BN}".
         3. TONE: Professional, slightly futuristic, helpful.
+        4. OWNER NAME:
+           - If asked in English: {OWNER_NAME}
+           - If asked in Bangla: {OWNER_NAME_BN}
         """
     }
 
