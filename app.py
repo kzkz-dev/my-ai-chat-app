@@ -8,17 +8,17 @@ import json
 import random
 
 # ==========================================
-# 🔹 Flux AI (Admin & Identity - Build 17.0.0) 🛡️
+# 🔹 Flux AI (Final Stable - Build 18.0.0) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
-VERSION = "17.0.0"
+VERSION = "18.0.0"
 ADMIN_PASSWORD = "Flux2026"  # ⚠️CHANGE THIS PASSWORD⚠️
 
 # Global Stats variables
 SERVER_START_TIME = time.time()
 TOTAL_MESSAGES = 0
-SYSTEM_ACTIVE = True  # Admin can toggle this
+SYSTEM_ACTIVE = True 
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
@@ -69,6 +69,9 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # NOTE: In the HTML below, all CSS/JS curly braces are doubled {{ }} to avoid Python f-string errors.
+    # Python variables like {APP_NAME} use single braces.
+    
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -96,8 +99,6 @@ def home():
                 --bot-icon: linear-gradient(135deg, #3b82f6, #8b5cf6);
                 --danger: #ef4444;
                 --success: #10b981;
-                --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.5);
-                --shadow-input: 0 5px 20px rgba(0,0,0,0.3);
             }}
             body.light {{
                 --bg: #ffffff;
@@ -109,8 +110,6 @@ def home():
                 --accent: #2563eb;
                 --chat-accent: #2563eb;
                 --bot-icon: linear-gradient(135deg, #2563eb, #7c3aed);
-                --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.1);
-                --shadow-input: 0 5px 20px rgba(0,0,0,0.05);
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
@@ -130,7 +129,7 @@ def home():
             .new-chat-btn {{
                 width: 100%; padding: 12px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border);
                 border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
-                margin-bottom: 20px; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                margin-bottom: 20px; transition: all 0.2s ease;
             }}
             .new-chat-btn:active {{ transform: scale(0.98); border-color: var(--accent); }}
 
@@ -145,17 +144,16 @@ def home():
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
             .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }}
             .theme-btn {{ flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: 0.3s; }}
-            .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+            .theme-btn.active {{ background: var(--bg); color: var(--text); }}
 
             .about-section {{ 
                 display: none; background: var(--input-bg); padding: 20px; border-radius: 16px;
                 margin-top: 5px; font-size: 0.9rem; text-align: center; border: 1px solid var(--border);
-                box-shadow: var(--shadow-soft); animation: fadeIn 0.3s;
+                animation: fadeIn 0.3s;
             }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.3rem; margin: 0 12px; transition: 0.2s; display: inline-block; }}
-            .about-link:hover {{ color: var(--accent); transform: scale(1.1); }}
-
+            
             header {{
                 height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
                 background: rgba(11, 15, 25, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
@@ -166,7 +164,6 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 18px 140px 18px; display: flex; flex-direction: column; gap: 24px; }}
 
-            /* WELCOME SCREEN */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; 
@@ -181,20 +178,16 @@ def home():
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.05rem; max-width: 80%; }}
 
-            /* SUGGESTIONS */
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; width: 100%; max-width: 700px; }}
             .chip {{
                 padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px;
                 cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
                 font-weight: 500; font-size: 0.92rem; display: flex; align-items: center; gap: 12px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             }}
             body.light .chip {{ background: rgba(0,0,0,0.02); }}
-            .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: var(--shadow-soft); }}
-            .chip:active {{ transform: scale(0.96); background: var(--input-bg); }}
+            .chip:active {{ transform: scale(0.96); background: var(--input-bg); border-color: var(--accent); color: var(--text); }}
             .chip i {{ color: var(--text); font-size: 1.1rem; opacity: 0.8; }}
 
-            /* MESSAGES */
             .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s ease; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
@@ -210,13 +203,12 @@ def home():
                 padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; word-wrap: break-word;
             }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
-            .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }}
+            .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); border: 1px solid var(--border); }}
             
             .bubble strong {{ color: var(--chat-accent); font-weight: 700; }}
-            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 10px; cursor: pointer; box-shadow: var(--shadow-soft); border: 1px solid var(--border); }}
+            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 10px; cursor: pointer; border: 1px solid var(--border); }}
             .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
 
-            /* INPUT AREA */
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
                 background: linear-gradient(to top, var(--bg) 85%, transparent); display: flex; justify-content: center; z-index: 50;
@@ -224,7 +216,7 @@ def home():
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
                 background: var(--input-bg); border-radius: 28px; padding: 10px 10px 10px 24px;
-                border: 1px solid var(--border); box-shadow: var(--shadow-input); transition: all 0.3s ease;
+                border: 1px solid var(--border); transition: all 0.3s ease;
             }}
             .input-box:focus-within {{ border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }}
             textarea {{
@@ -239,38 +231,38 @@ def home():
             .send-btn:hover {{ transform: rotate(-10deg) scale(1.05); background: var(--accent); color: white; }}
             .send-btn:active {{ transform: scale(0.9); }}
 
-            /* MODAL STYLES */
             .modal-overlay {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(6px);
             }}
             .modal-box {{
-                background: var(--sidebar); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 350px; text-align: center; box-shadow: var(--shadow-soft);
+                background: var(--sidebar); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 350px; text-align: center;
             }}
             .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; color: var(--text); }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
             
             .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.95rem; transition: 0.2s; }}
             .btn-cancel {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
-            .btn-delete {{ background: var(--danger); color: white; box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3); }}
-            .btn-confirm {{ background: var(--success); color: white; box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3); }}
+            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-confirm {{ background: var(--success); color: white; }}
             .btn-modal:hover {{ transform: translateY(-2px); }}
 
-            /* ADMIN PANEL */
             .stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
             .stat-box {{ background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }}
             .stat-val {{ font-size: 1.5rem; font-weight: 700; color: var(--accent); }}
             .stat-label {{ font-size: 0.8rem; color: var(--text-secondary); }}
 
-            @keyframes floatPulse {
-                0%, 100% { transform: translateY(0); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4); }
-                50% { transform: translateY(-12px); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.7); }
-            }
+            @keyframes floatPulse {{
+                0%, 100% {{ transform: translateY(0); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4); }}
+                50% {{ transform: translateY(-12px); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.7); }}
+            }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
+            
             pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--border); }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
         </style>
@@ -371,9 +363,9 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v17_history')) || [];
-            let userName = localStorage.getItem('flux_user_name'); // Check if name exists
-            let awaitingName = false; // Flag for name flow
+            let chats = JSON.parse(localStorage.getItem('flux_v18_history')) || [];
+            let userName = localStorage.getItem('flux_user_name'); 
+            let awaitingName = false; 
 
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
@@ -405,6 +397,7 @@ def home():
                 const selected = shuffled.slice(0, 4);
                 let html = '';
                 selected.forEach(s => {{
+                    // NOTE: Escaped braces properly here
                     html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
@@ -427,7 +420,7 @@ def home():
                 resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v17_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v18_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -501,7 +494,6 @@ def home():
                 const text = msgInput.value.trim();
                 if(!text) return;
 
-                // 🛡️ ADMIN CHECK
                 if(text === '!admin') {{
                     msgInput.value = '';
                     openModal('admin-auth-modal');
@@ -517,7 +509,6 @@ def home():
                 msgInput.value = '';
                 appendBubble(text, true);
 
-                // 👤 NAME VERIFICATION FLOW
                 if(!userName && !awaitingName) {{
                     awaitingName = true;
                     setTimeout(() => {{
@@ -537,7 +528,6 @@ def home():
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                // Add name to context
                 if(userName) context.unshift({{role: "system", content: "User's name is " + userName}});
 
                 try {{
@@ -578,12 +568,11 @@ def home():
                 }}
             }}
 
-            // ADMIN & MODAL LOGIC
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
             
-            function confirmDelete() {{ localStorage.removeItem('flux_v17_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v18_history'); location.reload(); }}
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
@@ -591,8 +580,6 @@ def home():
                     closeModal('admin-auth-modal');
                     openModal('admin-panel-modal');
                     document.getElementById('admin-pass').value = '';
-                    
-                    // Fetch Stats
                     try {{
                         const res = await fetch('/admin/stats');
                         const data = await res.json();
@@ -635,7 +622,6 @@ def home():
     </html>
     """
 
-# 🛡️ ADMIN API ROUTES
 @app.route("/admin/stats")
 def admin_stats():
     return jsonify({
