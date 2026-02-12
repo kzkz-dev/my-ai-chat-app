@@ -163,16 +163,20 @@ def home():
                 display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth;
             }}
 
-            /* Welcome Screen Animations */
+            /* Welcome Screen Animations (Fixed Logo Position & Pulse) */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 80%; text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                height: 100%; /* Full height to center properly */
+                text-align: center; animation: popIn 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                padding-top: 20px;
+                padding-bottom: 80px; /* Space for suggestions */
             }}
             .icon-wrapper {{ 
                 width: 70px; height: 70px; background: var(--bot-icon); border-radius: 22px; 
                 display: flex; align-items: center; justify-content: center; font-size: 2.2rem; color: white; 
                 margin-bottom: 20px; box-shadow: 0 0 25px rgba(59, 130, 246, 0.4);
-                animation: float 3s ease-in-out infinite;
+                /* 🆕 NEW ANIMATION: FLOAT + PULSE BLINK */
+                animation: floatPulse 4s ease-in-out infinite;
             }}
             
             .welcome-title {{ font-size: 2.2rem; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.5px; }}
@@ -312,7 +316,10 @@ def home():
             blockquote {{ border-left: 4px solid var(--accent); margin: 10px 0; padding-left: 15px; color: var(--text-secondary); font-style: italic; background: rgba(59, 130, 246, 0.05); padding: 12px 15px; border-radius: 0 10px 10px 0; }}
 
             /* Keyframes */
-            @keyframes float {{ 0%, 100% {{ transform: translateY(0px); }} 50% {{ transform: translateY(-8px); box-shadow: 0 15px 30px rgba(59, 130, 246, 0.5); }} }}
+            @keyframes floatPulse {
+                0%, 100% { transform: translateY(0px) scale(1); box-shadow: 0 0 25px rgba(59, 130, 246, 0.4); }
+                50% { transform: translateY(-8px) scale(1.05); box-shadow: 0 0 35px rgba(59, 130, 246, 0.7); }
+            }
             @keyframes pulseGlow {{ 0%, 100% {{ box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); transform: scale(1); }} 50% {{ box-shadow: 0 0 20px rgba(59, 130, 246, 0.6); transform: scale(1.05); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
