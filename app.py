@@ -1,13 +1,5 @@
 from flask import Flask, request, Response, jsonify
 from groq import Groq
-# Try importing Cerebras, handle error if library missing
-try:
-    from cerebras.cloud.sdk import Cerebras
-    cerebras_installed = True
-except ImportError:
-    cerebras_installed = False
-    print("⚠️ Cerebras SDK not installed. Add 'cerebras_cloud_sdk' to requirements.txt")
-
 import os
 import time
 from datetime import datetime, timedelta
@@ -17,12 +9,12 @@ import random
 import math
 
 # ==========================================
-# 🔹 Flux AI ( Build 23.1.0) 🛡️
+# 🔹 Flux AI (Groq Stability Edition - Build 23.2.0) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "23.1.0"
+VERSION = "23.2.0"
 ADMIN_PASSWORD = "7rx9x2c0"
 
 # Links
@@ -37,21 +29,20 @@ SYSTEM_ACTIVE = True
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# CONFIGURATION
+# CONFIGURATION: GROQ ONLY
 GROQ_KEYS = [k.strip() for k in os.environ.get("GROQ_KEYS", "").split(",") if k.strip()]
-CEREBRAS_KEY = os.environ.get("CEREBRAS_KEY", "")
 current_groq_index = 0
+
+if not GROQ_KEYS:
+    print("⚠️ WARNING: No Groq keys found. Please add them in Render Environment Variables.")
 
 def get_groq_client():
     global current_groq_index
     if not GROQ_KEYS: return None
+    # Rotate keys for load balancing
     key = GROQ_KEYS[current_groq_index % len(GROQ_KEYS)]
     current_groq_index += 1
     return Groq(api_key=key)
-
-def get_cerebras_client():
-    if not CEREBRAS_KEY or not cerebras_installed: return None
-    return Cerebras(api_key=CEREBRAS_KEY)
 
 def get_uptime():
     uptime_seconds = int(time.time() - SERVER_START_TIME)
@@ -96,6 +87,7 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # ⚠️ IMPORTANT: All CSS/JS braces must be doubled {{ }}
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -112,13 +104,14 @@ def home():
 
         <style>
             :root {{
-                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
+                /* 🌌 CYBERPUNK PALETTE */
+                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(8, 8, 20) 0%, rgb(2, 2, 5) 90%);
                 --glass-bg: rgba(20, 20, 35, 0.65);
                 --glass-border: rgba(255, 255, 255, 0.08);
                 --text: #e0e6ed;
                 --text-secondary: #94a3b8;
                 --accent: #00f3ff;
-                --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+                --accent-glow: 0 0 15px rgba(0, 243, 255, 0.6);
                 --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
                 --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
                 --danger: #ff0f7b;
@@ -126,21 +119,33 @@ def home():
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
+            body {{ 
+                margin: 0; background: var(--bg-gradient); color: var(--text); 
+                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
+                height: 100vh; display: flex; overflow: hidden; 
+            }}
 
-            .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
+            .glass {{
+                background: var(--glass-bg); backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
+            }}
 
             #sidebar {{
                 width: 280px; height: 100%; display: flex; flex-direction: column;
                 padding: 20px; border-right: 1px solid var(--glass-border);
                 transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
                 position: absolute; z-index: 200; left: 0; top: 0; 
-                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-                background: rgba(15, 15, 30, 0.85); backdrop-filter: blur(20px);
+                box-shadow: 10px 0 40px rgba(0,0,0,0.6);
+                background: rgba(10, 10, 25, 0.9); backdrop-filter: blur(25px);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
-            .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: white; text-shadow: var(--accent-glow); }}
+            .brand {{ 
+                font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; 
+                display: flex; align-items: center; gap: 12px; color: white; 
+                text-shadow: var(--accent-glow);
+                animation: glowPulse 3s infinite alternate;
+            }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
@@ -162,7 +167,7 @@ def home():
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
             .about-section {{ 
-                display: none; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 16px;
+                display: none; background: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 16px;
                 margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
                 animation: fadeIn 0.3s;
             }}
@@ -172,7 +177,7 @@ def home():
 
             header {{
                 height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-                background: rgba(15, 15, 30, 0.7); backdrop-filter: blur(15px);
+                background: rgba(10, 10, 25, 0.75); backdrop-filter: blur(20px);
                 border-bottom: 1px solid var(--glass-border); 
                 position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             }}
@@ -182,27 +187,27 @@ def home():
 
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; padding-top: 120px; padding-bottom: 100px;
+                height: 100%; text-align: center; padding-top: 130px; padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
-                width: 90px; height: 90px; background: linear-gradient(135deg, rgba(0, 243, 255, 0.1), rgba(188, 19, 254, 0.1));
-                border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 28px; 
-                display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; 
-                margin-bottom: 25px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
+                width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(188, 19, 254, 0.15));
+                border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 30px; 
+                display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; 
+                margin-bottom: 25px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
                 animation: levitate 4s ease-in-out infinite;
             }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .welcome-title {{ font-size: 2.4rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #b3b3b3); -webkit-background-clip: text; color: transparent; }}
+            .welcome-title {{ font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #b3b3b3); -webkit-background-clip: text; color: transparent; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; max-width: 80%; line-height: 1.5; }}
 
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
             .chip {{
-                padding: 18px 22px; background: rgba(255, 255, 255, 0.03); 
+                padding: 18px 22px; background: rgba(255, 255, 255, 0.04); 
                 border: 1px solid var(--glass-border); border-radius: 20px;
                 cursor: pointer; text-align: left; color: var(--text-secondary); 
                 transition: all 0.3s; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 14px;
             }}
-            .chip:hover {{ transform: translateY(-5px); background: rgba(255, 255, 255, 0.07); border-color: var(--accent); color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }}
+            .chip:hover {{ transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); border-color: var(--accent); color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }}
             .chip i {{ color: var(--accent); font-size: 1.2rem; opacity: 0.9; }}
 
             .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s; }}
@@ -226,16 +231,16 @@ def home():
 
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
-                background: linear-gradient(to top, rgb(5, 5, 10) 0%, transparent 100%); 
+                background: linear-gradient(to top, rgb(2, 2, 5) 0%, transparent 100%); 
                 display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: rgba(30, 30, 50, 0.7); border-radius: 30px; padding: 8px 8px 8px 24px;
-                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                background: rgba(30, 30, 55, 0.7); border-radius: 30px; padding: 8px 8px 8px 24px;
+                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.4);
                 backdrop-filter: blur(20px); transition: all 0.3s ease;
             }}
-            .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 25px rgba(0, 243, 255, 0.15); }}
+            .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
                 color: white; font-size: 1.05rem; max-height: 160px; resize: none; padding: 14px 0; font-family: inherit;
@@ -245,17 +250,17 @@ def home():
                 border-radius: 50%; cursor: pointer; margin-left: 12px; margin-bottom: 2px;
                 display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: 0.3s;
             }}
-            .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
+            .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; box-shadow: 0 0 15px var(--accent); }}
 
             .modal-overlay {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
-                z-index: 9999; backdrop-filter: blur(8px);
+                background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; 
+                z-index: 9999; backdrop-filter: blur(10px);
             }}
             .modal-box {{
                 background: rgba(20, 20, 35, 0.95); border: 1px solid var(--glass-border); 
                 padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; 
-                text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
             }}
             .modal-title {{ font-size: 1.5rem; margin-bottom: 12px; font-weight: 700; color: white; }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
@@ -274,6 +279,7 @@ def home():
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+            @keyframes glowPulse {{ 0% {{ text-shadow: 0 0 10px rgba(0,243,255,0.5); }} 100% {{ text-shadow: 0 0 20px rgba(0,243,255,0.9), 0 0 10px rgba(188,19,254,0.5); }} }}
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
@@ -378,7 +384,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v23_1_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v23_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
 
@@ -402,7 +408,7 @@ def home():
                 const selected = shuffled.slice(0, 4);
                 let html = '';
                 selected.forEach(s => {{
-                    // DOUBLE BRACES in f-string
+                    // NOTE: Double braces for JS inside f-string
                     html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
@@ -424,7 +430,7 @@ def home():
                 resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v23_1_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v23_2_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -517,6 +523,7 @@ def home():
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
+                // We pass name via SYSTEM PROMPT instead of user body to avoid transcript issues
                 
                 try {{
                     const res = await fetch('/chat', {{
@@ -550,7 +557,6 @@ def home():
 
                 }} catch(e) {{
                     removeTyping();
-                    // Clean error message
                     appendBubble("⚠️ I'm currently experiencing high traffic. Please try again in a moment.", false);
                 }}
             }}
@@ -559,7 +565,7 @@ def home():
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
             
-            function confirmDelete() {{ localStorage.removeItem('flux_v23_1_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v23_2_history'); location.reload(); }}
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
@@ -612,6 +618,7 @@ def home():
     </html>
     """
 
+# 🛡️ ADMIN API ROUTES
 @app.route("/admin/stats")
 def admin_stats():
     return jsonify({
@@ -650,7 +657,7 @@ def chat():
 
     ctx = get_current_context()
     
-    # 🧠 BRAIN (HYBRID)
+    # 🧠 BRAIN (NATURAL)
     sys_prompt_content = f"""
     You are {APP_NAME}, a super-intelligent AI assistant.
     
@@ -670,25 +677,16 @@ def chat():
 
     sys_message = {"role": "system", "content": sys_prompt_content}
 
-    # HYBRID ENGINE LOGIC
     def generate():
-        providers = []
+        global current_key_index
+        attempts = 0
+        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
         
-        # Check Groq
-        if GROQ_KEYS: providers.append('groq')
-        # Check Cerebras
-        if CEREBRAS_KEY and cerebras_installed: providers.append('cerebras')
-        
-        if not providers:
-            yield "⚠️ System Error: No AI keys configured. Please contact Admin."
-            return
-
-        # Try Primary Choice (Random)
-        primary = random.choice(providers)
-        
-        try:
-            if primary == 'groq':
+        while attempts < max_retries:
+            try:
                 client = get_groq_client()
+                if not client: yield "⚠️ Config Error."; return
+                
                 stream = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
                     messages=[sys_message] + messages,
@@ -696,38 +694,15 @@ def chat():
                     temperature=0.7, 
                     max_tokens=1024
                 )
-            else: # Cerebras
-                client = get_cerebras_client()
-                stream = client.chat.completions.create(
-                    model="llama3.1-70b",
-                    messages=[sys_message] + messages,
-                    stream=True,
-                    temperature=0.7, 
-                    max_tokens=1024
-                )
-            
-            for chunk in stream:
-                if chunk.choices and chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
-
-        except Exception as e:
-            # 🚑 FALLBACK MECHANISM
-            try:
-                fallback = 'cerebras' if primary == 'groq' else 'groq'
-                if fallback == 'groq': client = get_groq_client()
-                else: client = get_cerebras_client()
-                
-                if client:
-                    stream = client.chat.completions.create(
-                        model="llama-3.3-70b-versatile" if fallback == 'groq' else "llama3.1-70b",
-                        messages=[sys_message] + messages,
-                        stream=True
-                    )
-                    for chunk in stream:
-                        if chunk.choices and chunk.choices[0].delta.content:
-                            yield chunk.choices[0].delta.content
-            except:
-                yield "⚠️ System overloaded. Please try again."
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+                return
+            except Exception as e:
+                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+                attempts += 1
+                time.sleep(1)
+        yield "⚠️ System overloaded. Please try again."
 
     return Response(generate(), mimetype="text/plain")
 
