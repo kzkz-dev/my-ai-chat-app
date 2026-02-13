@@ -6,19 +6,20 @@ from datetime import datetime, timedelta
 import pytz
 import json
 import random
-import math
+import re      # ➕ Math: Regex এর জন্য
+import math    # ➕ Math: অংকের লাইব্রেরি
 
 # ==========================================
-# 🔹 Flux AI (Groq Stability Edition - Build 23.2.0) 🛡️
+# 🔹 Flux AI (Ultimate Stable - Build 18.2.4) 🛡️
 # ==========================================
 APP_NAME = "Flux AI"
-OWNER_NAME = "KAWCHUR"
-OWNER_NAME_BN = "কাওছুর"
-VERSION = "23.2.0"
-ADMIN_PASSWORD = "7rx9x2c0"
+OWNER_NAME = "KAWCHUR"  
+OWNER_NAME_BN = "কাওছুর" 
+VERSION = "18.2.4"
+ADMIN_PASSWORD = "7rx9x2c0" 
 
-# Links
-FACEBOOK_URL = "https://www.facebook.com/profile.php?id=100024467246473" 
+# ⚠️ Links Restored
+FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
 # Stats
@@ -29,19 +30,16 @@ SYSTEM_ACTIVE = True
 app = Flask(__name__)
 app.secret_key = os.urandom(24)
 
-# CONFIGURATION: GROQ ONLY
 GROQ_KEYS = [k.strip() for k in os.environ.get("GROQ_KEYS", "").split(",") if k.strip()]
-current_groq_index = 0
+current_key_index = 0
 
 if not GROQ_KEYS:
     print("⚠️ WARNING: No Groq keys found. Please add them in Render Environment Variables.")
 
 def get_groq_client():
-    global current_groq_index
+    global current_key_index
     if not GROQ_KEYS: return None
-    # Rotate keys for load balancing
-    key = GROQ_KEYS[current_groq_index % len(GROQ_KEYS)]
-    current_groq_index += 1
+    key = GROQ_KEYS[current_key_index % len(GROQ_KEYS)]
     return Groq(api_key=key)
 
 def get_uptime():
@@ -51,22 +49,41 @@ def get_uptime():
 def get_current_context(): 
     tz_dhaka = pytz.timezone('Asia/Dhaka')
     now_dhaka = datetime.now(tz_dhaka)
+    now_utc = datetime.now(pytz.utc)
     return {
-        "time_local": now_dhaka.strftime("%I:%M %p")
+        "time_utc": now_utc.strftime("%I:%M %p"),
+        "time_local": now_dhaka.strftime("%I:%M %p"),
+        "date": now_dhaka.strftime("%d %B, %Y (%A)"),
+        "year": now_dhaka.year
     }
 
-# 🧮 MATH ENGINE
+# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - FIXED FOR '?' AND '='
 def solve_math_problem(text):
     try:
+        # ১. ক্লিনিং: স্পেস, সমান চিহ্ন, প্রশ্নবোধক এবং কমা সরিয়ে ফেলা (যাতে এরর না দেয়)
         clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
+        
+        # ২. নিরাপত্তা: অংক ছাড়া অন্য কোনো অক্ষর থাকলে স্কিপ করবে
         allowed_chars = set("0123456789.+-*/()xX÷^")
-        if not set(clean_text).issubset(allowed_chars): return None
-        if len(clean_text) < 3 or not any(op in clean_text for op in ['+', '-', '*', '/', 'x', '÷', '^']): return None
+        if not set(clean_text).issubset(allowed_chars):
+            return None
+        
+        # ৩. খুব ছোট টেক্সট (যেমন শুধু "2026") হলে স্কিপ
+        if len(clean_text) < 3 or not any(op in clean_text for op in ['+', '-', '*', '/', 'x', '÷', '^']):
+            return None
+
+        # ৪. চিহ্ন ঠিক করা
         expression = clean_text.replace("x", "*").replace("X", "*").replace("÷", "/").replace("^", "**")
+        
+        # ৫. ক্যালকুলেশন
         result = eval(expression, {"__builtins__": None}, {"math": math})
-        if result == int(result): return f"{int(result):,}" 
+        
+        # ৬. উত্তর সাজানো
+        if result == int(result):
+            return f"{int(result):,}" 
         return f"{result:,.4f}" 
-    except: return None
+    except:
+        return None
 
 SUGGESTION_POOL = [
     {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
@@ -87,7 +104,6 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
-    # ⚠️ IMPORTANT: All CSS/JS braces must be doubled {{ }}
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -97,194 +113,206 @@ def home():
         <title>{APP_NAME}</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark-reasonable.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
             :root {{
-                /* 🌌 CYBERPUNK PALETTE */
-                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(8, 8, 20) 0%, rgb(2, 2, 5) 90%);
-                --glass-bg: rgba(20, 20, 35, 0.65);
-                --glass-border: rgba(255, 255, 255, 0.08);
-                --text: #e0e6ed;
-                --text-secondary: #94a3b8;
-                --accent: #00f3ff;
-                --accent-glow: 0 0 15px rgba(0, 243, 255, 0.6);
-                --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
-                --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
-                --danger: #ff0f7b;
-                --success: #00ff87;
+                --bg: #0b0f19;
+                --sidebar: #111827;
+                --text: #f3f4f6;
+                --text-secondary: #9ca3af;
+                --input-bg: #1f2937;
+                --border: #374151;
+                --accent: #3b82f6;
+                --chat-accent: #3b82f6;
+                --bot-icon: linear-gradient(135deg, #3b82f6, #8b5cf6);
+                --danger: #ef4444;
+                --success: #10b981;
+                --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.5);
+                --shadow-input: 0 5px 20px rgba(0,0,0,0.3);
+            }}
+            body.light {{
+                --bg: #ffffff;
+                --sidebar: #f9fafb;
+                --text: #111827;
+                --text-secondary: #6b7280;
+                --input-bg: #f3f4f6;
+                --border: #e5e7eb;
+                --accent: #2563eb;
+                --chat-accent: #2563eb;
+                --bot-icon: linear-gradient(135deg, #2563eb, #7c3aed);
+                --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.1);
+                --shadow-input: 0 5px 20px rgba(0,0,0,0.05);
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ 
-                margin: 0; background: var(--bg-gradient); color: var(--text); 
-                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
-                height: 100vh; display: flex; overflow: hidden; 
-            }}
-
-            .glass {{
-                background: var(--glass-bg); backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
-            }}
+            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
 
             #sidebar {{
-                width: 280px; height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--glass-border);
-                transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
-                position: absolute; z-index: 200; left: 0; top: 0; 
-                box-shadow: 10px 0 40px rgba(0,0,0,0.6);
-                background: rgba(10, 10, 25, 0.9); backdrop-filter: blur(25px);
+                width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
+                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
-            .brand {{ 
-                font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; 
-                display: flex; align-items: center; gap: 12px; color: white; 
-                text-shadow: var(--accent-glow);
-                animation: glowPulse 3s infinite alternate;
-            }}
-            .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
+            .brand {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: -0.5px; }}
+            .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05); 
-                color: var(--text); border: 1px solid var(--glass-border);
-                border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
-                margin-bottom: 20px; transition: all 0.3s ease;
+                width: 100%; padding: 12px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border);
+                border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
+                margin-bottom: 20px; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
             }}
-            .new-chat-btn:active {{ transform: scale(0.97); }}
+            .new-chat-btn:active {{ transform: scale(0.98); border-color: var(--accent); }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
             .history-item {{
                 padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
-                transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem;
+                transition: background 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
             }}
-            .history-item:hover {{ background: rgba(255, 255, 255, 0.05); color: white; }}
+            .history-item:active {{ background: var(--input-bg); color: var(--text); }}
 
-            .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            
+            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
+            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }}
+            .theme-btn {{ flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: 0.3s; }}
+            .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+
             .about-section {{ 
-                display: none; background: rgba(0, 0, 0, 0.6); padding: 20px; border-radius: 16px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
-                animation: fadeIn 0.3s;
+                display: none; background: var(--input-bg); padding: 20px; border-radius: 16px;
+                margin-top: 5px; font-size: 0.9rem; text-align: center; border: 1px solid var(--border);
+                box-shadow: var(--shadow-soft); animation: fadeIn 0.3s;
             }}
             .about-section.show {{ display: block; }}
-            .about-link {{ color: white; font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
-            .about-link:hover {{ color: var(--accent); }}
+            .about-link {{ color: var(--text); font-size: 1.3rem; margin: 0 12px; transition: 0.2s; display: inline-block; }}
+            .about-link:hover {{ color: var(--accent); transform: scale(1.1); }}
 
             header {{
-                height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-                background: rgba(10, 10, 25, 0.75); backdrop-filter: blur(20px);
-                border-bottom: 1px solid var(--glass-border); 
-                position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
+                background: rgba(11, 15, 25, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                border-bottom: 1px solid var(--border); position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             }}
+            body.light header {{ background: rgba(255, 255, 255, 0.9); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 18px 140px 18px; display: flex; flex-direction: column; gap: 24px; }}
 
+            /* WELCOME SCREEN */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; padding-top: 130px; padding-bottom: 100px;
+                height: 100%; text-align: center; 
+                padding-top: 80px; padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
-                width: 100px; height: 100px; background: linear-gradient(135deg, rgba(0, 243, 255, 0.15), rgba(188, 19, 254, 0.15));
-                border: 1px solid rgba(255, 255, 255, 0.15); border-radius: 30px; 
-                display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; 
-                margin-bottom: 25px; box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
-                animation: levitate 4s ease-in-out infinite;
+                width: 80px; height: 80px; background: var(--bot-icon); border-radius: 26px; 
+                display: flex; align-items: center; justify-content: center; font-size: 2.6rem; color: white; 
+                margin-bottom: 25px; box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
+                animation: floatPulse 4s ease-in-out infinite;
             }}
-            .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .welcome-title {{ font-size: 2.5rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #b3b3b3); -webkit-background-clip: text; color: transparent; }}
-            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; max-width: 80%; line-height: 1.5; }}
+            .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.05rem; max-width: 80%; }}
 
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
+            /* SUGGESTIONS */
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; width: 100%; max-width: 700px; }}
             .chip {{
-                padding: 18px 22px; background: rgba(255, 255, 255, 0.04); 
-                border: 1px solid var(--glass-border); border-radius: 20px;
-                cursor: pointer; text-align: left; color: var(--text-secondary); 
-                transition: all 0.3s; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 14px;
+                padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px;
+                cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+                font-weight: 500; font-size: 0.92rem; display: flex; align-items: center; gap: 12px;
+                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
             }}
-            .chip:hover {{ transform: translateY(-5px); background: rgba(255, 255, 255, 0.08); border-color: var(--accent); color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }}
-            .chip i {{ color: var(--accent); font-size: 1.2rem; opacity: 0.9; }}
+            body.light .chip {{ background: rgba(0,0,0,0.02); }}
+            .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: var(--shadow-soft); }}
+            .chip:active {{ transform: scale(0.96); background: var(--input-bg); }}
+            .chip i {{ color: var(--text); font-size: 1.1rem; opacity: 0.8; }}
 
-            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s; }}
+            /* MESSAGES */
+            .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s ease; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            .avatar {{ width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 1.1rem; }}
-            .bot-avatar {{ background: var(--bot-grad); color: white; }}
-            .user-avatar {{ background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); }}
+            .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
+            .bot-avatar {{ background: var(--bot-icon); color: white; }}
+            .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
             .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
-            .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
+            .sender-name {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
-            .bubble {{ padding: 14px 20px; border-radius: 22px; font-size: 1.02rem; line-height: 1.65; word-wrap: break-word; position: relative; }}
-            .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
-            .user .bubble {{ background: var(--user-grad); border-radius: 22px 4px 22px 22px; color: white; box-shadow: 0 5px 20px rgba(20, 136, 204, 0.3); }}
+            /* 🔥 CSS FIX FOR OVERFLOW 🔥 */
+            .bubble {{ 
+                padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; 
+                word-wrap: break-word;          /* Old standard */
+                word-break: break-word;         /* Important for long numbers */
+                overflow-wrap: break-word;      /* Modern standard */
+                white-space: pre-wrap;          /* Preserves spaces but wraps */
+            }}
+            .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
+            .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }}
             
-            .bubble strong {{ color: var(--accent); font-weight: 700; }}
-            .bubble img {{ max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }}
-            .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
+            .bubble strong {{ color: var(--chat-accent); font-weight: 700; }}
+            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 10px; cursor: pointer; box-shadow: var(--shadow-soft); border: 1px solid var(--border); }}
+            .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
 
+            /* INPUT AREA */
             #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
-                background: linear-gradient(to top, rgb(2, 2, 5) 0%, transparent 100%); 
-                display: flex; justify-content: center; z-index: 50;
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+                background: linear-gradient(to top, var(--bg) 85%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: rgba(30, 30, 55, 0.7); border-radius: 30px; padding: 8px 8px 8px 24px;
-                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.4);
-                backdrop-filter: blur(20px); transition: all 0.3s ease;
+                background: var(--input-bg); border-radius: 28px; padding: 10px 10px 10px 24px;
+                border: 1px solid var(--border); box-shadow: var(--shadow-input); transition: all 0.3s ease;
             }}
-            .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); }}
+            .input-box:focus-within {{ border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: white; font-size: 1.05rem; max-height: 160px; resize: none; padding: 14px 0; font-family: inherit;
+                color: var(--text); font-size: 1.05rem; max-height: 160px; resize: none; padding: 12px 0; font-family: inherit;
             }}
             .send-btn {{
-                background: var(--text); color: black; border: none; width: 48px; height: 48px;
+                background: var(--text); color: var(--bg); border: none; width: 46px; height: 46px;
                 border-radius: 50%; cursor: pointer; margin-left: 12px; margin-bottom: 2px;
-                display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: 0.3s;
+                display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s;
             }}
-            .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; box-shadow: 0 0 15px var(--accent); }}
+            .send-btn:hover {{ transform: rotate(-10deg) scale(1.05); background: var(--accent); color: white; }}
+            .send-btn:active {{ transform: scale(0.9); }}
 
+            /* MODAL STYLES */
             .modal-overlay {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.85); display: none; justify-content: center; align-items: center; 
-                z-index: 9999; backdrop-filter: blur(10px);
+                background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(6px);
             }}
             .modal-box {{
-                background: rgba(20, 20, 35, 0.95); border: 1px solid var(--glass-border); 
-                padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; 
-                text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+                background: var(--sidebar); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 350px; text-align: center; box-shadow: var(--shadow-soft);
             }}
-            .modal-title {{ font-size: 1.5rem; margin-bottom: 12px; font-weight: 700; color: white; }}
+            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; color: var(--text); }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
             
-            .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.95rem; transition: 0.2s; }}
-            .btn-cancel {{ background: rgba(255,255,255,0.1); color: white; }}
-            .btn-delete {{ background: var(--danger); color: white; }}
-            .btn-confirm {{ background: var(--success); color: black; }}
+            .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.95rem; transition: 0.2s; }}
+            .btn-cancel {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
+            .btn-delete {{ background: var(--danger); color: white; box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3); }}
+            .btn-confirm {{ background: var(--success); color: white; box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3); }}
+            .btn-modal:hover {{ transform: translateY(-2px); }}
 
-            .stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }}
-            .stat-box {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 14px; border: 1px solid var(--glass-border); }}
-            .stat-val {{ font-size: 1.6rem; font-weight: 700; color: var(--accent); }}
-            .stat-label {{ font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px; }}
+            /* ADMIN PANEL */
+            .stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
+            .stat-box {{ background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }}
+            .stat-val {{ font-size: 1.5rem; font-weight: 700; color: var(--accent); }}
+            .stat-label {{ font-size: 0.8rem; color: var(--text-secondary); }}
 
-            @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
+            @keyframes floatPulse {{
+                0%, 100% {{ transform: translateY(0); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4); }}
+                50% {{ transform: translateY(-12px); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.7); }}
+            }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
-            @keyframes glowPulse {{ 0% {{ text-shadow: 0 0 10px rgba(0,243,255,0.5); }} 100% {{ text-shadow: 0 0 20px rgba(0,243,255,0.9), 0 0 10px rgba(188,19,254,0.5); }} }}
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
-            .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
+            .dot {{ width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
             
-            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--glass-border); }}
+            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--border); box-shadow: var(--shadow-soft); }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
         </style>
     </head>
@@ -303,10 +331,10 @@ def home():
 
         <div id="admin-auth-modal" class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-title"><i class="fas fa-shield-alt" style="color:var(--accent)"></i> Admin Access</div>
+                <div class="modal-title"><i class="fas fa-shield-alt"></i> Admin Access</div>
                 <div class="modal-desc">Enter authorization code</div>
-                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:white; margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
-                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
+                <input type="password" id="admin-pass" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:10px; outline:none;" placeholder="Password">
+                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:15px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
                     <button class="btn-modal btn-confirm" onclick="verifyAdmin()">Login</button>
@@ -315,23 +343,23 @@ def home():
         </div>
 
         <div id="admin-panel-modal" class="modal-overlay">
-            <div class="modal-box" style="max-width: 450px;">
-                <div class="modal-title" style="margin-bottom:20px;">Admin Dashboard</div>
+            <div class="modal-box" style="max-width: 400px;">
+                <div class="modal-title">Admin Panel</div>
                 <div class="stats-grid">
                     <div class="stat-box"><div class="stat-val" id="stat-msgs">0</div><div class="stat-label">Total Messages</div></div>
                     <div class="stat-box"><div class="stat-val" id="stat-uptime">0s</div><div class="stat-label">Server Uptime</div></div>
-                    <div class="stat-box"><div class="stat-val" style="font-size:1.1rem;">{VERSION}</div><div class="stat-label">App Version</div></div>
-                    <div class="stat-box"><div class="stat-val" style="font-size:1.1rem; color:white;">{OWNER_NAME}</div><div class="stat-label">Developer</div></div>
+                    <div class="stat-box"><div class="stat-val" style="font-size:1rem;">{VERSION}</div><div class="stat-label">App Version</div></div>
+                    <div class="stat-box"><div class="stat-val" style="font-size:1rem; color:var(--text);">{OWNER_NAME}</div><div class="stat-label">Developer</div></div>
                 </div>
-                <div class="modal-desc" id="system-status-text" style="font-weight:700; font-size:1.1rem; color:var(--success);">System is ONLINE 🟢</div>
-                <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0; padding:16px;">Turn System OFF</button>
-                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:15px 0 0 0;">Close Panel</button>
+                <div class="modal-desc" id="system-status-text" style="font-weight:600;">System is currently ONLINE</div>
+                <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0;">Turn System OFF</button>
+                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:10px 0 0 0;">Close Panel</button>
             </div>
         </div>
 
         <div class="overlay" onclick="toggleSidebar()"></div>
         
-        <div id="sidebar" class="glass closed">
+        <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-plus"></i> New Chat
@@ -340,40 +368,45 @@ def home():
             <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
+                <div class="theme-toggles">
+                    <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
+                    <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
+                </div>
+                
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
+                
                 <div id="about-info" class="about-section">
-                    <strong style="font-size:1.2rem; display:block; margin-bottom:5px; color:white;">{APP_NAME}</strong>
-                    <span style="font-size:0.8rem; opacity:0.7;">v{VERSION}</span><br>
-                    <small style="color:var(--text-secondary)">Created by <span style="color:var(--accent)">{OWNER_NAME}</span></small><br>
+                    <strong style="font-size:1.1rem; display:block; margin-bottom:5px;">{APP_NAME} v{VERSION}</strong>
+                    <small style="color:var(--text-secondary)">Dev: {OWNER_NAME}</small><br>
                     <div style="margin:15px 0;">
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5;">&copy; 2026 All Rights Reserved</small>
+                    <small style="display:block; margin-top:5px; font-weight:600; opacity:0.7;">All rights reserved by {OWNER_NAME} &copy; 2026</small>
                 </div>
-                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
+                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ef4444;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
         </div>
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
-                <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #bbb); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
+                <span style="font-weight:800; font-size:1.3rem; letter-spacing: -0.5px;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Your intelligent AI companion ready to explore the future.</div>
+                    <div class="welcome-subtitle">Your intelligent AI companion.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Type a message..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -384,7 +417,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v23_2_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v18_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
 
@@ -396,8 +429,19 @@ def home():
             const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
+            const accentColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+
+            const savedTheme = localStorage.getItem('theme') || 'dark';
+            setTheme(savedTheme);
             renderHistory();
             renderSuggestions(); 
+
+            function setTheme(mode) {{
+                document.body.className = mode;
+                localStorage.setItem('theme', mode);
+                document.getElementById('btn-dark').className = mode === 'dark' ? 'theme-btn active' : 'theme-btn';
+                document.getElementById('btn-light').className = mode === 'light' ? 'theme-btn active' : 'theme-btn';
+            }}
 
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
@@ -408,7 +452,7 @@ def home():
                 const selected = shuffled.slice(0, 4);
                 let html = '';
                 selected.forEach(s => {{
-                    // NOTE: Double braces for JS inside f-string
+                    // NOTE: Escaped braces properly here
                     html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
@@ -416,7 +460,8 @@ def home():
 
             function startNewChat() {{
                 currentChatId = Date.now();
-                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
+                const randomColor = accentColors[Math.floor(Math.random() * accentColors.length)];
+                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [], accent: randomColor }});
                 saveData();
                 renderHistory();
                 renderSuggestions();
@@ -430,7 +475,7 @@ def home():
                 resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v23_2_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v18_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -448,6 +493,7 @@ def home():
                 currentChatId = id;
                 const chat = chats.find(c => c.id === id);
                 if(!chat) return;
+                document.documentElement.style.setProperty('--chat-accent', chat.accent || 'var(--accent)');
                 chatBox.innerHTML = '';
                 welcomeScreen.style.display = 'none'; 
                 if (chat.messages.length === 0) {{
@@ -461,6 +507,20 @@ def home():
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
+            function addBrandingToImages() {{
+                document.querySelectorAll('.bubble img').forEach(img => {{
+                    if(img.closest('.img-container')) return; 
+                    const container = document.createElement('div');
+                    container.className = 'img-container';
+                    img.parentNode.insertBefore(container, img);
+                    container.appendChild(img);
+                    const branding = document.createElement('div');
+                    branding.className = 'img-brand';
+                    branding.innerHTML = '<i class="fas fa-bolt" style="color:var(--chat-accent)"></i> Flux AI';
+                    container.appendChild(branding);
+                }});
+            }}
+
             function appendBubble(text, isUser) {{
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div');
@@ -469,6 +529,7 @@ def home():
                 const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
                 wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble">${{marked.parse(text)}}</div></div>`;
                 chatBox.appendChild(wrapper);
+                if(!isUser) {{ hljs.highlightAll(); addBrandingToImages(); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
@@ -491,6 +552,7 @@ def home():
                 if(text === '!admin') {{
                     msgInput.value = '';
                     openModal('admin-auth-modal');
+                    // Reset Error Msg
                     document.getElementById('admin-error-msg').style.display = 'none';
                     return;
                 }}
@@ -507,7 +569,7 @@ def home():
                 if(!userName && !awaitingName) {{
                     awaitingName = true;
                     setTimeout(() => {{
-                        appendBubble("Hello! Welcome to Flux AI. Before we start, may I know your name?", false);
+                        appendBubble("Hello! Before we start, may I know your name?", false);
                     }}, 600);
                     return;
                 }}
@@ -523,17 +585,17 @@ def home():
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                // We pass name via SYSTEM PROMPT instead of user body to avoid transcript issues
-                
+                if(userName) context.unshift({{role: "system", content: "User's name is " + userName}});
+
                 try {{
                     const res = await fetch('/chat', {{
                         method: 'POST',
                         headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context, user_name: userName }})
+                        body: JSON.stringify({{ messages: context }})
                     }});
                     
                     removeTyping();
-                    if(!res.ok) throw new Error("API Error");
+                    if(!res.ok) throw new Error("System Offline");
                     
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
@@ -554,18 +616,21 @@ def home():
                     }}
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData();
+                    hljs.highlightAll();
+                    addBrandingToImages();
 
                 }} catch(e) {{
                     removeTyping();
-                    appendBubble("⚠️ I'm currently experiencing high traffic. Please try again in a moment.", false);
+                    appendBubble("⚠️ System is currently offline by Admin or connection failed.", false);
                 }}
             }}
 
+            // ADMIN & MODAL LOGIC
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
             
-            function confirmDelete() {{ localStorage.removeItem('flux_v23_2_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v18_history'); location.reload(); }}
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
@@ -584,7 +649,12 @@ def home():
                         updateSysBtn(data.active);
                     }} catch(e) {{ alert('Error fetching stats'); }}
                 }} else {{
+                    // 🔒 SECURE ERROR: No alert box, just red text
                     errorMsg.style.display = 'block';
+                    // Optional: Shake animation
+                    const box = document.querySelector('#admin-auth-modal .modal-box');
+                    box.style.transform = 'translateX(5px)';
+                    setTimeout(() => box.style.transform = 'translateX(0)', 100);
                 }}
             }}
 
@@ -602,12 +672,12 @@ def home():
                 if(isActive) {{
                     btn.innerText = "Turn System OFF";
                     btn.style.background = "var(--danger)";
-                    txt.innerText = "System is ONLINE 🟢";
+                    txt.innerText = "System is ONLINE";
                     txt.style.color = "var(--success)";
                 }} else {{
                     btn.innerText = "Turn System ON";
                     btn.style.background = "var(--success)";
-                    txt.innerText = "System is OFFLINE 🔴";
+                    txt.innerText = "System is OFFLINE";
                     txt.style.color = "var(--danger)";
                 }}
             }}
@@ -642,40 +712,49 @@ def chat():
     TOTAL_MESSAGES += 1
     data = request.json
     messages = data.get("messages", [])
-    user_name = data.get("user_name", None)
-
-    # MATH ENGINE
+    
+    # --- 🔥 FLUX INSTRUMENTS INTEGRATION START 🔥 ---
+    # শেষের মেসেজটা (ইউজারের প্রশ্ন) নিচ্ছি
     if messages and messages[-1]['role'] == 'user':
         last_msg = messages[-1]['content']
+        
+        # চেক করছি এটা অংক কিনা
         math_result = solve_math_problem(last_msg)
+        
         if math_result:
+            # যদি অংক হয়, তবে আমরা সিস্টেম প্রম্পটে উত্তরটা ঢুকিয়ে দেব
+            # এতে AI আর ভুল করবে না, কারণ উত্তর তার হাতেই আছে!
             system_note = {
                 "role": "system",
-                "content": f"⚡ FLUX TOOL: Math detected. Answer is {math_result}. Use this exact value."
+                "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value. Do not calculate it yourself."
             }
-            messages.insert(-1, system_note)
+            messages.insert(-1, system_note) # ইউজারের মেসেজের ঠিক আগে বসিয়ে দিলাম
+    # --- 🔥 FLUX INSTRUMENTS INTEGRATION END 🔥 ---
 
     ctx = get_current_context()
     
-    # 🧠 BRAIN (NATURAL)
-    sys_prompt_content = f"""
-    You are {APP_NAME}, a super-intelligent AI assistant.
-    
-    IDENTITY:
-    - Name: {APP_NAME}
-    - Created by: {OWNER_NAME} (Bangla: {OWNER_NAME_BN})
-    
-    CONTEXT:
-    - Time: {ctx['time_local']}
-    
-    RULES:
-    1. **NO SCRIPT FORMAT**: Never use prefixes like "Flux AI:". Reply directly.
-    2. **NATURAL**: Speak naturally. Do not repeat the owner's name unless asked.
-    3. **NAME**: You know the user is {user_name if user_name else 'friend'}. Use it rarely.
-    4. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-    """
-
-    sys_message = {"role": "system", "content": sys_prompt_content}
+    # 🔥 FIX APPLIED: AI will NOT mention owner unless asked.
+    # 🔥 FIX APPLIED: Bangla spelling enforced as "কাওছুর".
+    sys_prompt = {
+        "role": "system",
+        "content": f"""
+        You are {APP_NAME}, a friendly and expert AI assistant.
+        
+        IDENTITY & OWNER:
+        - You were created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        - IMPORTANT: Do NOT mention the owner's name spontaneously or in your introduction. Only mention it if the user explicitly asks "Who created you?" or "Who is your owner?".
+        
+        CONTEXT:
+        - Time: {ctx['time_local']} (Dhaka), {ctx['time_utc']} (UTC)
+        - Date: {ctx['date']}
+        
+        RULES:
+        1. NO "Generating..." text for images. Just output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+        2. Be concise but helpful.
+        3. Use **bold** for important points.
+        4. If speaking Bangla, ALWAYS spell the owner's name as "{OWNER_NAME_BN}".
+        """
+    }
 
     def generate():
         global current_key_index
@@ -686,23 +765,21 @@ def chat():
             try:
                 client = get_groq_client()
                 if not client: yield "⚠️ Config Error."; return
-                
                 stream = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=[sys_message] + messages,
+                    messages=[sys_prompt] + messages,
                     stream=True,
                     temperature=0.7, 
                     max_tokens=1024
                 )
                 for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
+                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
                 return
             except Exception as e:
                 current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
                 attempts += 1
                 time.sleep(1)
-        yield "⚠️ System overloaded. Please try again."
+        yield "⚠️ System overloaded."
 
     return Response(generate(), mimetype="text/plain")
 
