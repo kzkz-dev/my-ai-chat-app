@@ -2,4 +2,3 @@ flask
 groq
 pytz
 gunicorn
-cerebras_cloud_sdk
