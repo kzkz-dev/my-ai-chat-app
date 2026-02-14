@@ -10,7 +10,7 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Identity & Neural Fix - v27.2.0) 🧠
+# 🔹 Flux AI (Identity Fixed - Build 27.2.0) 🔧
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
@@ -92,253 +92,257 @@ def home():
         <title>{APP_NAME}</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Inter:wght@300;400;600&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark-reasonable.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
             :root {{
-                /* 🎨 THEME VARIABLES */
-                --hue: 250; /* Purple/Blue Base */
-                --bg: #050510;
-                --sidebar: #0a0a16; /* Fixed Dark Sidebar */
+                /* 🌑 DARK MODE (DEFAULT) */
+                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
+                --glass-bg: rgba(20, 20, 35, 0.7);
+                --sidebar-bg: rgba(15, 15, 30, 0.95); /* Fixed Sidebar Color */
+                --glass-border: rgba(255, 255, 255, 0.08);
                 --text: #e0e6ed;
                 --text-secondary: #94a3b8;
-                --input-bg: #151525;
-                --border: #2d2d44;
-                --accent: #7c3aed; /* Purple */
-                --accent-2: #3b82f6; /* Blue */
-                --glow: 0 0 15px rgba(124, 58, 237, 0.4);
+                --accent: #00f3ff;
                 
-                /* Gradient for Logo & User Bubble */
-                --brand-grad: linear-gradient(135deg, #a855f7 0%, #3b82f6 100%);
+                /* 🔥 LOGO GRADIENT (Purple to Blue as per image) */
+                --bot-grad: linear-gradient(135deg, #d946ef 0%, #3b82f6 100%);
+                --user-grad: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+                
+                --danger: #ff0f7b;
+                --success: #00ff87;
             }}
-            
+
             body.light {{
-                --bg: #ffffff;
-                --sidebar: #f8fafc;
-                --text: #1e293b;
-                --text-secondary: #64748b;
-                --input-bg: #f1f5f9;
-                --border: #e2e8f0;
-                --accent: #6366f1;
+                /* ☀️ LIGHT MODE */
+                --bg-gradient: #ffffff;
+                --glass-bg: #f3f4f6;
+                --sidebar-bg: #ffffff; /* White Sidebar in Light Mode */
+                --text: #1f2937;
+                --text-secondary: #4b5563;
+                --glass-border: #e5e7eb;
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
             body {{ 
-                margin: 0; background: var(--bg); color: var(--text); 
-                font-family: 'Inter', 'Noto Sans Bengali', sans-serif; 
+                margin: 0; background: var(--bg-gradient); color: var(--text); 
+                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
                 height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.3s ease;
+                transition: background 0.3s ease, color 0.3s ease;
             }}
 
             /* 🧠 NEURAL BACKGROUND */
             #neuro-bg {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                z-index: -1; pointer-events: none; opacity: 0.4;
+                z-index: -1; pointer-events: none; opacity: 0.3;
             }}
 
-            /* SIDEBAR */
+            /* SIDEBAR (FIXED COLOR) */
             #sidebar {{
-                width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--border); 
+                width: 280px; height: 100%; display: flex; flex-direction: column;
+                padding: 20px; border-right: 1px solid var(--glass-border);
+                transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s;
                 position: absolute; z-index: 200; left: 0; top: 0; 
-                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
+                background: var(--sidebar-bg); /* Uses dynamic variable */
+                backdrop-filter: blur(20px);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ 
-                font-family: var(--font-header); font-size: 1.6rem; font-weight: 800; 
-                margin-bottom: 25px; display: flex; align-items: center; gap: 10px; 
-                color: var(--text); letter-spacing: 1px;
+                font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; 
+                display: flex; align-items: center; gap: 12px; color: var(--text); 
             }}
-            /* 🔥 LOGO GRADIENT FIX */
-            .brand i {{ 
-                background: var(--brand-grad); -webkit-background-clip: text; color: transparent; 
-                filter: drop-shadow(0 0 5px rgba(168, 85, 247, 0.5));
-            }}
+            .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; font-size: 1.8rem; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 12px; background: var(--brand-grad); 
-                color: white; border: none;
-                border-radius: 10px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px;
-                margin-bottom: 20px; transition: 0.3s; box-shadow: 0 4px 15px rgba(124, 58, 237, 0.3);
+                width: 100%; padding: 14px; background: rgba(100, 100, 255, 0.05); 
+                color: var(--text); border: 1px solid var(--glass-border);
+                border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
+                margin-bottom: 20px; transition: all 0.3s ease;
             }}
-            .new-chat-btn:active {{ transform: scale(0.98); }}
+            .new-chat-btn:active {{ transform: scale(0.97); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
             .history-item {{
-                padding: 12px; border-radius: 8px; cursor: pointer; color: var(--text-secondary); 
-                font-size: 0.95rem; transition: background 0.2s; display: flex; align-items: center; gap: 10px;
+                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
+                transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
             }}
-            .history-item:hover {{ background: var(--input-bg); color: var(--text); }}
+            .history-item:hover {{ background: rgba(100, 100, 255, 0.1); color: var(--text); }}
 
-            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
+            .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
-            /* THEME TOGGLE */
-            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 4px; border-radius: 8px; }}
-            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 6px; }}
-            .theme-btn.active {{ background: var(--bg); color: var(--text); font-weight: bold; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
-
-            /* ABOUT SECTION */
             .about-section {{ 
-                display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
-                animation: fadeIn 0.3s;
+                display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px;
+                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
+                animation: fadeIn 0.3s; color: var(--text);
             }}
             .about-section.show {{ display: block; }}
-            .about-link {{ color: var(--text); font-size: 1.2rem; margin: 0 10px; }}
+            .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
 
-            /* MAIN CHAT */
-            #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            
-            header {{
-                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
-                background: rgba(10, 10, 25, 0.85); backdrop-filter: blur(10px);
-                border-bottom: 1px solid var(--border); position: absolute; top: 0; left: 0; right: 0; z-index: 100;
-            }}
-            body.light header {{ background: rgba(255, 255, 255, 0.85); }}
+            /* THEME TOGGLES */
+            .theme-toggles {{ display: flex; background: rgba(100,100,255,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
+            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
+            .theme-btn.active {{ background: rgba(255,255,255,0.2); color: var(--text); }}
 
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 18px 140px 18px; display: flex; flex-direction: column; gap: 24px; }}
+            header {{
+                height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+                background: var(--glass-bg); backdrop-filter: blur(15px);
+                border-bottom: 1px solid var(--glass-border); 
+                position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+            }}
+
+            #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
             /* WELCOME SCREEN */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; padding-top: 60px;
+                height: 100%; text-align: center; padding-top: 100px; padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
-                width: 90px; height: 90px; border-radius: 25px; 
-                display: flex; align-items: center; justify-content: center; font-size: 3.5rem; 
-                margin-bottom: 20px; animation: floatPulse 4s ease-in-out infinite;
-                background: rgba(255,255,255,0.05); border: 1px solid var(--border);
+                width: 100px; height: 100px; background: rgba(255,255,255,0.03);
+                border: 1px solid var(--glass-border); border-radius: 30px; 
+                display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white; 
+                margin-bottom: 25px; box-shadow: 0 0 30px rgba(100, 100, 255, 0.1);
+                animation: levitate 4s ease-in-out infinite;
             }}
-            .icon-wrapper i {{ background: var(--brand-grad); -webkit-background-clip: text; color: transparent; }}
-            
-            .welcome-title {{ font-family: var(--font-header); font-size: 2rem; font-weight: 700; margin-bottom: 10px; }}
-            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 30px; font-size: 1rem; }}
+            .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
+            .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; color: var(--text); }}
+            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; max-width: 80%; }}
 
-            /* SUGGESTIONS */
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; width: 100%; max-width: 700px; }}
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
             .chip {{
-                padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 12px;
-                cursor: pointer; text-align: left; color: var(--text-secondary); transition: 0.3s;
-                font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
+                padding: 18px 22px; background: var(--glass-bg); 
+                border: 1px solid var(--glass-border); border-radius: 20px;
+                cursor: pointer; text-align: left; color: var(--text-secondary); 
+                transition: all 0.3s; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 14px;
             }}
-            .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); }}
-            .chip i {{ color: var(--accent); }}
+            .chip:hover {{ transform: translateY(-5px); border-color: var(--accent); color: var(--text); }}
+            .chip i {{ color: var(--accent); font-size: 1.2rem; opacity: 0.9; }}
 
-            /* MESSAGES */
-            .message-wrapper {{ display: flex; gap: 12px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s; }}
+            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
+            .avatar {{ width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); font-size: 1.1rem; }}
+            .bot-avatar {{ background: var(--bot-grad); color: white; }}
+            .user-avatar {{ background: rgba(100,100,255,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
             
-            .avatar {{ width: 38px; height: 38px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }}
-            .bot-avatar {{ background: var(--brand-grad); color: white; box-shadow: 0 0 10px rgba(124, 58, 237, 0.4); }}
-            .user-avatar {{ background: var(--input-bg); border: 1px solid var(--border); color: var(--text); }}
-            
-            .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; min-width: 0; }}
+            .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
-            
-            .bubble {{ 
-                padding: 12px 16px; border-radius: 16px; font-size: 1rem; line-height: 1.6; 
-                word-wrap: break-word; overflow-wrap: break-word;
-            }}
-            .bot .bubble {{ background: transparent; padding-left: 0; width: 100%; }}
-            .user .bubble {{ background: var(--brand-grad); color: white; border-radius: 16px 4px 16px 16px; box-shadow: 0 5px 15px rgba(59, 130, 246, 0.3); }}
+            .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
+            .message-wrapper.user .sender-name {{ display: none; }}
 
-            /* CODE BLOCKS */
-            pre {{ 
-                background: #0d1117 !important; padding: 15px; border-radius: 10px; 
-                overflow-x: auto; border: 1px solid var(--border); position: relative;
-                margin-top: 10px; max-width: 100%;
-            }}
-            code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
+            .bubble {{ padding: 14px 20px; border-radius: 22px; font-size: 1.02rem; line-height: 1.65; word-wrap: break-word; position: relative; }}
+            .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
+            .user .bubble {{ background: var(--user-grad); border-radius: 22px 4px 22px 22px; color: white; box-shadow: 0 5px 20px rgba(0,0,0,0.2); }}
             
+            .bubble strong {{ color: var(--accent); font-weight: 700; }}
+            .bubble img {{ max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.2); border: 1px solid var(--glass-border); }}
+
+            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
+            code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
             .copy-btn {{
-                position: absolute; top: 8px; right: 8px;
-                background: rgba(255, 255, 255, 0.1); color: #fff;
-                border: none; padding: 5px 10px; border-radius: 5px;
-                cursor: pointer; font-size: 0.8rem;
+                position: absolute; top: 10px; right: 10px;
+                background: rgba(255,255,255,0.1); color: white; border: none;
+                padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
             }}
+            .copy-btn:hover {{ background: var(--accent); }}
 
             .run-code-btn {{
-                display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
-                padding: 8px 14px; background: rgba(59, 130, 246, 0.1); color: var(--accent-2);
-                border: 1px solid var(--accent-2); border-radius: 8px; font-weight: 600; cursor: pointer;
+                display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
+                padding: 10px 16px; background: rgba(100,100,255,0.1); color: var(--accent);
+                border: 1px solid var(--accent); border-radius: 10px; font-weight: 600; cursor: pointer;
+                transition: 0.3s;
             }}
+            .run-code-btn:hover {{ background: var(--accent); color: black; }}
 
-            /* INPUT AREA */
             #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
-                background: linear-gradient(to top, var(--bg) 90%, transparent); display: flex; justify-content: center; z-index: 50;
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
+                background: var(--glass-bg); backdrop-filter: blur(10px);
+                display: flex; justify-content: center; z-index: 50; border-top: 1px solid var(--glass-border);
             }}
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: var(--input-bg); border: 1px solid var(--border);
-                border-radius: 20px; padding: 10px 10px 10px 20px; backdrop-filter: blur(10px);
-                box-shadow: 0 5px 20px rgba(0,0,0,0.1); transition: 0.3s;
+                background: rgba(100, 100, 255, 0.05); border-radius: 30px; padding: 8px 8px 8px 24px;
+                border: 1px solid var(--glass-border); transition: all 0.3s ease;
             }}
-            .input-box:focus-within {{ border-color: var(--accent); box-shadow: var(--glow); }}
+            .input-box:focus-within {{ border-color: var(--accent); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 10px 0; font-family: inherit;
+                color: var(--text); font-size: 1.05rem; max-height: 160px; resize: none; padding: 14px 0; font-family: inherit;
             }}
             .send-btn {{
-                background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px;
-                border-radius: 12px; cursor: pointer; margin-left: 10px;
-                display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s;
+                background: var(--text); color: black; border: none; width: 48px; height: 48px;
+                border-radius: 50%; cursor: pointer; margin-left: 12px; margin-bottom: 2px;
+                display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: 0.3s;
             }}
-            .send-btn:hover {{ background: var(--brand-grad); color: white; }}
+            .send-btn:hover {{ transform: scale(1.1); background: var(--accent); }}
 
-            /* PREVIEW MODAL */
+            .energy-ball {{
+                position: fixed; width: 20px; height: 20px; background: var(--accent);
+                border-radius: 50%; pointer-events: none; z-index: 9999;
+                box-shadow: 0 0 20px var(--accent), 0 0 40px white;
+                animation: shootUp 0.6s ease-in-out forwards;
+            }}
+
             #preview-modal {{
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
-                backdrop-filter: blur(5px);
+                backdrop-filter: blur(8px);
             }}
             .preview-box {{
-                width: 95%; max-width: 500px; height: 80%; background: white; border-radius: 12px; overflow: hidden;
-                display: flex; flex-direction: column; box-shadow: 0 0 50px rgba(0,0,0,0.5);
+                width: 90%; height: 85%; background: white; border-radius: 16px; overflow: hidden;
+                display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             }}
             .preview-header {{
-                padding: 10px 15px; background: #111; color: white; display: flex; justify-content: space-between; align-items: center;
+                padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
+                display: flex; justify-content: space-between; align-items: center;
             }}
             iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
-            /* ANIMATIONS */
-            @keyframes floatPulse {{ 0%, 100% {{ transform: translateY(0); box-shadow: 0 10px 40px rgba(124, 58, 237, 0.2); }} 50% {{ transform: translateY(-10px); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.4); }} }}
-            @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
-            @keyframes popIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            .modal-overlay {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
+                z-index: 9999; backdrop-filter: blur(8px);
+            }}
+            .modal-box {{
+                background: var(--sidebar-bg); border: 1px solid var(--glass-border); 
+                padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; 
+                text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.2); color: var(--text);
+            }}
             
-            .typing {{ display: flex; gap: 6px; padding: 10px 0; }}
+            .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.95rem; transition: 0.2s; }}
+            .btn-cancel {{ background: rgba(100,100,255,0.1); color: var(--text); }}
+            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-confirm {{ background: var(--success); color: black; }}
+
+            @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
+            @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+            @keyframes shootUp {{ 0% {{ bottom: 80px; left: 50%; opacity: 1; transform: scale(1); }} 100% {{ bottom: 70%; left: 50%; opacity: 0; transform: scale(0.2); }} }}
+            
+            .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
             
             .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
-            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }}
-            .modal-box {{ background: var(--sidebar); border: 1px solid var(--border); padding: 25px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; }}
         </style>
     </head>
     <body class="dark">
         <canvas id="neuro-bg"></canvas>
 
-        <div id="preview-modal">
-            <div class="preview-box">
-                <div class="preview-header">
-                    <span style="font-weight:700;">Live Preview</span>
-                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:5px; cursor:pointer;">Close</button>
-                </div>
-                <iframe id="code-frame"></iframe>
-            </div>
-        </div>
-
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
-                <h3 style="color:var(--text); margin-bottom:10px;">Delete History?</h3>
-                <div style="display:flex; gap:10px; margin-top:20px;">
-                    <button onclick="closeModal('delete-modal')" style="flex:1; padding:10px; background:var(--input-bg); color:var(--text); border:none; border-radius:6px;">Cancel</button>
-                    <button onclick="confirmDelete()" style="flex:1; padding:10px; background:#ef4444; color:white; border:none; border-radius:6px;">Delete</button>
+                <h3>Clear History?</h3>
+                <p style="color:var(--text-secondary); margin-bottom:20px;">This will remove all conversations.</p>
+                <div style="display:flex;">
+                    <button class="btn-modal btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
+                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete</button>
                 </div>
             </div>
         </div>
@@ -346,21 +350,34 @@ def home():
         <div id="admin-auth-modal" class="modal-overlay">
             <div class="modal-box">
                 <h3 style="color:var(--accent);">Admin Access</h3>
-                <input type="password" id="admin-pass" style="width:100%; padding:10px; margin:15px 0; background:rgba(0,0,0,0.3); border:1px solid var(--border); color:var(--text); text-align:center; border-radius:6px;" placeholder="Password">
-                <button onclick="verifyAdmin()" style="width:100%; padding:10px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:bold;">Login</button>
-                <button onclick="closeModal('admin-auth-modal')" style="margin-top:10px; background:transparent; border:none; color:var(--text-secondary);">Cancel</button>
+                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
+                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;">Invalid Password</div>
+                <div style="display:flex;">
+                    <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
+                    <button class="btn-modal btn-confirm" onclick="verifyAdmin()">Login</button>
+                </div>
             </div>
         </div>
 
         <div id="admin-panel-modal" class="modal-overlay">
-            <div class="modal-box">
-                <h3>Dashboard</h3>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:15px 0;">
-                    <div style="background:var(--input-bg); padding:10px; border-radius:8px;"><div id="stat-msgs" style="font-size:1.5rem; font-weight:bold; color:var(--accent);">0</div><small>Messages</small></div>
-                    <div style="background:var(--input-bg); padding:10px; border-radius:8px;"><div id="stat-uptime" style="font-size:1.2rem; font-weight:bold; color:var(--accent);">0s</div><small>Uptime</small></div>
+            <div class="modal-box" style="max-width: 450px;">
+                <h3 style="margin-bottom:20px;">Admin Dashboard</h3>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:25px;">
+                    <div style="background:rgba(100,100,255,0.1); padding:15px; border-radius:12px;"><div id="stat-msgs" style="font-size:1.6rem; font-weight:700; color:var(--accent);">0</div><div style="font-size:0.8rem;">MESSAGES</div></div>
+                    <div style="background:rgba(100,100,255,0.1); padding:15px; border-radius:12px;"><div id="stat-uptime" style="font-size:1.2rem; font-weight:700; color:var(--accent);">0s</div><div style="font-size:0.8rem;">UPTIME</div></div>
                 </div>
-                <button id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; padding:12px; background:#10b981; color:white; border:none; border-radius:6px;">System Online</button>
-                <button onclick="closeModal('admin-panel-modal')" style="margin-top:10px; background:transparent; border:none; color:var(--text-secondary);">Close</button>
+                <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0;">Turn System OFF</button>
+                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:15px 0 0 0;">Close</button>
+            </div>
+        </div>
+
+        <div id="preview-modal">
+            <div class="preview-box">
+                <div class="preview-header">
+                    <span style="font-weight:700; color:black;">Live Preview</span>
+                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">Close</button>
+                </div>
+                <iframe id="code-frame"></iframe>
             </div>
         </div>
 
@@ -371,6 +388,7 @@ def home():
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-plus"></i> New Chat
             </button>
+            <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px; opacity:0.8;">RECENT</div>
             <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
@@ -378,25 +396,27 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
                 </div>
-                <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> About</div>
+
+                <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
                 <div id="about-info" class="about-section">
-                    <strong>{APP_NAME} v{VERSION}</strong><br>
-                    <small>Created by <span style="color:var(--accent)">{OWNER_NAME}</span></small><br>
-                    <div style="margin:10px 0; font-size:1.2rem;">
+                    <strong style="font-size:1.2rem; display:block; margin-bottom:5px;">{APP_NAME}</strong>
+                    <span style="font-size:0.8rem; opacity:0.7;">v{VERSION}</span><br>
+                    <small style="color:var(--text-secondary)">Created by <span style="color:var(--accent)">{OWNER_NAME}</span></small><br>
+                    <div style="margin:15px 0;">
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="opacity:0.7">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
+                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5;">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
                 </div>
-                <div class="history-item" style="color:#ef4444;" onclick="openDeleteModal('delete-modal')"><i class="fas fa-trash"></i> Clear Data</div>
+                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:var(--danger);"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
         </div>
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem;"><i class="fas fa-bars"></i></button>
-                <span style="font-family:var(--font-header); font-weight:700;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem;"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
+                <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
@@ -410,7 +430,7 @@ def home():
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Message Flux AI..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -420,51 +440,44 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
+            
             let chats = JSON.parse(localStorage.getItem('flux_v27_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
+
             let currentChatId = null;
-            
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
+            const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
-            // 1. NEURAL BACKGROUND ANIMATION (FIXED COLORS)
+            renderHistory();
+            renderSuggestions(); 
+
+            // NEURAL BG (Adjusted Colors)
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
             function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
-            
             class Particle {{
-                constructor() {{
-                    this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height;
-                    this.vx = (Math.random()-.5)*0.5; this.vy = (Math.random()-.5)*0.5;
-                }}
-                update() {{
-                    this.x+=this.vx; this.y+=this.vy;
-                    if(this.x<0||this.x>canvas.width) this.vx*=-1;
-                    if(this.y<0||this.y>canvas.height) this.vy*=-1;
-                }}
-                draw() {{
-                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
-                    ctx.beginPath(); ctx.arc(this.x, this.y, 1.5, 0, Math.PI*2); ctx.fill();
-                }}
+                constructor() {{ this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.vx = (Math.random()-.5)*0.5; this.vy = (Math.random()-.5)*0.5; }}
+                update() {{ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>canvas.width) this.vx*=-1; if(this.y<0||this.y>canvas.height) this.vy*=-1; }}
+                draw() {{ ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent'); ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fill(); }}
             }}
             for(let i=0; i<60; i++) particles.push(new Particle());
             function animateBg() {{
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                particles.forEach((p,i)=>{{
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {{
                     p.update(); p.draw();
-                    particles.slice(i+1).forEach(p2=>{{
+                    particles.slice(index+1).forEach(p2 => {{
                         let d = Math.hypot(p.x-p2.x, p.y-p2.y);
-                        if(d<120) {{
-                            ctx.strokeStyle = `rgba(124, 58, 237, ${{1-d/120}})`; // Purple connections
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
+                        if(d<100) {{
+                            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent').replace('rgb','rgba').replace(')',', '+ (1-d/100)*0.2 +')');
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(p2.x, p2.y); ctx.stroke();
                         }}
                     }});
                 }});
@@ -472,7 +485,7 @@ def home():
             }}
             animateBg();
 
-            // 2. LOGIC FUNCTIONS
+            // THEME TOGGLE
             function setTheme(mode) {{
                 document.body.className = mode;
                 document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn';
@@ -480,7 +493,7 @@ def home():
             }}
 
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
-            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 150) + 'px'; }}
+            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
 
             function renderSuggestions() {{
@@ -494,11 +507,7 @@ def home():
                 currentChatId = Date.now();
                 chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
                 saveData(); renderHistory(); renderSuggestions();
-                
-                chatBox.innerHTML = ''; 
-                chatBox.appendChild(welcomeScreen); 
-                welcomeScreen.style.display = 'flex';
-                
+                chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
                 sidebar.classList.add('closed'); overlay.style.display = 'none';
                 msgInput.value = ''; resizeInput(msgInput);
             }}
@@ -509,14 +518,13 @@ def home():
                 const list = document.getElementById('history-list'); list.innerHTML = '';
                 chats.forEach(chat => {{
                     const div = document.createElement('div'); div.className = 'history-item';
-                    div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 20) + '</span>';
+                    div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
                     div.onclick = () => loadChat(chat.id); list.appendChild(div);
                 }});
             }}
 
             function loadChat(id) {{
-                currentChatId = id; const chat = chats.find(c => c.id === id);
-                if(!chat) return;
+                currentChatId = id; const chat = chats.find(c => c.id === id); if(!chat) return;
                 chatBox.innerHTML = ''; welcomeScreen.style.display = 'none';
                 chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false));
                 sidebar.classList.add('closed'); overlay.style.display = 'none';
@@ -529,7 +537,8 @@ def home():
                     btn.className = 'copy-btn'; btn.innerHTML = '<i class="fas fa-copy"></i>';
                     btn.onclick = () => {{
                         navigator.clipboard.writeText(pre.querySelector('code').innerText);
-                        btn.innerHTML = '<i class="fas fa-check"></i>'; setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 2000);
+                        btn.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 2000);
                     }};
                     pre.appendChild(btn);
                 }});
@@ -548,6 +557,11 @@ def home():
             }}
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
+            function playSentAnimation() {{
+                const ball = document.createElement('div'); ball.className = 'energy-ball'; ball.style.left = '50%';
+                document.body.appendChild(ball); setTimeout(() => ball.remove(), 500);
+            }}
+
             function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div');
@@ -557,7 +571,6 @@ def home():
                 chatBox.appendChild(wrapper);
                 const bubble = wrapper.querySelector('.bubble');
                 bubble.innerHTML = marked.parse(text);
-                
                 if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, bubble); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
@@ -565,31 +578,25 @@ def home():
             function showTyping() {{
                 const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator';
                 wrapper.className = 'message-wrapper bot';
-                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="padding:10px;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
+                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
                 chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
             function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
-
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
                 const text = msgInput.value.trim(); if(!text) return;
-                
-                if(text === '!admin') {{ msgInput.value=''; document.getElementById('admin-auth-modal').style.display='flex'; return; }}
+                if(text === '!admin') {{ msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return; }}
 
+                playSentAnimation();
                 if(!currentChatId) startNewChat();
                 const chat = chats.find(c => c.id === currentChatId);
                 chat.messages.push({{ role: 'user', text: text }});
                 if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
                 saveData(); msgInput.value = ''; appendBubble(text, true);
 
-                if(!userName && !awaitingName) {{
-                    awaitingName = true; setTimeout(()=>appendBubble("Hello! May I know your name?", false), 600); return;
-                }}
-                if(awaitingName) {{
-                    userName = text; localStorage.setItem('flux_user_name', userName); awaitingName = false;
-                    setTimeout(()=>appendBubble(`Nice to meet you, ${{userName}}!`, false), 600); return;
-                }}
+                if(!userName && !awaitingName) {{ awaitingName = true; setTimeout(() => appendBubble("Hello! May I know your name?", false), 600); return; }}
+                if(awaitingName) {{ userName = text; localStorage.setItem('flux_user_name', userName); awaitingName = false; setTimeout(() => appendBubble(`Nice to meet you, ${{userName}}!`, false), 600); return; }}
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
@@ -598,42 +605,46 @@ def home():
                     const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ messages: context, user_name: userName }}) }});
                     removeTyping();
                     const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
-                    
                     const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
                     chatBox.appendChild(wrapper); const bubble = wrapper.querySelector('.bubble');
 
                     while(true) {{
                         const {{ done, value }} = await reader.read(); if(done) break;
-                        botResp += decoder.decode(value);
-                        bubble.innerHTML = marked.parse(botResp);
-                        chatBox.scrollTo({{ top: chatBox.scrollHeight }});
+                        botResp += decoder.decode(value); bubble.innerHTML = marked.parse(botResp);
+                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubble);
                 }} catch(e) {{ removeTyping(); appendBubble("⚠️ Connection Error.", false); }}
             }}
 
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); }}
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
+            function openDeleteModal(id) {{ openModal(id); }}
             function confirmDelete() {{ localStorage.removeItem('flux_v27_2_history'); location.reload(); }}
-            
+
             async function verifyAdmin() {{
                 if(document.getElementById('admin-pass').value === '{ADMIN_PASSWORD}') {{
                     closeModal('admin-auth-modal'); openModal('admin-panel-modal');
                     const res = await fetch('/admin/stats'); const data = await res.json();
                     document.getElementById('stat-msgs').innerText = data.total_messages;
                     document.getElementById('stat-uptime').innerText = data.uptime;
+                    updateSysBtn(data.active);
                 }} else {{ document.getElementById('admin-error-msg').style.display = 'block'; }}
             }}
+
             async function toggleSystem() {{
                 const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json();
-                const btn = document.getElementById('btn-toggle-sys');
-                btn.innerText = data.active ? "Turn System OFF" : "Turn System ON";
-                btn.style.background = data.active ? "#ef4444" : "#10b981";
+                updateSysBtn(data.active);
             }}
 
-            renderHistory(); renderSuggestions();
+            function updateSysBtn(isActive) {{
+                const btn = document.getElementById('btn-toggle-sys');
+                btn.innerText = isActive ? "Turn System OFF" : "Turn System ON";
+                btn.style.background = isActive ? "var(--danger)" : "var(--success)";
+            }}
+
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
     </body>
@@ -664,31 +675,38 @@ def chat():
     TOTAL_MESSAGES += 1
     data = request.json
     messages = data.get("messages", [])
-    user_name = data.get("user_name", None)
+    user_name = data.get("user_name", "User") # Default to 'User' if unknown
 
     # MATH ENGINE
     if messages and messages[-1]['role'] == 'user':
-        math_result = solve_math_problem(messages[-1]['content'])
+        last_msg = messages[-1]['content']
+        math_result = solve_math_problem(last_msg)
         if math_result:
-            messages.insert(-1, {{"role": "system", "content": f"⚡ MATH TOOL: Answer is {{math_result}}."}})
+            system_note = {
+                "role": "system",
+                "content": f"⚡ FLUX TOOL: Math detected. Answer is {math_result}. Use this exact value."
+            }
+            messages.insert(-1, system_note)
 
     ctx = get_current_context()
     
-    # 🧠 BRAIN UPDATE: STRICT IDENTITY CONTROL
+    # 🔥 FIXED: IDENTITY & OWNER SEPARATION
     sys_prompt_content = f"""
-    You are {APP_NAME}, a friendly and expert AI assistant.
+    You are {APP_NAME}, a helpful AI assistant.
     
-    IDENTITY PROTOCOL:
-    1. **YOUR CREATOR:** You were created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-    2. **THE USER:** The person you are talking to is named "{user_name if user_name else 'User'}".
-    3. **CRITICAL RULE:** Do NOT confuse the user with your creator. If the user asks "Who created me?", you don't know (unless they told you). If they ask "Who created YOU?", the answer is {OWNER_NAME}.
+    IDENTITY & OWNER:
+    - You were created by **{OWNER_NAME}** (Bangla: {OWNER_NAME_BN}).
+    - **IMPORTANT:** {OWNER_NAME} is your CREATOR. The person chatting with you is the **USER**.
+    - The User's name is: **{user_name}**.
+    - Do NOT confuse the User with your Creator unless the User explicitly says "I am Kawchur".
     
     CONTEXT:
     - Time: {ctx['time_local']}
     
     RULES:
-    1. **CODING**: Use ```html blocks for HTML code.
-    2. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+    1. **NO SCRIPT FORMAT**: Reply naturally.
+    2. **CODING**: Use ```html blocks for HTML code.
+    3. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
