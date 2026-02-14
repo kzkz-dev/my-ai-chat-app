@@ -10,12 +10,12 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Identity Fixed - Build 27.2.0) 🧠
+# 🔹 Flux AI (Perfect Fixed - Build 28.0.0) 🚀
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "27.2.0"
+VERSION = "28.0.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -34,7 +34,7 @@ GROQ_KEYS = [k.strip() for k in os.environ.get("GROQ_KEYS", "").split(",") if k.
 current_key_index = 0
 
 if not GROQ_KEYS:
-    print("⚠️ WARNING: No Groq keys found. Please add them in Render Environment Variables.")
+    print("⚠️ WARNING: No Groq keys found. Please check Render Environment Variables.")
 
 def get_groq_client():
     global current_key_index
@@ -49,9 +49,9 @@ def get_uptime():
 def get_current_context(): 
     tz_dhaka = pytz.timezone('Asia/Dhaka')
     now_dhaka = datetime.now(tz_dhaka)
-    now_utc = datetime.now(pytz.utc) # UTC Time added
+    now_utc = datetime.now(pytz.utc)
     return {
-        "time_utc": now_utc.strftime("%I:%M %p (UTC)"),
+        "time_utc": now_utc.strftime("%I:%M %p"),
         "time_local": now_dhaka.strftime("%I:%M %p"),
         "date": now_dhaka.strftime("%d %B, %Y")
     }
@@ -59,6 +59,7 @@ def get_current_context():
 # 🧮 MATH ENGINE
 def solve_math_problem(text):
     try:
+        # Regex fix for port scan issue (Using raw strings r'')
         clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
         allowed_chars = set("0123456789.+-*/()xX÷^")
         if not set(clean_text).issubset(allowed_chars): return None
@@ -85,6 +86,7 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # ⚠️ PYTHON F-STRING SAFE HTML
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -103,8 +105,8 @@ def home():
             :root {{
                 --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
                 --glass-bg: rgba(20, 20, 35, 0.65);
+                --sidebar-bg: rgba(15, 15, 30, 0.95); /* Fixed Dark Sidebar */
                 --glass-border: rgba(255, 255, 255, 0.08);
-                --sidebar-bg: rgba(15, 15, 30, 0.95); /* Fixed Sidebar Color Variable */
                 --text: #e0e6ed;
                 --text-secondary: #94a3b8;
                 --accent: #00f3ff;
@@ -113,15 +115,19 @@ def home():
                 --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
                 --danger: #ff0f7b;
                 --success: #00ff87;
+                --input-bg: rgba(30, 30, 50, 0.7);
             }}
 
             body.light {{
                 --bg-gradient: #ffffff;
                 --glass-bg: #f3f4f6;
-                --sidebar-bg: rgba(255, 255, 255, 0.95); /* Light Sidebar */
+                --sidebar-bg: #ffffff; /* Light Sidebar */
+                --glass-border: #e5e7eb;
                 --text: #1f2937;
                 --text-secondary: #4b5563;
-                --glass-border: #e5e7eb;
+                --input-bg: #e5e7eb;
+                --accent: #2563eb;
+                --bot-grad: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
@@ -129,8 +135,10 @@ def home():
                 margin: 0; background: var(--bg-gradient); color: var(--text); 
                 font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
                 height: 100vh; display: flex; overflow: hidden; 
+                transition: background 0.3s ease, color 0.3s ease;
             }}
 
+            /* 🧠 NEURAL BACKGROUND */
             #neuro-bg {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 z-index: -1; pointer-events: none; opacity: 0.3;
@@ -141,15 +149,14 @@ def home():
                 -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
             }}
 
-            /* SIDEBAR FIX */
+            /* SIDEBAR FIXED */
             #sidebar {{
                 width: 280px; height: 100%; display: flex; flex-direction: column;
                 padding: 20px; border-right: 1px solid var(--glass-border);
                 transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
                 position: absolute; z-index: 200; left: 0; top: 0; 
                 box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-                background: var(--sidebar-bg); /* Uses Variable now */
-                backdrop-filter: blur(20px);
+                background: var(--sidebar-bg); backdrop-filter: blur(20px);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
@@ -204,20 +211,20 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* WELCOME SCREEN */
+            /* WELCOME SCREEN FIXED */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; padding-top: 120px; padding-bottom: 100px;
+                height: 100%; text-align: center; padding-top: 40px; padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
                 width: 100px; height: 100px; background: rgba(255,255,255,0.03);
                 border: 1px solid var(--glass-border); border-radius: 30px; 
-                display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white; 
+                display: flex; align-items: center; justify-content: center; font-size: 4rem; color: var(--text); 
                 margin-bottom: 25px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
                 animation: levitate 4s ease-in-out infinite;
             }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .welcome-title {{ font-size: 2.4rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, var(--text), #bbb); -webkit-background-clip: text; color: transparent; }}
+            .welcome-title {{ font-size: 2.4rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, var(--text), var(--text-secondary)); -webkit-background-clip: text; color: transparent; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; max-width: 80%; line-height: 1.5; }}
 
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
@@ -246,8 +253,9 @@ def home():
             .user .bubble {{ background: var(--user-grad); border-radius: 22px 4px 22px 22px; color: white; box-shadow: 0 5px 20px rgba(20, 136, 204, 0.3); }}
             
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
-            
-            /* COPY & RUN BUTTONS */
+            .bubble img {{ max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }}
+            .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
+
             pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
             .copy-btn {{
@@ -263,23 +271,19 @@ def home():
                 border: 1px solid var(--accent); border-radius: 10px; font-weight: 600; cursor: pointer;
                 transition: 0.3s;
             }}
-            .run-code-btn:hover {{ background: var(--accent); color: black; }}
+            .run-code-btn:hover {{ background: var(--accent); color: var(--bg); }}
 
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
-                background: linear-gradient(to top, rgb(5, 5, 10) 0%, transparent 100%); 
+                background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); 
                 display: flex; justify-content: center; z-index: 50;
             }}
-            body.light #input-area {{ background: linear-gradient(to top, #ffffff 0%, transparent 100%); }}
-
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: rgba(30, 30, 50, 0.7); border-radius: 30px; padding: 8px 8px 8px 24px;
+                background: var(--input-bg); border-radius: 30px; padding: 8px 8px 8px 24px;
                 border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
                 backdrop-filter: blur(20px); transition: all 0.3s ease;
             }}
-            body.light .input-box {{ background: rgba(255, 255, 255, 0.9); }}
-
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 25px rgba(0, 243, 255, 0.15); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
@@ -314,7 +318,6 @@ def home():
             }}
             iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
-            /* MODALS */
             .modal-overlay {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
@@ -341,7 +344,6 @@ def home():
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            
             .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
         </style>
     </head>
@@ -375,9 +377,11 @@ def home():
         <div id="admin-panel-modal" class="modal-overlay">
             <div class="modal-box" style="max-width: 450px;">
                 <div class="modal-title" style="margin-bottom:20px;">Admin Dashboard</div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:20px;">
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;"><div id="stat-msgs" style="font-size:1.5rem; font-weight:bold; color:var(--accent);">0</div><small>Messages</small></div>
-                    <div style="background:rgba(255,255,255,0.05); padding:10px; border-radius:8px;"><div id="stat-uptime" style="font-size:1.2rem; font-weight:bold; color:var(--accent);">0s</div><small>Uptime</small></div>
+                <div class="stats-grid">
+                    <div class="stat-box"><div class="stat-val" id="stat-msgs">0</div><div class="stat-label">Total Messages</div></div>
+                    <div class="stat-box"><div class="stat-val" id="stat-uptime">0s</div><div class="stat-label">Server Uptime</div></div>
+                    <div class="stat-box"><div class="stat-val" style="font-size:1.1rem;">{VERSION}</div><div class="stat-label">App Version</div></div>
+                    <div class="stat-box"><div class="stat-val" style="font-size:1.1rem; color:var(--accent);">{OWNER_NAME}</div><div class="stat-label">Developer</div></div>
                 </div>
                 <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0; padding:16px;">Turn System OFF</button>
                 <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:15px 0 0 0;">Close Panel</button>
@@ -387,7 +391,7 @@ def home():
         <div id="preview-modal">
             <div class="preview-box">
                 <div class="preview-header">
-                    <span style="font-weight:700; color:black;">Live Preview</span>
+                    <span style="font-weight:700; color:#333;">Live Preview</span>
                     <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Close</button>
                 </div>
                 <iframe id="code-frame"></iframe>
@@ -413,13 +417,13 @@ def home():
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
                 <div id="about-info" class="about-section">
                     <strong style="font-size:1.2rem; display:block; margin-bottom:5px; color:var(--text);">{APP_NAME}</strong>
-                    <span style="font-size:0.8rem; opacity:0.7; color:var(--text);">v{VERSION}</span><br>
+                    <span style="font-size:0.8rem; opacity:0.7;">v{VERSION}</span><br>
                     <small style="color:var(--text-secondary)">Created by <span style="color:var(--accent)">{OWNER_NAME}</span></small><br>
                     <div style="margin:15px 0;">
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
+                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5;">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
                 </div>
                 <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -428,7 +432,7 @@ def home():
         <div id="main">
             <header>
                 <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
-                <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #bbb); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
+                <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, var(--text), var(--text-secondary)); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
                 <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
@@ -454,7 +458,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v27_2_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v28_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
 
@@ -463,35 +467,55 @@ def home():
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
-            const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
             renderHistory();
             renderSuggestions(); 
 
-            // NEURAL BG
+            // 🧠 1. NEURAL BACKGROUND ANIMATION (BRAIN EFFECT)
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
+            
             function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
+
             class Particle {{
-                constructor() {{ this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5; }}
-                update() {{ this.x += this.vx; this.y += this.vy; if(this.x < 0 || this.x > canvas.width) this.vx *= -1; if(this.y < 0 || this.y > canvas.height) this.vy *= -1; }}
-                draw() {{ ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent'); ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI * 2); ctx.fill(); }}
+                constructor() {{
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2;
+                }}
+                update() {{
+                    this.x += this.vx; this.y += this.vy;
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }}
+                draw() {{
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }}
             }}
+
             for(let i=0; i<60; i++) particles.push(new Particle());
+
             function animateBg() {{
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 particles.forEach((p, index) => {{
                     p.update(); p.draw();
                     for(let j=index; j<particles.length; j++) {{
-                        const dx = p.x - particles[j].x; const dy = p.y - particles[j].y; const dist = Math.sqrt(dx*dx + dy*dy);
+                        const dx = p.x - particles[j].x;
+                        const dy = p.y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
                         if(dist < 100) {{
                             const accentColor = getComputedStyle(document.body).getPropertyValue('--accent');
+                            // Create subtle lines
                             ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')');
-                            ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                         }}
                     }}
                 }});
@@ -499,7 +523,7 @@ def home():
             }}
             animateBg();
 
-            // THEME
+            // THEME TOGGLE
             function setTheme(mode) {{
                 document.body.className = mode;
                 document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn';
@@ -508,59 +532,91 @@ def home():
 
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
-            function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
+            
+            // SIDEBAR LOGIC
+            function toggleSidebar() {{ 
+                sidebar.classList.toggle('closed'); 
+                overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; 
+            }}
 
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
                 const selected = shuffled.slice(0, 4);
                 let html = '';
-                selected.forEach(s => {{ html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>'; }});
+                selected.forEach(s => {{
+                    html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
+                }});
                 document.getElementById('suggestion-box').innerHTML = html;
             }}
 
             function startNewChat() {{
                 currentChatId = Date.now();
                 chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
-                saveData(); renderHistory(); renderSuggestions();
-                chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
-                sidebar.classList.add('closed'); overlay.style.display = 'none';
-                msgInput.value = ''; resizeInput(msgInput);
+                saveData();
+                renderHistory();
+                renderSuggestions();
+                
+                chatBox.innerHTML = '';
+                chatBox.appendChild(welcomeScreen);
+                welcomeScreen.style.display = 'flex';
+                
+                sidebar.classList.add('closed');
+                overlay.style.display = 'none';
+                msgInput.value = '';
+                resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v27_2_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v28_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
-                const list = document.getElementById('history-list'); list.innerHTML = '';
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
                 chats.forEach(chat => {{
-                    const div = document.createElement('div'); div.className = 'history-item';
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
                     div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
-                    div.onclick = () => loadChat(chat.id); list.appendChild(div);
+                    div.onclick = () => loadChat(chat.id);
+                    list.appendChild(div);
                 }});
             }}
 
             function loadChat(id) {{
-                currentChatId = id; const chat = chats.find(c => c.id === id); if(!chat) return;
-                chatBox.innerHTML = ''; welcomeScreen.style.display = 'none'; 
+                currentChatId = id;
+                const chat = chats.find(c => c.id === id);
+                if(!chat) return;
+                
+                chatBox.innerHTML = '';
+                welcomeScreen.style.display = 'none'; 
+                
                 chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false));
-                sidebar.classList.add('closed'); overlay.style.display = 'none';
+                
+                sidebar.classList.add('closed');
+                overlay.style.display = 'none';
+                setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
+            // COPY BUTTON LOGIC
             function addCopyButtons() {{
                 document.querySelectorAll('pre').forEach(pre => {{
                     if (pre.querySelector('.copy-btn')) return;
-                    const btn = document.createElement('button'); btn.className = 'copy-btn';
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
                     btn.innerHTML = '<i class="fas fa-copy"></i>';
                     btn.onclick = () => {{
-                        navigator.clipboard.writeText(pre.querySelector('code').innerText);
-                        btn.innerHTML = '<i class="fas fa-check"></i>'; setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 2000);
+                        const code = pre.querySelector('code').innerText;
+                        navigator.clipboard.writeText(code);
+                        btn.innerHTML = '<i class="fas fa-check"></i>';
+                        setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 2000);
                     }};
                     pre.appendChild(btn);
                 }});
             }}
 
+            // LIVE PREVIEW LOGIC
             function checkForCode(text, bubble) {{
                 if(text.includes('```html')) {{
-                    const btn = document.createElement('button'); btn.className = 'run-code-btn';
+                    const btn = document.createElement('button');
+                    btn.className = 'run-code-btn';
                     btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
                     btn.onclick = () => {{
                         const code = text.match(/```html([\\s\\S]*?)```/)[1];
@@ -572,9 +628,13 @@ def home():
             }}
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
+            // ENERGY TRAIL
             function playSentAnimation() {{
-                const ball = document.createElement('div'); ball.className = 'energy-ball'; ball.style.left = '50%';
-                document.body.appendChild(ball); setTimeout(() => ball.remove(), 500);
+                const ball = document.createElement('div');
+                ball.className = 'energy-ball';
+                ball.style.left = '50%';
+                document.body.appendChild(ball);
+                setTimeout(() => ball.remove(), 500);
             }}
 
             function appendBubble(text, isUser, animate=true) {{
@@ -585,45 +645,68 @@ def home():
                 const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
                 wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble"></div></div>`;
                 chatBox.appendChild(wrapper);
+                
                 const bubble = wrapper.querySelector('.bubble');
                 bubble.innerHTML = marked.parse(text);
-                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, bubble); }}
+                
+                if(!isUser) {{
+                    hljs.highlightAll();
+                    addCopyButtons();
+                    checkForCode(text, bubble);
+                }}
+                
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
             function showTyping() {{
-                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator';
+                const wrapper = document.createElement('div');
+                wrapper.id = 'typing-indicator';
                 wrapper.className = 'message-wrapper bot';
                 wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
-                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+                chatBox.appendChild(wrapper);
+                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
+
             function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
-                const text = msgInput.value.trim(); if(!text) return;
-                if(text === '!admin') {{ msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return; }}
+                const text = msgInput.value.trim();
+                if(!text) return;
 
-                // Update Name if User Corrects it
-                const nameMatch = text.match(/(?:my name is|i am|call me) ([a-z\s]+)/i);
-                if (nameMatch && nameMatch[1]) {{
-                    userName = nameMatch[1].trim();
-                    localStorage.setItem('flux_user_name', userName);
+                if(text === '!admin') {{
+                    msgInput.value = '';
+                    openModal('admin-auth-modal');
+                    document.getElementById('admin-error-msg').style.display = 'none';
+                    return;
                 }}
 
-                playSentAnimation();
+                playSentAnimation(); // 🔥 Visual Effect
+
                 if(!currentChatId) startNewChat();
                 const chat = chats.find(c => c.id === currentChatId);
+                
                 chat.messages.push({{ role: 'user', text: text }});
                 if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
-                saveData(); msgInput.value = ''; appendBubble(text, true);
+                saveData();
+                msgInput.value = '';
+                appendBubble(text, true);
 
                 if(!userName && !awaitingName) {{
-                    awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What is your name?", false); }}, 600); return;
+                    awaitingName = true;
+                    setTimeout(() => {{
+                        appendBubble("Hello! Welcome to Flux AI. Before we start, may I know your name?", false);
+                    }}, 600);
+                    return;
                 }}
                 if(awaitingName) {{
-                    userName = text; localStorage.setItem('flux_user_name', userName); awaitingName = false;
-                    setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you?`, false); }}, 600); return;
+                    userName = text;
+                    localStorage.setItem('flux_user_name', userName);
+                    awaitingName = false;
+                    setTimeout(() => {{
+                        appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false);
+                    }}, 600);
+                    return;
                 }}
 
                 showTyping();
@@ -631,40 +714,89 @@ def home():
                 
                 try {{
                     const res = await fetch('/chat', {{
-                        method: 'POST', headers: {{ 'Content-Type': 'application/json' }},
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
                         body: JSON.stringify({{ messages: context, user_name: userName }})
                     }});
-                    removeTyping();
-                    if(!res.ok) throw new Error("Offline");
-                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
                     
-                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
+                    removeTyping();
+                    if(!res.ok) throw new Error("System Offline");
+                    
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let botResp = '';
+                    
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
-                    chatBox.appendChild(wrapper); const bubbleDiv = wrapper.querySelector('.bubble');
+                    chatBox.appendChild(wrapper);
+                    const bubbleDiv = wrapper.querySelector('.bubble');
 
                     while(true) {{
-                        const {{ done, value }} = await reader.read(); if(done) break;
-                        botResp += decoder.decode(value); bubbleDiv.innerHTML = marked.parse(botResp);
+                        const {{ done, value }} = await reader.read();
+                        if(done) break;
+                        botResp += decoder.decode(value);
+                        bubbleDiv.innerHTML = marked.parse(botResp);
                         chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
                     chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubbleDiv);
-                }} catch(e) {{ removeTyping(); appendBubble("⚠️ Connection Error.", false); }}
+                    saveData();
+                    hljs.highlightAll();
+                    addCopyButtons();
+                    checkForCode(botResp, bubbleDiv);
+
+                }} catch(e) {{
+                    removeTyping();
+                    appendBubble("⚠️ System is currently offline by Admin or connection failed.", false);
+                }}
             }}
 
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v27_2_history'); location.reload(); }}
+            
+            // 🔥 FIXED CLEAR HISTORY
+            function confirmDelete() {{ localStorage.removeItem('flux_v28_history'); location.reload(); }}
 
             async function verifyAdmin() {{
-                if(document.getElementById('admin-pass').value === '{ADMIN_PASSWORD}') {{
-                    closeModal('admin-auth-modal'); openModal('admin-panel-modal');
-                    const res = await fetch('/admin/stats'); const data = await res.json();
-                    document.getElementById('stat-uptime').innerText = data.uptime; document.getElementById('stat-msgs').innerText = data.total_messages;
-                }} else {{ document.getElementById('admin-error-msg').style.display = 'block'; }}
+                const pass = document.getElementById('admin-pass').value;
+                const errorMsg = document.getElementById('admin-error-msg');
+                
+                if(pass === '{ADMIN_PASSWORD}') {{
+                    errorMsg.style.display = 'none';
+                    closeModal('admin-auth-modal');
+                    openModal('admin-panel-modal');
+                    document.getElementById('admin-pass').value = '';
+                    try {{
+                        const res = await fetch('/admin/stats');
+                        const data = await res.json();
+                        document.getElementById('stat-uptime').innerText = data.uptime;
+                        document.getElementById('stat-msgs').innerText = data.total_messages;
+                        updateSysBtn(data.active);
+                    }} catch(e) {{ alert('Error fetching stats'); }}
+                }} else {{
+                    errorMsg.style.display = 'block';
+                }}
             }}
-            async function toggleSystem() {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); }}
+
+            async function toggleSystem() {{
+                try {{
+                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
+                    const data = await res.json();
+                    updateSysBtn(data.active);
+                }} catch(e) {{ alert('Error toggling system'); }}
+            }}
+
+            function updateSysBtn(isActive) {{
+                const btn = document.getElementById('btn-toggle-sys');
+                if(isActive) {{
+                    btn.innerText = "Turn System OFF";
+                    btn.style.background = "var(--danger)";
+                }} else {{
+                    btn.innerText = "Turn System ON";
+                    btn.style.background = "var(--success)";
+                }}
+            }}
 
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
@@ -696,7 +828,7 @@ def chat():
     TOTAL_MESSAGES += 1
     data = request.json
     messages = data.get("messages", [])
-    user_name = data.get("user_name", "User") # Defaults to "User" if null
+    user_name = data.get("user_name", "User") # Default to 'User' if not provided
 
     # MATH ENGINE
     if messages and messages[-1]['role'] == 'user':
@@ -711,23 +843,34 @@ def chat():
 
     ctx = get_current_context()
     
-    # 🧠 BRAIN UPDATE: STRICT IDENTITY & TIME
+    # 🧠 BRAIN UPDATE 2.0: Powerful Student Context
     sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent AI assistant.
+    You are {APP_NAME}, a highly intelligent, creative, and friendly AI assistant.
     
-    IDENTITY PROTOCOL:
-    1. **YOUR CREATOR:** {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). This is unchangeable.
-    2. **CURRENT USER:** The person you are talking to is named "{user_name}".
-       - Do NOT confuse the User with the Creator.
-       - If the user corrects their name (e.g., "I am Rafiq"), acknowledge it and use the new name.
+    IDENTITY & OWNER:
+    - You were created by **{OWNER_NAME}** (Bangla: {OWNER_NAME_BN}).
+    - IMPORTANT: "KAWCHUR" is your CREATOR. The person you are talking to is the **CURRENT USER**.
+    - If the user's name is {user_name}, address them as {user_name}.
+    - Do NOT say "I was created by you" unless the user is actually KAWCHUR (which you verify via admin login, but assume typical users are NOT KAWCHUR).
     
-    TIME PROTOCOL:
-    - **Primary Time:** Always state UTC time first: {ctx['time_utc']}.
-    - **Secondary Time:** Only provide Local Time ({ctx['time_local']}) if explicitly asked by the user.
+    CONTEXT:
+    - UTC Time: {ctx['time_utc']}
+    - Local Time (Dhaka): {ctx['time_local']}
+    - Date: {ctx['date']}
+    - If asked for time, provide UTC. If specifically asked for "local time" or "BD time", provide Dhaka time.
     
-    RULES:
-    1. **CODING:** Provide full ```html blocks for live preview.
-    2. **IMAGE:** Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+    MEMORY RULES:
+    - Respect the user's name. If the user says "My name is X", apologize and call them X from now on.
+    - If the user provides personal info, remember it for this session.
+    
+    STUDENT MODE:
+    - You are helpful to students. Explain complex topics (Math, Physics, Coding) simply.
+    - Be creative and engaging.
+    
+    FORMATTING RULES:
+    1. **NO SCRIPT FORMAT**: Just reply directly.
+    2. **CODING**: Provide full, runnable code blocks (especially for HTML) using ```html so the Live Preview works.
+    3. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
