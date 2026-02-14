@@ -6,15 +6,16 @@ from datetime import datetime, timedelta
 import pytz
 import json
 import random
+import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Port Fix Edition - Build 25.1.0) 🚑
+# 🔹 Flux AI (Mobile Fixed - Build 25.2.0) 📱
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "25.1.0"
+VERSION = "25.2.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -98,6 +99,7 @@ def home():
 
         <style>
             :root {{
+                /* 🎨 v18 ORIGINAL THEME RESTORED */
                 --bg: #0b0f19;
                 --sidebar: #111827;
                 --text: #f3f4f6;
@@ -116,6 +118,7 @@ def home():
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
             body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
 
+            /* SIDEBAR */
             #sidebar {{
                 width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
                 padding: 20px; border-right: 1px solid var(--border); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -143,6 +146,7 @@ def home():
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
             
+            /* ABOUT SECTION (RESTORED) */
             .about-section {{ 
                 display: none; background: var(--input-bg); padding: 20px; border-radius: 16px;
                 margin-top: 5px; font-size: 0.9rem; text-align: center; border: 1px solid var(--border);
@@ -161,6 +165,7 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 18px 140px 18px; display: flex; flex-direction: column; gap: 24px; }}
 
+            /* WELCOME SCREEN (ORIGINAL) */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; 
@@ -185,6 +190,7 @@ def home():
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: var(--shadow-soft); }}
             .chip i {{ color: var(--text); font-size: 1.1rem; opacity: 0.8; }}
 
+            /* MESSAGES */
             .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s ease; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
             .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
@@ -196,22 +202,25 @@ def home():
             .sender-name {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
+            /* 🔥 FIXED MOBILE OVERFLOW */
             .bubble {{ 
                 padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; 
                 word-wrap: break-word; overflow-wrap: break-word; white-space: pre-wrap;
+                max-width: 100%;
             }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
             .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }}
             
-            /* 🔥 RUN CODE BUTTON STYLE (v18 Matching) */
+            /* 🔥 RUN CODE BUTTON STYLE */
             .run-code-btn {{
                 display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-                padding: 10px 16px; background: var(--input-bg); color: var(--accent);
-                border: 1px solid var(--accent); border-radius: 12px; font-weight: 600; cursor: pointer;
+                padding: 8px 16px; background: var(--input-bg); color: var(--accent);
+                border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer;
                 transition: 0.3s; font-size: 0.9rem;
             }}
             .run-code-btn:hover {{ background: var(--accent); color: white; }}
 
+            /* INPUT AREA */
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
                 background: linear-gradient(to top, var(--bg) 85%, transparent); display: flex; justify-content: center; z-index: 50;
@@ -233,42 +242,45 @@ def home():
             }}
             .send-btn:hover {{ transform: rotate(-10deg) scale(1.05); background: var(--accent); color: white; }}
 
-            /* 🔥 ENERGY TRAIL (v18 Matching) */
+            /* 🔥 ENERGY TRAIL (SIMPLE) */
             .energy-ball {{
-                position: fixed; width: 12px; height: 12px; background: var(--accent);
+                position: fixed; width: 15px; height: 15px; background: var(--accent);
                 border-radius: 50%; pointer-events: none; z-index: 9999;
                 box-shadow: 0 0 15px var(--accent), 0 0 30px white;
                 animation: shootUp 0.5s ease-in-out forwards;
             }}
 
-            /* 🔥 PREVIEW MODAL (Clean Design) */
+            /* 🔥 PREVIEW MODAL (MOBILE FIXED) */
             #preview-modal {{
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); z-index: 300; justify-content: center; align-items: center;
-                backdrop-filter: blur(8px);
+                background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
+                backdrop-filter: blur(5px);
             }}
             .preview-box {{
-                width: 90%; height: 85%; background: white; border-radius: 20px; overflow: hidden;
+                width: 95%; max-width: 450px; height: 80%; background: white; border-radius: 12px; overflow: hidden;
                 display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
             }}
             .preview-header {{
-                padding: 15px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
+                padding: 10px 15px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
                 display: flex; justify-content: space-between; align-items: center;
             }}
             iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
+            /* ADMIN & MODALS */
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(6px); }}
             .modal-box {{ background: var(--sidebar); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 350px; text-align: center; box-shadow: var(--shadow-soft); }}
-            .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; flex: 1; margin: 0 6px; }}
+            .btn-modal {{ padding: 12px; border-radius: 10px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 5px; }}
             .btn-delete {{ background: var(--danger); color: white; }}
             
+            /* ANIMATIONS */
             @keyframes floatPulse {{ 0%, 100% {{ transform: translateY(0); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4); }} 50% {{ transform: translateY(-12px); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.7); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
             @keyframes shootUp {{ 0% {{ bottom: 80px; left: 50%; opacity: 1; transform: scale(1); }} 100% {{ bottom: 70%; left: 50%; opacity: 0; transform: scale(0.2); }} }}
 
-            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--border); }}
-            code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
+            /* CODE BLOCK FIX */
+            pre {{ background: #0d1117 !important; padding: 15px; border-radius: 12px; overflow-x: auto; border: 1px solid var(--border); max-width: 100%; }}
+            code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; }}
         </style>
     </head>
     <body class="dark">
@@ -276,8 +288,8 @@ def home():
         <div id="preview-modal">
             <div class="preview-box">
                 <div class="preview-header">
-                    <span style="color:#111827; font-weight:700; font-family:'Inter';">Live Preview</span>
-                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:600;">Close</button>
+                    <span style="color:#111827; font-weight:700;">Live Preview</span>
+                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 12px; border-radius:6px; cursor:pointer; font-weight:600;">Close</button>
                 </div>
                 <iframe id="code-frame"></iframe>
             </div>
@@ -370,7 +382,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v25_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v25_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
 
@@ -417,7 +429,7 @@ def home():
                 resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v25_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v25_2_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -455,13 +467,13 @@ def home():
                 setTimeout(() => ball.remove(), 500);
             }}
 
-            // 🔥 2. LIVE PREVIEW LOGIC (Visual Button)
+            // 🔥 2. LIVE PREVIEW LOGIC
             function checkForCode(text, bubble) {{
-                // Use double escape for backslash in Regex inside f-string
                 if(text.includes('```html')) {{
                     const existingBtn = bubble.querySelector('.run-code-btn');
                     if(existingBtn) existingBtn.remove();
 
+                    // Corrected Regex Escape for Python f-string
                     const btn = document.createElement('button');
                     btn.className = 'run-code-btn';
                     btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
@@ -575,7 +587,7 @@ def home():
                     }}
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData();
-                    checkForCode(botResp, bubbleDiv); // 🔥 Add Button Logic
+                    checkForCode(botResp, bubbleDiv); 
                     hljs.highlightAll();
 
                 }} catch(e) {{
@@ -588,7 +600,7 @@ def home():
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
             
-            function confirmDelete() {{ localStorage.removeItem('flux_v25_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v25_2_history'); location.reload(); }}
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
