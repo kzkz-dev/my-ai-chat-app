@@ -10,12 +10,12 @@ import re      # ➕ Math: Regex এর জন্য
 import math    # ➕ Math: অংকের লাইব্রেরি
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Stable - Build 18.2.4) 🛡️
+# 🔹 Flux AI (Sci-Fi Ultimate - Build 24.0.0) 🌌
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "18.2.4"
+VERSION = "24.0.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # ⚠️ Links Restored
@@ -57,53 +57,35 @@ def get_current_context():
         "year": now_dhaka.year
     }
 
-# 🧮 FLUX INSTRUMENTS (MATH ENGINE) - FIXED FOR '?' AND '='
+# 🧮 MATH ENGINE
 def solve_math_problem(text):
     try:
-        # ১. ক্লিনিং: স্পেস, সমান চিহ্ন, প্রশ্নবোধক এবং কমা সরিয়ে ফেলা (যাতে এরর না দেয়)
         clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
-        
-        # ২. নিরাপত্তা: অংক ছাড়া অন্য কোনো অক্ষর থাকলে স্কিপ করবে
         allowed_chars = set("0123456789.+-*/()xX÷^")
-        if not set(clean_text).issubset(allowed_chars):
-            return None
-        
-        # ৩. খুব ছোট টেক্সট (যেমন শুধু "2026") হলে স্কিপ
-        if len(clean_text) < 3 or not any(op in clean_text for op in ['+', '-', '*', '/', 'x', '÷', '^']):
-            return None
-
-        # ৪. চিহ্ন ঠিক করা
+        if not set(clean_text).issubset(allowed_chars): return None
+        if len(clean_text) < 3 or not any(op in clean_text for op in ['+', '-', '*', '/', 'x', '÷', '^']): return None
         expression = clean_text.replace("x", "*").replace("X", "*").replace("÷", "/").replace("^", "**")
-        
-        # ৫. ক্যালকুলেশন
         result = eval(expression, {"__builtins__": None}, {"math": math})
-        
-        # ৬. উত্তর সাজানো
-        if result == int(result):
-            return f"{int(result):,}" 
+        if result == int(result): return f"{int(result):,}" 
         return f"{result:,.4f}" 
     except:
         return None
 
 SUGGESTION_POOL = [
-    {"icon": "fas fa-envelope-open-text", "text": "Draft a professional email"},
-    {"icon": "fas fa-code", "text": "Write a Python script"},
-    {"icon": "fas fa-brain", "text": "Explain Quantum Physics simply"},
-    {"icon": "fas fa-dumbbell", "text": "30-minute home workout plan"},
-    {"icon": "fas fa-utensils", "text": "Suggest a healthy dinner recipe"},
-    {"icon": "fas fa-plane", "text": "Plan a 3-day trip to Cox's Bazar"},
-    {"icon": "fas fa-lightbulb", "text": "Creative business ideas"},
-    {"icon": "fas fa-laptop-code", "text": "Explain HTML & CSS basics"},
-    {"icon": "fas fa-guitar", "text": "Write a song lyric about rain"},
-    {"icon": "fas fa-camera", "text": "Photography tips for beginners"},
-    {"icon": "fas fa-paint-brush", "text": "Generate a futuristic city image"},
-    {"icon": "fas fa-calculator", "text": "Solve this puzzle: 2 + 2 * 4"}
+    {"icon": "fas fa-code", "text": "Create a login page in HTML"},
+    {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
+    {"icon": "fas fa-dumbbell", "text": "30-minute home workout"},
+    {"icon": "fas fa-plane", "text": "Plan a trip to Cox's Bazar"},
+    {"icon": "fas fa-laptop-code", "text": "Write a Python calculator"},
+    {"icon": "fas fa-paint-brush", "text": "Generate a cyberpunk city image"},
+    {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"}
 ]
 
 @app.route("/")
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # ⚠️ CRITICAL: CSS/JS braces are double {{ }} to avoid Python errors
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -113,247 +95,239 @@ def home():
         <title>{APP_NAME}</title>
         
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;500;700&family=Noto+Sans+Bengali:wght@400;500;600&display=swap" rel="stylesheet">
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
             :root {{
-                --bg: #0b0f19;
-                --sidebar: #111827;
-                --text: #f3f4f6;
-                --text-secondary: #9ca3af;
-                --input-bg: #1f2937;
-                --border: #374151;
-                --accent: #3b82f6;
-                --chat-accent: #3b82f6;
-                --bot-icon: linear-gradient(135deg, #3b82f6, #8b5cf6);
-                --danger: #ef4444;
-                --success: #10b981;
-                --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.5);
-                --shadow-input: 0 5px 20px rgba(0,0,0,0.3);
-            }}
-            body.light {{
-                --bg: #ffffff;
-                --sidebar: #f9fafb;
-                --text: #111827;
-                --text-secondary: #6b7280;
-                --input-bg: #f3f4f6;
-                --border: #e5e7eb;
-                --accent: #2563eb;
-                --chat-accent: #2563eb;
-                --bot-icon: linear-gradient(135deg, #2563eb, #7c3aed);
-                --shadow-soft: 0 10px 40px -10px rgba(0,0,0,0.1);
-                --shadow-input: 0 5px 20px rgba(0,0,0,0.05);
+                --hue: 210; /* Default Blue */
+                --bg: #050a14;
+                --sidebar: rgba(10, 20, 30, 0.85);
+                --text: #e0f2ff;
+                --text-secondary: #8ba2b5;
+                --accent: hsl(var(--hue), 100%, 50%);
+                --glow: 0 0 15px hsl(var(--hue), 100%, 50%, 0.6);
+                --input-bg: rgba(20, 30, 50, 0.6);
+                --border: rgba(100, 200, 255, 0.1);
+                --font-main: 'Rajdhani', sans-serif;
+                --font-header: 'Orbitron', sans-serif;
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg); color: var(--text); font-family: 'Inter', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
+            body {{ 
+                margin: 0; background: var(--bg); color: var(--text); 
+                font-family: var(--font-main); height: 100vh; display: flex; overflow: hidden; 
+            }}
 
+            /* 🌌 1. NEURAL BACKGROUND */
+            #neuro-bg {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                z-index: -1; pointer-events: none;
+            }}
+
+            /* SIDEBAR (Glassmorphism) */
             #sidebar {{
-                width: 280px; background: var(--sidebar); height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--border); transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 5px 0 25px rgba(0,0,0,0.3);
+                width: 280px; height: 100%; display: flex; flex-direction: column;
+                padding: 20px; border-right: 1px solid var(--border); 
+                position: absolute; z-index: 200; left: 0; top: 0; 
+                background: var(--sidebar); backdrop-filter: blur(15px);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
-            .brand {{ font-size: 1.5rem; font-weight: 700; margin-bottom: 25px; display: flex; align-items: center; gap: 10px; color: var(--text); letter-spacing: -0.5px; }}
-            .brand i {{ background: var(--bot-icon); -webkit-background-clip: text; color: transparent; }}
+            .brand {{ 
+                font-family: var(--font-header); font-size: 1.8rem; font-weight: 900; 
+                margin-bottom: 25px; display: flex; align-items: center; gap: 10px; 
+                color: var(--text); letter-spacing: 2px; text-transform: uppercase;
+                text-shadow: var(--glow);
+            }}
             
             .new-chat-btn {{
-                width: 100%; padding: 12px; background: var(--input-bg); color: var(--text); border: 1px solid var(--border);
-                border-radius: 14px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
-                margin-bottom: 20px; transition: all 0.2s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                width: 100%; padding: 14px; background: rgba(255,255,255,0.05); 
+                color: var(--accent); border: 1px solid var(--accent);
+                border-radius: 8px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 10px;
+                margin-bottom: 20px; transition: 0.3s; font-family: var(--font-header);
+                box-shadow: var(--glow);
             }}
-            .new-chat-btn:active {{ transform: scale(0.98); border-color: var(--accent); }}
+            .new-chat-btn:active {{ transform: scale(0.95); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }}
             .history-item {{
-                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.95rem;
-                transition: background 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
+                padding: 12px; border-radius: 6px; cursor: pointer; color: var(--text-secondary); 
+                font-size: 1rem; transition: 0.3s; display: flex; align-items: center; gap: 10px;
+                border-left: 2px solid transparent;
             }}
-            .history-item:active {{ background: var(--input-bg); color: var(--text); }}
+            .history-item:hover {{ background: rgba(255,255,255,0.05); border-left-color: var(--accent); color: var(--text); }}
 
-            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
-            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 5px; border-radius: 12px; border: 1px solid var(--border); }}
-            .theme-btn {{ flex: 1; padding: 10px; border-radius: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; font-weight: 600; transition: 0.3s; }}
-            .theme-btn.active {{ background: var(--bg); color: var(--text); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }}
+            /* 🎨 2. THEME PICKER */
+            .theme-section {{ margin-top: auto; padding-top: 15px; border-top: 1px solid var(--border); }}
+            .theme-title {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 1px; }}
+            .theme-colors {{ display: flex; gap: 10px; justify-content: center; }}
+            .color-dot {{ width: 25px; height: 25px; border-radius: 50%; cursor: pointer; transition: 0.3s; border: 2px solid transparent; }}
+            .color-dot:hover, .color-dot.active {{ transform: scale(1.2); border-color: white; box-shadow: 0 0 10px currentColor; }}
 
-            .about-section {{ 
-                display: none; background: var(--input-bg); padding: 20px; border-radius: 16px;
-                margin-top: 5px; font-size: 0.9rem; text-align: center; border: 1px solid var(--border);
-                box-shadow: var(--shadow-soft); animation: fadeIn 0.3s;
-            }}
-            .about-section.show {{ display: block; }}
-            .about-link {{ color: var(--text); font-size: 1.3rem; margin: 0 12px; transition: 0.2s; display: inline-block; }}
-            .about-link:hover {{ color: var(--accent); transform: scale(1.1); }}
-
+            /* MAIN CHAT AREA */
+            #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
+            
             header {{
-                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
-                background: rgba(11, 15, 25, 0.85); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+                background: rgba(5, 10, 20, 0.8); backdrop-filter: blur(10px);
                 border-bottom: 1px solid var(--border); position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             }}
-            body.light header {{ background: rgba(255, 255, 255, 0.9); }}
 
-            #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 18px 140px 18px; display: flex; flex-direction: column; gap: 24px; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 20px 140px 20px; display: flex; flex-direction: column; gap: 25px; }}
 
-            /* WELCOME SCREEN */
+            /* 🧠 5. JARVIS ORB */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; 
-                padding-top: 80px; padding-bottom: 100px;
+                height: 100%; text-align: center; padding-top: 60px;
             }}
-            .icon-wrapper {{ 
-                width: 80px; height: 80px; background: var(--bot-icon); border-radius: 26px; 
-                display: flex; align-items: center; justify-content: center; font-size: 2.6rem; color: white; 
-                margin-bottom: 25px; box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4);
-                animation: floatPulse 4s ease-in-out infinite;
+            .orb-container {{
+                width: 120px; height: 120px; position: relative; margin-bottom: 30px;
+                display: flex; justify-content: center; align-items: center;
             }}
-            .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
-            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.05rem; max-width: 80%; }}
+            .orb {{
+                position: absolute; width: 100%; height: 100%; border-radius: 50%;
+                border: 2px solid var(--accent); border-top-color: transparent; border-bottom-color: transparent;
+                animation: spin 3s linear infinite; box-shadow: var(--glow);
+            }}
+            .orb::before {{
+                content: ''; position: absolute; inset: 10px; border-radius: 50%;
+                border: 2px solid #fff; border-left-color: transparent; border-right-color: transparent;
+                animation: spin-rev 5s linear infinite;
+            }}
+            .orb-core {{
+                width: 40px; height: 40px; background: var(--accent); border-radius: 50%;
+                box-shadow: 0 0 30px var(--accent), 0 0 60px var(--accent);
+                animation: pulse 2s ease-in-out infinite;
+            }}
+            
+            .welcome-title {{ font-family: var(--font-header); font-size: 2.2rem; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 2px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 30px; font-size: 1.1rem; max-width: 90%; }}
 
-            /* SUGGESTIONS */
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 12px; width: 100%; max-width: 700px; }}
-            .chip {{
-                padding: 16px 20px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 18px;
-                cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
-                font-weight: 500; font-size: 0.92rem; display: flex; align-items: center; gap: 12px;
-                box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            }}
-            body.light .chip {{ background: rgba(0,0,0,0.02); }}
-            .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: var(--shadow-soft); }}
-            .chip:active {{ transform: scale(0.96); background: var(--input-bg); }}
-            .chip i {{ color: var(--text); font-size: 1.1rem; opacity: 0.8; }}
-
-            /* MESSAGES */
-            .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s ease; }}
+            /* MESSAGES & MATRIX EFFECT */
+            .message-wrapper {{ display: flex; gap: 15px; width: 100%; max-width: 850px; margin: 0 auto; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            .avatar {{ width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }}
-            .bot-avatar {{ background: var(--bot-icon); color: white; }}
-            .user-avatar {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
             
-            .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
-            .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
-            .sender-name {{ font-size: 0.8rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; }}
-            .message-wrapper.user .sender-name {{ display: none; }}
-
-            /* 🔥 CSS FIX FOR OVERFLOW 🔥 */
-            .bubble {{ 
-                padding: 12px 18px; border-radius: 22px; font-size: 1.02rem; line-height: 1.6; 
-                word-wrap: break-word;          /* Old standard */
-                word-break: break-word;         /* Important for long numbers */
-                overflow-wrap: break-word;      /* Modern standard */
-                white-space: pre-wrap;          /* Preserves spaces but wraps */
+            .avatar {{ 
+                width: 40px; height: 40px; border-radius: 8px; display: flex; align-items: center; justify-content: center; 
+                background: rgba(255,255,255,0.05); border: 1px solid var(--border); font-size: 1.2rem;
+                box-shadow: var(--glow);
             }}
-            .bot .bubble {{ background: transparent; padding: 0; width: 100%; }}
-            .user .bubble {{ background: var(--input-bg); border-radius: 22px 6px 22px 22px; color: var(--text); box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid var(--border); }}
+            .bot-avatar {{ color: var(--accent); }}
             
-            .bubble strong {{ color: var(--chat-accent); font-weight: 700; }}
-            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 10px; cursor: pointer; box-shadow: var(--shadow-soft); border: 1px solid var(--border); }}
-            .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
+            .bubble {{ 
+                padding: 15px 20px; border-radius: 12px; font-size: 1.05rem; line-height: 1.6; position: relative;
+                background: rgba(10, 20, 35, 0.7); border: 1px solid var(--border);
+                backdrop-filter: blur(5px); max-width: 90%;
+            }}
+            .user .bubble {{ border-color: var(--accent); background: rgba(0, 200, 255, 0.1); }}
+            .bot .bubble {{ border-left: 3px solid var(--accent); }}
 
-            /* INPUT AREA */
+            /* 6. LIVE PREVIEW BUTTON */
+            .run-code-btn {{
+                display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+                padding: 8px 16px; background: var(--accent); color: #000;
+                border: none; border-radius: 4px; font-weight: 700; cursor: pointer;
+                font-family: var(--font-header); transition: 0.3s;
+            }}
+            .run-code-btn:hover {{ box-shadow: 0 0 20px var(--accent); transform: translateY(-2px); }}
+
+            /* INPUT HUD */
             #input-area {{
                 position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
-                background: linear-gradient(to top, var(--bg) 85%, transparent); display: flex; justify-content: center; z-index: 50;
+                background: linear-gradient(to top, var(--bg) 90%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: var(--input-bg); border-radius: 28px; padding: 10px 10px 10px 24px;
-                border: 1px solid var(--border); box-shadow: var(--shadow-input); transition: all 0.3s ease;
+                background: var(--input-bg); border: 1px solid var(--border);
+                border-radius: 12px; padding: 10px 10px 10px 20px; backdrop-filter: blur(10px);
+                box-shadow: 0 5px 20px rgba(0,0,0,0.3); transition: 0.3s; position: relative; overflow: hidden;
             }}
-            .input-box:focus-within {{ border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 15px 40px rgba(0,0,0,0.3); }}
+            .input-box:focus-within {{ border-color: var(--accent); box-shadow: var(--glow); }}
+            
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1.05rem; max-height: 160px; resize: none; padding: 12px 0; font-family: inherit;
+                color: var(--text); font-size: 1.1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit;
             }}
+            
             .send-btn {{
-                background: var(--text); color: var(--bg); border: none; width: 46px; height: 46px;
-                border-radius: 50%; cursor: pointer; margin-left: 12px; margin-bottom: 2px;
+                background: var(--accent); color: #000; border: none; width: 45px; height: 45px;
+                border-radius: 8px; cursor: pointer; margin-left: 10px;
                 display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s;
             }}
-            .send-btn:hover {{ transform: rotate(-10deg) scale(1.05); background: var(--accent); color: white; }}
-            .send-btn:active {{ transform: scale(0.9); }}
+            .send-btn:hover {{ box-shadow: 0 0 15px var(--accent); }}
 
-            /* MODAL STYLES */
-            .modal-overlay {{
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.75); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(6px);
+            /* 1. ENERGY TRAIL ANIMATION */
+            .energy-ball {{
+                position: fixed; width: 20px; height: 20px; background: var(--accent);
+                border-radius: 50%; pointer-events: none; z-index: 9999;
+                box-shadow: 0 0 20px var(--accent), 0 0 40px #fff;
+                animation: shootUp 0.6s ease-in-out forwards;
             }}
-            .modal-box {{
-                background: var(--sidebar); border: 1px solid var(--border); padding: 30px; border-radius: 24px; width: 90%; max-width: 350px; text-align: center; box-shadow: var(--shadow-soft);
-            }}
-            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; color: var(--text); }}
-            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
-            
-            .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 700; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.95rem; transition: 0.2s; }}
-            .btn-cancel {{ background: var(--input-bg); color: var(--text); border: 1px solid var(--border); }}
-            .btn-delete {{ background: var(--danger); color: white; box-shadow: 0 5px 20px rgba(239, 68, 68, 0.3); }}
-            .btn-confirm {{ background: var(--success); color: white; box-shadow: 0 5px 20px rgba(16, 185, 129, 0.3); }}
-            .btn-modal:hover {{ transform: translateY(-2px); }}
 
-            /* ADMIN PANEL */
-            .stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }}
-            .stat-box {{ background: var(--input-bg); padding: 15px; border-radius: 12px; border: 1px solid var(--border); }}
-            .stat-val {{ font-size: 1.5rem; font-weight: 700; color: var(--accent); }}
-            .stat-label {{ font-size: 0.8rem; color: var(--text-secondary); }}
-
-            @keyframes floatPulse {{
-                0%, 100% {{ transform: translateY(0); box-shadow: 0 10px 40px rgba(59, 130, 246, 0.4); }}
-                50% {{ transform: translateY(-12px); box-shadow: 0 20px 60px rgba(59, 130, 246, 0.7); }}
+            /* PREVIEW MODAL */
+            #preview-modal {{
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.9); z-index: 300; justify-content: center; align-items: center;
+                backdrop-filter: blur(10px);
             }}
-            @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
-            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+            .preview-box {{
+                width: 95%; height: 90%; background: #fff; border-radius: 10px; overflow: hidden;
+                display: flex; flex-direction: column; border: 2px solid var(--accent);
+            }}
+            .preview-header {{
+                padding: 10px; background: #222; color: #fff; display: flex; justify-content: space-between; align-items: center;
+            }}
+            iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
+
+            /* ANIMATIONS */
+            @keyframes spin {{ 0% {{ transform: rotate(0deg); }} 100% {{ transform: rotate(360deg); }} }}
+            @keyframes spin-rev {{ 0% {{ transform: rotate(360deg); }} 100% {{ transform: rotate(0deg); }} }}
+            @keyframes pulse {{ 0%, 100% {{ transform: scale(1); opacity: 1; }} 50% {{ transform: scale(0.8); opacity: 0.7; }} }}
+            @keyframes shootUp {{ 
+                0% {{ bottom: 80px; left: 50%; transform: scale(1); opacity: 1; }} 
+                100% {{ bottom: 60%; left: 50%; transform: scale(0.2); opacity: 0; }} 
+            }}
             
-            .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
-            .dot {{ width: 8px; height: 8px; background: var(--text-secondary); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
+            /* Admin & Delete Modal (Glassy) */
+            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }}
+            .modal-box {{ background: rgba(15, 25, 40, 0.95); border: 1px solid var(--accent); padding: 30px; border-radius: 16px; width: 90%; max-width: 350px; text-align: center; box-shadow: var(--glow); }}
             
-            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--border); box-shadow: var(--shadow-soft); }}
-            code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
+            pre {{ background: #0b121b !important; padding: 15px; border-radius: 8px; border: 1px solid var(--border); overflow-x: auto; }}
         </style>
     </head>
-    <body class="dark">
-        
+    <body>
+        <canvas id="neuro-bg"></canvas>
+
+        <div id="preview-modal">
+            <div class="preview-box">
+                <div class="preview-header">
+                    <span>🔴 Live Preview</span>
+                    <button onclick="closePreview()" style="background:red; color:white; border:none; padding:5px 10px; cursor:pointer;">Close</button>
+                </div>
+                <iframe id="code-frame"></iframe>
+            </div>
+        </div>
+
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-title">Clear History?</div>
-                <div class="modal-desc">This will permanently delete all your conversations.</div>
-                <div style="display:flex;">
-                    <button class="btn-modal btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
-                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete All</button>
+                <h3 style="color:var(--text)">Delete History?</h3>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button onclick="closeModal('delete-modal')" style="flex:1; padding:10px; background:rgba(255,255,255,0.1); border:1px solid var(--border); color:white; border-radius:5px;">Cancel</button>
+                    <button onclick="confirmDelete()" style="flex:1; padding:10px; background:var(--danger); border:none; color:white; border-radius:5px;">Delete</button>
                 </div>
             </div>
         </div>
 
         <div id="admin-auth-modal" class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-title"><i class="fas fa-shield-alt"></i> Admin Access</div>
-                <div class="modal-desc">Enter authorization code</div>
-                <input type="password" id="admin-pass" style="width:100%; padding:12px; border-radius:10px; border:1px solid var(--border); background:var(--bg); color:var(--text); margin-bottom:10px; outline:none;" placeholder="Password">
-                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:15px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
-                <div style="display:flex;">
-                    <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
-                    <button class="btn-modal btn-confirm" onclick="verifyAdmin()">Login</button>
-                </div>
-            </div>
-        </div>
-
-        <div id="admin-panel-modal" class="modal-overlay">
-            <div class="modal-box" style="max-width: 400px;">
-                <div class="modal-title">Admin Panel</div>
-                <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-val" id="stat-msgs">0</div><div class="stat-label">Total Messages</div></div>
-                    <div class="stat-box"><div class="stat-val" id="stat-uptime">0s</div><div class="stat-label">Server Uptime</div></div>
-                    <div class="stat-box"><div class="stat-val" style="font-size:1rem;">{VERSION}</div><div class="stat-label">App Version</div></div>
-                    <div class="stat-box"><div class="stat-val" style="font-size:1rem; color:var(--text);">{OWNER_NAME}</div><div class="stat-label">Developer</div></div>
-                </div>
-                <div class="modal-desc" id="system-status-text" style="font-weight:600;">System is currently ONLINE</div>
-                <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0;">Turn System OFF</button>
-                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:10px 0 0 0;">Close Panel</button>
+                <h3 style="color:var(--accent)">Admin Access</h3>
+                <input type="password" id="admin-pass" style="width:100%; padding:10px; margin:15px 0; background:rgba(0,0,0,0.3); border:1px solid var(--accent); color:white; text-align:center;" placeholder="Enter Code">
+                <button onclick="verifyAdmin()" style="width:100%; padding:10px; background:var(--accent); border:none; font-weight:bold;">LOGIN</button>
             </div>
         </div>
 
@@ -362,52 +336,43 @@ def home():
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
-                <i class="fas fa-plus"></i> New Chat
+                <i class="fas fa-plus"></i> NEW CHAT
             </button>
-            <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px; opacity:0.8;">RECENT</div>
+            
             <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
-                <div class="theme-toggles">
-                    <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i> Dark</button>
-                    <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i> Light</button>
-                </div>
+                <div class="theme-title">System Color</div>
+                <div class="theme-colors">
+                    <div class="color-dot" style="background: #00f3ff;" onclick="setTheme(190)"></div> <div class="color-dot" style="background: #a200ff;" onclick="setTheme(270)"></div> <div class="color-dot" style="background: #00ff88;" onclick="setTheme(150)"></div> <div class="color-dot" style="background: #ff0055;" onclick="setTheme(340)"></div> </div>
                 
-                <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
-                
-                <div id="about-info" class="about-section">
-                    <strong style="font-size:1.1rem; display:block; margin-bottom:5px;">{APP_NAME} v{VERSION}</strong>
-                    <small style="color:var(--text-secondary)">Dev: {OWNER_NAME}</small><br>
-                    <div style="margin:15px 0;">
-                        <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
-                        <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
-                    </div>
-                    <small style="display:block; margin-top:5px; font-weight:600; opacity:0.7;">All rights reserved by {OWNER_NAME} &copy; 2026</small>
-                </div>
-                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ef4444;"><i class="fas fa-trash-alt"></i> Delete History</div>
+                <div class="history-item" style="margin-top:15px;" onclick="openDeleteModal('delete-modal')"><i class="fas fa-trash"></i> Clear Memory</div>
             </div>
         </div>
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
-                <span style="font-weight:800; font-size:1.3rem; letter-spacing: -0.5px;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--text); font-size:1.3rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.4rem; cursor:pointer;"><i class="fas fa-bars"></i></button>
+                <span style="font-family:var(--font-header); font-weight:700; letter-spacing:1px;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
-                    <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
-                    <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Your intelligent AI companion.</div>
+                    <div class="orb-container">
+                        <div class="orb"></div>
+                        <div class="orb-core"></div>
+                    </div>
+                    <div class="welcome-title">SYSTEM ONLINE</div>
+                    <div class="welcome-subtitle">Awaiting your command, User.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
-                    <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+                    <textarea id="msg" placeholder="Enter command..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-location-arrow"></i></button>
                 </div>
             </div>
         </div>
@@ -416,43 +381,129 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            
-            let chats = JSON.parse(localStorage.getItem('flux_v18_history')) || [];
-            let userName = localStorage.getItem('flux_user_name'); 
-            let awaitingName = false; 
-
+            let chats = JSON.parse(localStorage.getItem('flux_v24_history')) || [];
             let currentChatId = null;
+            let currentHue = localStorage.getItem('flux_hue') || 190;
+            
+            // Apply Saved Theme
+            document.documentElement.style.setProperty('--hue', currentHue);
+
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
-            const deleteModal = document.getElementById('delete-modal');
-            const overlay = document.querySelector('.overlay');
 
-            const accentColors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4'];
+            // 1. NEURAL BACKGROUND JS
+            const canvas = document.getElementById('neuro-bg');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
-            const savedTheme = localStorage.getItem('theme') || 'dark';
-            setTheme(savedTheme);
-            renderHistory();
-            renderSuggestions(); 
-
-            function setTheme(mode) {{
-                document.body.className = mode;
-                localStorage.setItem('theme', mode);
-                document.getElementById('btn-dark').className = mode === 'dark' ? 'theme-btn active' : 'theme-btn';
-                document.getElementById('btn-light').className = mode === 'light' ? 'theme-btn active' : 'theme-btn';
+            class Particle {{
+                constructor() {{
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2;
+                }}
+                update() {{
+                    this.x += this.vx; this.y += this.vy;
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }}
+                draw() {{
+                    ctx.fillStyle = `hsl(${{currentHue}}, 100%, 70%)`;
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }}
             }}
 
-            function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
-            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
-            function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
+            for(let i=0; i<60; i++) particles.push(new Particle());
+
+            function animateBg() {{
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {{
+                    p.update(); p.draw();
+                    for(let j=index; j<particles.length; j++) {{
+                        const dx = p.x - particles[j].x;
+                        const dy = p.y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 100) {{
+                            ctx.strokeStyle = `hsla(${{currentHue}}, 100%, 70%, ${{1 - dist/100}})`;
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                        }}
+                    }}
+                }});
+                requestAnimationFrame(animateBg);
+            }}
+            animateBg();
+
+            // 2. THEME SETTER
+            function setTheme(hue) {{
+                currentHue = hue;
+                localStorage.setItem('flux_hue', hue);
+                document.documentElement.style.setProperty('--hue', hue);
+            }}
+
+            // 3. MATRIX / TYPEWRITER EFFECT
+            function typeText(element, text) {{
+                let index = 0;
+                element.innerHTML = '';
+                const interval = setInterval(() => {{
+                    element.innerHTML += text.charAt(index);
+                    index++;
+                    chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
+                    if(index >= text.length) clearInterval(interval);
+                }}, 5); // Fast typing
+            }}
+
+            // 4. ENERGY TRAIL
+            function playSentAnimation() {{
+                const ball = document.createElement('div');
+                ball.className = 'energy-ball';
+                document.body.appendChild(ball);
+                setTimeout(() => ball.remove(), 600);
+            }}
+
+            // 5. LIVE PREVIEW LOGIC
+            function checkForCode(text, bubble) {{
+                if(text.includes('```html')) {{
+                    const btn = document.createElement('button');
+                    btn.className = 'run-code-btn';
+                    btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+                    btn.onclick = () => {{
+                        const code = text.match(/```html([\s\S]*?)```/)[1];
+                        openPreview(code);
+                    }};
+                    bubble.appendChild(btn);
+                }}
+            }}
+
+            function openPreview(code) {{
+                document.getElementById('preview-modal').style.display = 'flex';
+                const frame = document.getElementById('code-frame');
+                frame.srcdoc = code;
+            }}
+            function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
+
+            // INIT LOGIC
+            renderHistory();
+            renderSuggestions();
+
+            function toggleSidebar() {{ sidebar.classList.toggle('closed'); }}
+            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 150) + 'px'; }}
+            function openDeleteModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); }}
+            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v24_history'); location.reload(); }}
 
             function renderSuggestions() {{
-                const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 4);
+                const shuffled = allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 4);
                 let html = '';
-                selected.forEach(s => {{
-                    // NOTE: Escaped braces properly here
+                shuffled.forEach(s => {{
                     html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
@@ -460,22 +511,15 @@ def home():
 
             function startNewChat() {{
                 currentChatId = Date.now();
-                const randomColor = accentColors[Math.floor(Math.random() * accentColors.length)];
-                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [], accent: randomColor }});
+                chats.unshift({{ id: currentChatId, title: "New Mission", messages: [] }});
                 saveData();
                 renderHistory();
                 renderSuggestions();
-                
                 chatBox.innerHTML = '';
                 chatBox.appendChild(welcomeScreen);
                 welcomeScreen.style.display = 'flex';
                 sidebar.classList.add('closed');
-                overlay.style.display = 'none';
-                msgInput.value = '';
-                resizeInput(msgInput);
             }}
-
-            function saveData() {{ localStorage.setItem('flux_v18_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -483,66 +527,47 @@ def home():
                 chats.forEach(chat => {{
                     const div = document.createElement('div');
                     div.className = 'history-item';
-                    div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
+                    div.innerHTML = '<i class="far fa-comment-dots"></i> <span>' + (chat.title || 'New Mission').substring(0, 20) + '</span>';
                     div.onclick = () => loadChat(chat.id);
                     list.appendChild(div);
                 }});
             }}
 
+            function saveData() {{ localStorage.setItem('flux_v24_history', JSON.stringify(chats)); }}
+
             function loadChat(id) {{
                 currentChatId = id;
                 const chat = chats.find(c => c.id === id);
                 if(!chat) return;
-                document.documentElement.style.setProperty('--chat-accent', chat.accent || 'var(--accent)');
                 chatBox.innerHTML = '';
-                welcomeScreen.style.display = 'none'; 
-                if (chat.messages.length === 0) {{
-                     chatBox.appendChild(welcomeScreen);
-                     welcomeScreen.style.display = 'flex';
-                }} else {{
-                    chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user'));
-                }}
+                welcomeScreen.style.display = 'none';
+                chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false)); // false = no typing effect for history
                 sidebar.classList.add('closed');
-                overlay.style.display = 'none';
-                setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
-            function addBrandingToImages() {{
-                document.querySelectorAll('.bubble img').forEach(img => {{
-                    if(img.closest('.img-container')) return; 
-                    const container = document.createElement('div');
-                    container.className = 'img-container';
-                    img.parentNode.insertBefore(container, img);
-                    container.appendChild(img);
-                    const branding = document.createElement('div');
-                    branding.className = 'img-brand';
-                    branding.innerHTML = '<i class="fas fa-bolt" style="color:var(--chat-accent)"></i> Flux AI';
-                    container.appendChild(branding);
-                }});
-            }}
-
-            function appendBubble(text, isUser) {{
+            function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div');
                 wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
                 const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
-                const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
-                wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble">${{marked.parse(text)}}</div></div>`;
+                wrapper.innerHTML = `${{avatar}}<div class="bubble-container"><div class="sender-name">${{isUser ? 'YOU' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
                 chatBox.appendChild(wrapper);
-                if(!isUser) {{ hljs.highlightAll(); addBrandingToImages(); }}
+                const bubble = wrapper.querySelector('.bubble');
+                
+                if(isUser || !animate) {{
+                    bubble.innerHTML = marked.parse(text);
+                    checkForCode(text, bubble);
+                }} else {{
+                    // Matrix Typing Effect for Bot
+                    let html = marked.parse(text);
+                    bubble.innerHTML = html; // Direct render for stability, glitch effect is CSS
+                    checkForCode(text, bubble);
+                }}
+                
+                hljs.highlightAll();
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
-            function showTyping() {{
-                const wrapper = document.createElement('div');
-                wrapper.id = 'typing-indicator';
-                wrapper.className = 'message-wrapper bot';
-                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-            }}
-
-            function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
@@ -551,41 +576,30 @@ def home():
 
                 if(text === '!admin') {{
                     msgInput.value = '';
-                    openModal('admin-auth-modal');
-                    // Reset Error Msg
-                    document.getElementById('admin-error-msg').style.display = 'none';
+                    document.getElementById('admin-auth-modal').style.display = 'flex';
                     return;
                 }}
+
+                playSentAnimation(); // 🚀 Energy Trail
 
                 if(!currentChatId) startNewChat();
                 const chat = chats.find(c => c.id === currentChatId);
                 
                 chat.messages.push({{ role: 'user', text: text }});
-                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
+                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 18); renderHistory(); }}
                 saveData();
                 msgInput.value = '';
                 appendBubble(text, true);
 
-                if(!userName && !awaitingName) {{
-                    awaitingName = true;
-                    setTimeout(() => {{
-                        appendBubble("Hello! Before we start, may I know your name?", false);
-                    }}, 600);
-                    return;
-                }}
-                if(awaitingName) {{
-                    userName = text;
-                    localStorage.setItem('flux_user_name', userName);
-                    awaitingName = false;
-                    setTimeout(() => {{
-                        appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false);
-                    }}, 600);
-                    return;
-                }}
+                // Loading Indicator
+                const loadingWrapper = document.createElement('div');
+                loadingWrapper.id = 'loading';
+                loadingWrapper.className = 'message-wrapper bot';
+                loadingWrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble" style="background:transparent; color:var(--accent);">Encrypting response...</div>`;
+                chatBox.appendChild(loadingWrapper);
+                chatBox.scrollTo({{ top: chatBox.scrollHeight }});
 
-                showTyping();
-                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                if(userName) context.unshift({{role: "system", content: "User's name is " + userName}});
+                const context = chat.messages.slice(-6).map(m => ({{ role: m.role, content: m.text }}));
 
                 try {{
                     const res = await fetch('/chat', {{
@@ -594,13 +608,13 @@ def home():
                         body: JSON.stringify({{ messages: context }})
                     }});
                     
-                    removeTyping();
-                    if(!res.ok) throw new Error("System Offline");
+                    document.getElementById('loading').remove();
                     
                     const reader = res.body.getReader();
                     const decoder = new TextDecoder();
                     let botResp = '';
                     
+                    // Create Bot Bubble
                     const wrapper = document.createElement('div');
                     wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
@@ -610,76 +624,43 @@ def home():
                     while(true) {{
                         const {{ done, value }} = await reader.read();
                         if(done) break;
-                        botResp += decoder.decode(value);
+                        const chunk = decoder.decode(value);
+                        botResp += chunk;
                         bubbleDiv.innerHTML = marked.parse(botResp);
-                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
+                        chatBox.scrollTo({{ top: chatBox.scrollHeight }});
                     }}
+                    
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData();
+                    checkForCode(botResp, bubbleDiv);
                     hljs.highlightAll();
-                    addBrandingToImages();
 
                 }} catch(e) {{
-                    removeTyping();
-                    appendBubble("⚠️ System is currently offline by Admin or connection failed.", false);
+                    document.getElementById('loading').remove();
+                    appendBubble("⚠️ Connection Lost. Check Neural Link.", false);
                 }}
             }}
 
-            // ADMIN & MODAL LOGIC
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
-            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function openDeleteModal(id) {{ openModal(id); }}
-            
-            function confirmDelete() {{ localStorage.removeItem('flux_v18_history'); location.reload(); }}
-
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
-                
                 if(pass === '{ADMIN_PASSWORD}') {{
-                    errorMsg.style.display = 'none';
-                    closeModal('admin-auth-modal');
-                    openModal('admin-panel-modal');
-                    document.getElementById('admin-pass').value = '';
-                    try {{
-                        const res = await fetch('/admin/stats');
-                        const data = await res.json();
-                        document.getElementById('stat-uptime').innerText = data.uptime;
-                        document.getElementById('stat-msgs').innerText = data.total_messages;
-                        updateSysBtn(data.active);
-                    }} catch(e) {{ alert('Error fetching stats'); }}
+                    document.getElementById('admin-auth-modal').style.display = 'none';
+                    document.getElementById('admin-panel-modal').style.display = 'flex';
+                    const res = await fetch('/admin/stats');
+                    const data = await res.json();
+                    document.getElementById('stat-msgs').innerText = data.total_messages;
+                    document.getElementById('stat-uptime').innerText = data.uptime;
                 }} else {{
-                    // 🔒 SECURE ERROR: No alert box, just red text
-                    errorMsg.style.display = 'block';
-                    // Optional: Shake animation
-                    const box = document.querySelector('#admin-auth-modal .modal-box');
-                    box.style.transform = 'translateX(5px)';
-                    setTimeout(() => box.style.transform = 'translateX(0)', 100);
+                    document.getElementById('admin-error-msg').style.display = 'block';
                 }}
             }}
 
             async function toggleSystem() {{
-                try {{
-                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
-                    const data = await res.json();
-                    updateSysBtn(data.active);
-                }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-
-            function updateSysBtn(isActive) {{
+                const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
+                const data = await res.json();
                 const btn = document.getElementById('btn-toggle-sys');
-                const txt = document.getElementById('system-status-text');
-                if(isActive) {{
-                    btn.innerText = "Turn System OFF";
-                    btn.style.background = "var(--danger)";
-                    txt.innerText = "System is ONLINE";
-                    txt.style.color = "var(--success)";
-                }} else {{
-                    btn.innerText = "Turn System ON";
-                    btn.style.background = "var(--success)";
-                    txt.innerText = "System is OFFLINE";
-                    txt.style.color = "var(--danger)";
-                }}
+                btn.innerText = data.active ? "Turn System OFF" : "Turn System ON";
+                btn.style.background = data.active ? "var(--danger)" : "var(--success)";
             }}
 
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
@@ -713,46 +694,35 @@ def chat():
     data = request.json
     messages = data.get("messages", [])
     
-    # --- 🔥 FLUX INSTRUMENTS INTEGRATION START 🔥 ---
-    # শেষের মেসেজটা (ইউজারের প্রশ্ন) নিচ্ছি
+    # MATH ENGINE
     if messages and messages[-1]['role'] == 'user':
         last_msg = messages[-1]['content']
-        
-        # চেক করছি এটা অংক কিনা
         math_result = solve_math_problem(last_msg)
-        
         if math_result:
-            # যদি অংক হয়, তবে আমরা সিস্টেম প্রম্পটে উত্তরটা ঢুকিয়ে দেব
-            # এতে AI আর ভুল করবে না, কারণ উত্তর তার হাতেই আছে!
             system_note = {
                 "role": "system",
-                "content": f"⚡ FLUX INSTRUMENT TOOL USED: The user asked a math question. The calculated TRUE answer is: {math_result}. You MUST use this exact value. Do not calculate it yourself."
+                "content": f"⚡ FLUX TOOL: Math detected. Answer is {math_result}. Use this exact value."
             }
-            messages.insert(-1, system_note) # ইউজারের মেসেজের ঠিক আগে বসিয়ে দিলাম
-    # --- 🔥 FLUX INSTRUMENTS INTEGRATION END 🔥 ---
+            messages.insert(-1, system_note)
 
     ctx = get_current_context()
     
-    # 🔥 FIX APPLIED: AI will NOT mention owner unless asked.
-    # 🔥 FIX APPLIED: Bangla spelling enforced as "কাওছুর".
     sys_prompt = {
         "role": "system",
         "content": f"""
-        You are {APP_NAME}, a friendly and expert AI assistant.
+        You are {APP_NAME}, a highly intelligent AI assistant from the future (Year 2026).
         
-        IDENTITY & OWNER:
-        - You were created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-        - IMPORTANT: Do NOT mention the owner's name spontaneously or in your introduction. Only mention it if the user explicitly asks "Who created you?" or "Who is your owner?".
+        IDENTITY:
+        - Created by: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        - Tone: Smart, Professional, Futuristic but friendly.
         
         CONTEXT:
-        - Time: {ctx['time_local']} (Dhaka), {ctx['time_utc']} (UTC)
-        - Date: {ctx['date']}
+        - Time: {ctx['time_local']} (Dhaka)
         
         RULES:
-        1. NO "Generating..." text for images. Just output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-        2. Be concise but helpful.
-        3. Use **bold** for important points.
-        4. If speaking Bangla, ALWAYS spell the owner's name as "{OWNER_NAME_BN}".
+        1. **NO SCRIPT FORMAT**: Never use "Flux AI:" or "User:" prefixes. Just reply directly.
+        2. **CODING**: If asked for code, provide it in a code block. If asked for HTML, provide a complete HTML snippet so the user can preview it.
+        3. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
         """
     }
 
