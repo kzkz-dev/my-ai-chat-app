@@ -10,7 +10,7 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Brain Edition - Build 27.1.0) 🧠
+# 🔹 Flux AI (Ultimate Fix - Build 27.1.0) 🧠
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
@@ -18,7 +18,7 @@ OWNER_NAME_BN = "কাওছুর"
 VERSION = "27.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
-# Links
+# Links (Restored)
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
@@ -99,313 +99,271 @@ def home():
 
         <style>
             :root {{
-                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
-                --glass-bg: rgba(20, 20, 35, 0.65);
-                --glass-border: rgba(255, 255, 255, 0.08);
-                --text: #e0e6ed;
+                /* 🎨 DEFAULT DARK THEME */
+                --bg: #050a14;
+                --sidebar: #0f172a;
+                --text: #e2e8f0;
                 --text-secondary: #94a3b8;
-                --accent: #00f3ff;
-                --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
-                --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
-                --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
-                --danger: #ff0f7b;
-                --success: #00ff87;
+                --input-bg: rgba(30, 41, 59, 0.7);
+                --border: rgba(148, 163, 184, 0.1);
+                --accent: #3b82f6;
+                /* 🔥 LOGO GRADIENT (Purple to Blue) */
+                --bolt-grad: linear-gradient(135deg, #d946ef 0%, #3b82f6 100%);
+                --user-msg: #1e293b;
+                --bot-msg: transparent;
             }}
 
             body.light {{
-                --bg-gradient: #ffffff;
-                --glass-bg: #f3f4f6;
-                --text: #1f2937;
-                --text-secondary: #4b5563;
-                --glass-border: #e5e7eb;
+                /* ☀️ LIGHT THEME */
+                --bg: #ffffff;
+                --sidebar: #f8fafc;
+                --text: #0f172a;
+                --text-secondary: #475569;
+                --input-bg: #f1f5f9;
+                --border: #e2e8f0;
+                --accent: #2563eb;
+                --user-msg: #eff6ff;
+                --bot-msg: transparent;
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
             body {{ 
-                margin: 0; background: var(--bg-gradient); color: var(--text); 
+                margin: 0; background: var(--bg); color: var(--text); 
                 font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
                 height: 100vh; display: flex; overflow: hidden; 
+                transition: background 0.3s, color 0.3s;
             }}
 
-            /* 🌌 NEURAL BRAIN BACKGROUND (ADDED BACK) */
+            /* 🌌 NEURAL BACKGROUND (The Brain Network) */
             #neuro-bg {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                z-index: -1; pointer-events: none; opacity: 0.3;
-            }}
-
-            .glass {{
-                background: var(--glass-bg); backdrop-filter: blur(16px);
-                -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
+                z-index: 0; pointer-events: none; opacity: 0.4;
             }}
 
             /* SIDEBAR */
             #sidebar {{
                 width: 280px; height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--glass-border);
-                transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+                padding: 20px; border-right: 1px solid var(--border);
+                background: var(--sidebar); /* 🔥 Dynamic Color */
                 position: absolute; z-index: 200; left: 0; top: 0; 
-                box-shadow: 10px 0 30px rgba(0,0,0,0.5);
-                background: rgba(15, 15, 30, 0.95); backdrop-filter: blur(20px);
+                transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                box-shadow: 5px 0 25px rgba(0,0,0,0.3);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ 
                 font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; 
-                display: flex; align-items: center; gap: 12px; color: white; 
-                text-shadow: var(--accent-glow);
+                display: flex; align-items: center; gap: 12px; color: var(--text);
+                letter-spacing: -0.5px;
             }}
-            .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
+            /* 🔥 LOGO GRADIENT MATCHING YOUR IMAGE */
+            .brand i {{ background: var(--bolt-grad); -webkit-background-clip: text; color: transparent; font-size: 1.8rem; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 14px; background: rgba(255, 255, 255, 0.05); 
-                color: var(--text); border: 1px solid var(--glass-border);
-                border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
-                margin-bottom: 20px; transition: all 0.3s ease;
+                width: 100%; padding: 12px; background: var(--input-bg); 
+                color: var(--accent); border: 1px solid var(--border);
+                border-radius: 12px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 10px;
+                margin-bottom: 20px; transition: 0.2s;
             }}
-            .new-chat-btn:active {{ transform: scale(0.97); }}
+            .new-chat-btn:active {{ transform: scale(0.98); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 5px; }}
             .history-item {{
-                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
-                transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
+                padding: 12px; border-radius: 10px; cursor: pointer; color: var(--text-secondary); 
+                font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                transition: 0.2s; display: flex; align-items: center; gap: 10px;
             }}
-            .history-item:hover {{ background: rgba(255, 255, 255, 0.05); color: white; }}
+            .history-item:active, .history-item:hover {{ background: var(--input-bg); color: var(--text); }}
 
-            .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
+            .menu-section {{ margin-top: auto; border-top: 1px solid var(--border); padding-top: 15px; display: flex; flex-direction: column; gap: 10px; }}
             
-            /* ABOUT SECTION */
+            /* ABOUT SECTION (Restored Links) */
             .about-section {{ 
-                display: none; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 16px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
-                animation: fadeIn 0.3s;
+                display: none; background: var(--input-bg); padding: 15px; border-radius: 12px;
+                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--border);
             }}
-            .about-section.show {{ display: block; }}
-            .about-link {{ color: white; font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
-            .about-link:hover {{ color: var(--accent); }}
+            .about-section.show {{ display: block; animation: fadeIn 0.3s; }}
+            .social-links {{ margin: 10px 0; display: flex; justify-content: center; gap: 15px; }}
+            .social-links a {{ color: var(--text); font-size: 1.3rem; transition: 0.2s; }}
+            .social-links a:hover {{ color: var(--accent); transform: scale(1.1); }}
 
-            /* DARK/LIGHT TOGGLE */
-            .theme-toggles {{ display: flex; background: rgba(255,255,255,0.05); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
-            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
-            .theme-btn.active {{ background: rgba(255,255,255,0.1); color: white; }}
-
+            /* HEADER */
             header {{
-                height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
-                background: rgba(15, 15, 30, 0.7); backdrop-filter: blur(15px);
-                border-bottom: 1px solid var(--glass-border); 
-                position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+                height: 60px; display: flex; align-items: center; justify-content: space-between; padding: 0 18px;
+                background: rgba(5, 10, 20, 0.8); backdrop-filter: blur(10px);
+                border-bottom: 1px solid var(--border); position: absolute; top: 0; left: 0; right: 0; z-index: 100;
             }}
+            body.light header {{ background: rgba(255, 255, 255, 0.8); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 80px 18px 140px 18px; display: flex; flex-direction: column; gap: 24px; position: relative; z-index: 1; }}
 
             /* WELCOME SCREEN */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
-                height: 100%; text-align: center; padding-top: 120px; padding-bottom: 100px;
+                height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px;
             }}
             .icon-wrapper {{ 
-                width: 100px; height: 100px; background: rgba(255,255,255,0.03);
-                border: 1px solid var(--glass-border); border-radius: 30px; 
-                display: flex; align-items: center; justify-content: center; font-size: 4rem; color: white; 
-                margin-bottom: 25px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
-                animation: levitate 4s ease-in-out infinite;
+                width: 90px; height: 90px; background: rgba(255,255,255,0.05); 
+                border-radius: 24px; display: flex; align-items: center; justify-content: center; 
+                font-size: 3.5rem; margin-bottom: 20px; border: 1px solid var(--border);
+                box-shadow: 0 0 40px rgba(59, 130, 246, 0.2);
             }}
-            .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .welcome-title {{ font-size: 2.4rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #b3b3b3); -webkit-background-clip: text; color: transparent; }}
-            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1.1rem; max-width: 80%; line-height: 1.5; }}
+            .icon-wrapper i {{ background: var(--bolt-grad); -webkit-background-clip: text; color: transparent; }}
+            
+            .welcome-title {{ font-size: 2rem; font-weight: 800; margin-bottom: 8px; letter-spacing: -0.5px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 30px; font-size: 1rem; max-width: 80%; }}
 
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; width: 100%; max-width: 700px; }}
             .chip {{
-                padding: 18px 22px; background: rgba(255, 255, 255, 0.03); 
-                border: 1px solid var(--glass-border); border-radius: 20px;
-                cursor: pointer; text-align: left; color: var(--text-secondary); 
-                transition: all 0.3s; font-weight: 500; font-size: 0.95rem; display: flex; align-items: center; gap: 14px;
+                padding: 14px; background: var(--input-bg); border: 1px solid var(--border); border-radius: 12px;
+                cursor: pointer; text-align: left; color: var(--text-secondary); transition: 0.2s;
+                font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 10px;
             }}
-            .chip:hover {{ transform: translateY(-5px); background: rgba(255, 255, 255, 0.07); border-color: var(--accent); color: white; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }}
-            .chip i {{ color: var(--accent); font-size: 1.2rem; opacity: 0.9; }}
+            .chip:hover {{ border-color: var(--accent); color: var(--text); transform: translateY(-2px); }}
+            .chip i {{ color: var(--accent); opacity: 0.8; }}
 
-            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s; }}
+            /* MESSAGES */
+            .message-wrapper {{ display: flex; gap: 12px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.3s; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            .avatar {{ width: 40px; height: 40px; border-radius: 14px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.3); font-size: 1.1rem; }}
-            .bot-avatar {{ background: var(--bot-grad); color: white; }}
-            .user-avatar {{ background: rgba(255,255,255,0.1); color: white; border: 1px solid var(--glass-border); }}
+            
+            .avatar {{ width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1.1rem; }}
+            .bot-avatar {{ background: var(--bolt-grad); color: white; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4); }}
+            .user-avatar {{ background: var(--input-bg); border: 1px solid var(--border); color: var(--text); }}
             
             .bubble-container {{ display: flex; flex-direction: column; max-width: 85%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
-            .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
-            .message-wrapper.user .sender-name {{ display: none; }}
-
-            .bubble {{ padding: 14px 20px; border-radius: 22px; font-size: 1.02rem; line-height: 1.65; word-wrap: break-word; position: relative; }}
-            .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
-            .user .bubble {{ background: var(--user-grad); border-radius: 22px 4px 22px 22px; color: white; box-shadow: 0 5px 20px rgba(20, 136, 204, 0.3); }}
             
-            .bubble strong {{ color: var(--accent); font-weight: 700; }}
-            .bubble img {{ max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }}
-            .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
+            .bubble {{ 
+                padding: 12px 16px; border-radius: 18px; font-size: 1rem; line-height: 1.6; 
+                word-wrap: break-word; overflow-wrap: break-word;
+            }}
+            .bot .bubble {{ background: var(--bot-msg); padding-left: 0; width: 100%; color: var(--text); }}
+            .user .bubble {{ background: var(--user-msg); border: 1px solid var(--border); color: var(--text); border-radius: 18px 4px 18px 18px; }}
 
-            /* CODE & COPY BUTTON */
-            pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
-            code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
+            /* CODE BLOCKS & COPY */
+            pre {{ background: #0d1117 !important; padding: 15px; border-radius: 12px; overflow-x: auto; border: 1px solid var(--border); position: relative; margin-top: 10px; }}
+            code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; }}
             .copy-btn {{
-                position: absolute; top: 10px; right: 10px;
-                background: rgba(255,255,255,0.1); color: white; border: none;
-                padding: 5px 10px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+                position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.1); color: #fff;
+                border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 0.75rem;
             }}
-            .copy-btn:hover {{ background: var(--accent); }}
 
-            /* LIVE PREVIEW BUTTON */
+            /* RUN BUTTON */
             .run-code-btn {{
-                display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-                padding: 10px 16px; background: rgba(255,255,255,0.05); color: var(--accent);
-                border: 1px solid var(--accent); border-radius: 10px; font-weight: 600; cursor: pointer;
-                transition: 0.3s;
+                display: inline-flex; align-items: center; gap: 8px; margin-top: 10px;
+                padding: 8px 14px; background: var(--input-bg); color: var(--accent);
+                border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer;
             }}
-            .run-code-btn:hover {{ background: var(--accent); color: black; }}
 
+            /* INPUT AREA */
             #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 25px;
-                background: linear-gradient(to top, rgb(5, 5, 10) 0%, transparent 100%); 
-                display: flex; justify-content: center; z-index: 50;
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+                background: linear-gradient(to top, var(--bg) 85%, transparent); display: flex; justify-content: center; z-index: 50;
             }}
             .input-box {{
                 width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: rgba(30, 30, 50, 0.7); border-radius: 30px; padding: 8px 8px 8px 24px;
-                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-                backdrop-filter: blur(20px); transition: all 0.3s ease;
+                background: var(--input-bg); border-radius: 24px; padding: 10px 10px 10px 20px;
+                border: 1px solid var(--border); box-shadow: 0 5px 20px rgba(0,0,0,0.1); backdrop-filter: blur(10px);
             }}
-            .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 25px rgba(0, 243, 255, 0.15); }}
             textarea {{
                 flex: 1; background: transparent; border: none; outline: none;
-                color: white; font-size: 1.05rem; max-height: 160px; resize: none; padding: 14px 0; font-family: inherit;
+                color: var(--text); font-size: 1rem; max-height: 140px; resize: none; padding: 10px 0; font-family: inherit;
             }}
             .send-btn {{
-                background: var(--text); color: black; border: none; width: 48px; height: 48px;
-                border-radius: 50%; cursor: pointer; margin-left: 12px; margin-bottom: 2px;
-                display: flex; align-items: center; justify-content: center; font-size: 1.3rem; transition: 0.3s;
+                background: var(--text); color: var(--bg); border: none; width: 42px; height: 42px;
+                border-radius: 50%; cursor: pointer; margin-left: 10px;
+                display: flex; align-items: center; justify-content: center; font-size: 1.2rem;
             }}
-            .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
-            /* ENERGY TRAIL ANIMATION */
+            /* 🔥 ENERGY TRAIL (BOLT) */
             .energy-ball {{
-                position: fixed; width: 20px; height: 20px; background: var(--accent);
+                position: fixed; width: 15px; height: 15px; background: var(--accent);
                 border-radius: 50%; pointer-events: none; z-index: 9999;
-                box-shadow: 0 0 20px var(--accent), 0 0 40px white;
-                animation: shootUp 0.6s ease-in-out forwards;
+                box-shadow: 0 0 20px var(--accent);
+                animation: shootUp 0.5s ease-in-out forwards;
             }}
+
+            /* ANIMATIONS */
+            @keyframes popIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+            @keyframes shootUp {{ 0% {{ bottom: 80px; left: 50%; opacity: 1; transform: scale(1); }} 100% {{ bottom: 70%; left: 50%; opacity: 0; transform: scale(0.2); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; }} to {{ opacity: 1; }} }}
 
             /* PREVIEW MODAL */
             #preview-modal {{
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
-                backdrop-filter: blur(8px);
             }}
             .preview-box {{
-                width: 90%; height: 85%; background: white; border-radius: 16px; overflow: hidden;
-                display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+                width: 95%; height: 85%; background: white; border-radius: 12px; overflow: hidden;
+                display: flex; flex-direction: column;
             }}
             .preview-header {{
-                padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
-                display: flex; justify-content: space-between; align-items: center;
+                padding: 10px; background: #1e293b; color: white; display: flex; justify-content: space-between; align-items: center;
             }}
-            iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
+            iframe {{ flex: 1; border: none; }}
 
-            /* MODALS */
-            .modal-overlay {{
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
-                z-index: 9999; backdrop-filter: blur(8px);
-            }}
-            .modal-box {{
-                background: rgba(20, 20, 35, 0.95); border: 1px solid var(--glass-border); 
-                padding: 35px; border-radius: 24px; width: 90%; max-width: 360px; 
-                text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            }}
-            .modal-title {{ font-size: 1.5rem; margin-bottom: 12px; font-weight: 700; color: white; }}
-            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
+            /* OVERLAY & MODALS */
+            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 150; display: none; backdrop-filter: blur(2px); }}
+            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; }}
+            .modal-box {{ background: var(--sidebar); border: 1px solid var(--border); padding: 25px; border-radius: 16px; width: 90%; max-width: 320px; text-align: center; }}
             
-            .btn-modal {{ padding: 14px; border-radius: 14px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.95rem; transition: 0.2s; }}
-            .btn-cancel {{ background: rgba(255,255,255,0.1); color: white; }}
-            .btn-delete {{ background: var(--danger); color: white; }}
-            .btn-confirm {{ background: var(--success); color: black; }}
-
-            .stats-grid {{ display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 25px; }}
-            .stat-box {{ background: rgba(255,255,255,0.05); padding: 15px; border-radius: 14px; border: 1px solid var(--glass-border); }}
-            .stat-val {{ font-size: 1.6rem; font-weight: 700; color: var(--accent); }}
-            .stat-label {{ font-size: 0.8rem; color: var(--text-secondary); text-transform: uppercase; margin-top: 5px; }}
-
-            @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
-            @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
-            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
-            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
-            @keyframes shootUp {{ 0% {{ bottom: 80px; left: 50%; opacity: 1; transform: scale(1); }} 100% {{ bottom: 70%; left: 50%; opacity: 0; transform: scale(0.2); }} }}
-            
-            .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
-            .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            
-            /* Sidebar Overlay */
-            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
+            .theme-toggles {{ display: flex; background: var(--input-bg); padding: 4px; border-radius: 8px; margin-bottom: 10px; }}
+            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 6px; }}
+            .theme-btn.active {{ background: var(--bg); color: var(--accent); box-shadow: 0 2px 5px rgba(0,0,0,0.1); }}
         </style>
     </head>
     <body class="dark">
         <canvas id="neuro-bg"></canvas>
 
+        <div id="preview-modal">
+            <div class="preview-box">
+                <div class="preview-header">
+                    <span>Live Preview</span>
+                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:5px 10px; border-radius:4px;">Close</button>
+                </div>
+                <iframe id="code-frame"></iframe>
+            </div>
+        </div>
+
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-title">Clear History?</div>
-                <div class="modal-desc">This will permanently delete all your conversations.</div>
-                <div style="display:flex;">
-                    <button class="btn-modal btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
-                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete All</button>
+                <h3 style="color:var(--text)">Clear History?</h3>
+                <div style="display:flex; gap:10px; margin-top:20px;">
+                    <button onclick="closeModal('delete-modal')" style="flex:1; padding:10px; background:var(--input-bg); color:var(--text); border:none; border-radius:8px;">Cancel</button>
+                    <button onclick="confirmDelete()" style="flex:1; padding:10px; background:var(--danger); color:white; border:none; border-radius:8px;">Delete</button>
                 </div>
             </div>
         </div>
 
         <div id="admin-auth-modal" class="modal-overlay">
             <div class="modal-box">
-                <div class="modal-title"><i class="fas fa-shield-alt" style="color:var(--accent)"></i> Admin Access</div>
-                <div class="modal-desc">Enter authorization code</div>
-                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(0,0,0,0.3); color:white; margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
-                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
-                <div style="display:flex;">
-                    <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
-                    <button class="btn-modal btn-confirm" onclick="verifyAdmin()">Login</button>
-                </div>
+                <h3 style="color:var(--accent)">Admin Access</h3>
+                <input type="password" id="admin-pass" style="width:100%; padding:10px; margin:15px 0; background:var(--input-bg); border:1px solid var(--border); color:var(--text); text-align:center; border-radius:8px;" placeholder="Password">
+                <button onclick="verifyAdmin()" style="width:100%; padding:10px; background:var(--accent); color:white; border:none; border-radius:8px;">Login</button>
+                <button onclick="closeModal('admin-auth-modal')" style="margin-top:10px; background:transparent; border:none; color:var(--text-secondary);">Cancel</button>
             </div>
         </div>
 
         <div id="admin-panel-modal" class="modal-overlay">
-            <div class="modal-box" style="max-width: 450px;">
-                <div class="modal-title" style="margin-bottom:20px;">Admin Dashboard</div>
-                <div class="stats-grid">
-                    <div class="stat-box"><div class="stat-val" id="stat-msgs">0</div><div class="stat-label">Total Messages</div></div>
-                    <div class="stat-box"><div class="stat-val" id="stat-uptime">0s</div><div class="stat-label">Server Uptime</div></div>
-                    <div class="stat-box"><div class="stat-val" style="font-size:1.1rem;">{VERSION}</div><div class="stat-label">App Version</div></div>
-                    <div class="stat-box"><div class="stat-val" style="font-size:1.1rem; color:white;">{OWNER_NAME}</div><div class="stat-label">Developer</div></div>
+            <div class="modal-box">
+                <h3>Dashboard</h3>
+                <div style="margin:15px 0;">
+                    <div>Msgs: <span id="stat-msgs" style="color:var(--accent)">0</span></div>
+                    <div>Uptime: <span id="stat-uptime" style="color:var(--accent)">0s</span></div>
                 </div>
-                <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0; padding:16px;">Turn System OFF</button>
-                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:15px 0 0 0;">Close Panel</button>
-            </div>
-        </div>
-
-        <div id="preview-modal">
-            <div class="preview-box">
-                <div class="preview-header">
-                    <span style="font-weight:700;">Live Preview</span>
-                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Close</button>
-                </div>
-                <iframe id="code-frame"></iframe>
+                <button onclick="toggleSystem()" id="btn-toggle-sys" style="width:100%; padding:10px; background:var(--success); color:white; border:none; border-radius:8px;">System Online</button>
+                <button onclick="closeModal('admin-panel-modal')" style="margin-top:10px; background:transparent; border:none; color:var(--text-secondary);">Close</button>
             </div>
         </div>
 
         <div class="overlay" onclick="toggleSidebar()"></div>
         
-        <div id="sidebar" class="glass closed">
+        <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
             <button class="new-chat-btn" onclick="startNewChat()">
                 <i class="fas fa-plus"></i> New Chat
             </button>
-            <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px; opacity:0.8;">RECENT</div>
             <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
@@ -413,41 +371,39 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
                 </div>
-
-                <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
+                <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> About</div>
                 <div id="about-info" class="about-section">
-                    <strong style="font-size:1.2rem; display:block; margin-bottom:5px; color:white;">{APP_NAME}</strong>
-                    <span style="font-size:0.8rem; opacity:0.7;">v{VERSION}</span><br>
-                    <small style="color:var(--text-secondary)">Created by <span style="color:var(--accent)">{OWNER_NAME}</span></small><br>
-                    <div style="margin:15px 0;">
-                        <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
-                        <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
+                    <strong>{APP_NAME} v{VERSION}</strong><br>
+                    <small>Dev: {OWNER_NAME}</small>
+                    <div class="social-links">
+                        <a href="{FACEBOOK_URL}" target="_blank"><i class="fab fa-facebook"></i></a>
+                        <a href="{WEBSITE_URL}" target="_blank"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5;">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
+                    <small>&copy; 2026 All Rights Reserved</small>
                 </div>
-                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
+                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ef4444;"><i class="fas fa-trash"></i> Delete History</div>
             </div>
         </div>
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:white; font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
-                <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, #fff, #bbb); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem;"><i class="fas fa-bars"></i></button>
+                <span style="font-weight:700; font-size:1.2rem;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
-                    <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Your intelligent AI companion ready to explore the future.</div>
+                    <div class="welcome-title">Flux AI</div>
+                    <div class="welcome-subtitle">Your intelligent companion.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Type here..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -455,350 +411,178 @@ def home():
 
         <script>
             marked.use({{ breaks: true, gfm: true }});
-            
             const allSuggestions = {suggestions_json};
-            
             let chats = JSON.parse(localStorage.getItem('flux_v27_1_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
-
             let currentChatId = null;
+            
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
-            const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
-            renderHistory();
-            renderSuggestions(); 
-
-            // 🧠 1. NEURAL BACKGROUND ANIMATION (BRAIN EFFECT)
+            // 🧠 NEURAL BG SCRIPT
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
-            
             function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
             window.addEventListener('resize', resizeCanvas);
             resizeCanvas();
-
             class Particle {{
-                constructor() {{
-                    this.x = Math.random() * canvas.width;
-                    this.y = Math.random() * canvas.height;
-                    this.vx = (Math.random() - 0.5) * 0.5;
-                    this.vy = (Math.random() - 0.5) * 0.5;
-                    this.size = Math.random() * 2;
-                }}
-                update() {{
-                    this.x += this.vx; this.y += this.vy;
-                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
-                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
-                }}
-                draw() {{
-                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
-                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
-                }}
+                constructor() {{ this.x = Math.random()*canvas.width; this.y = Math.random()*canvas.height; this.vx = (Math.random()-.5)*0.5; this.vy = (Math.random()-.5)*0.5; }}
+                update() {{ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>canvas.width) this.vx*=-1; if(this.y<0||this.y>canvas.height) this.vy*=-1; }}
+                draw() {{ ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent'); ctx.beginPath(); ctx.arc(this.x, this.y, 2, 0, Math.PI*2); ctx.fill(); }}
             }}
-
-            for(let i=0; i<60; i++) particles.push(new Particle());
-
+            for(let i=0; i<50; i++) particles.push(new Particle());
             function animateBg() {{
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach((p, index) => {{
+                ctx.clearRect(0,0,canvas.width,canvas.height);
+                particles.forEach((p,i)=>{{
                     p.update(); p.draw();
-                    for(let j=index; j<particles.length; j++) {{
-                        const dx = p.x - particles[j].x;
-                        const dy = p.y - particles[j].y;
-                        const dist = Math.sqrt(dx*dx + dy*dy);
-                        if(dist < 100) {{
-                            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent');
-                            // Create subtle lines
-                            ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')');
-                            ctx.lineWidth = 0.5;
-                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                    particles.slice(i+1).forEach(p2=>{{
+                        let d = Math.hypot(p.x-p2.x, p.y-p2.y);
+                        if(d<100) {{
+                            ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent').replace('rgb','rgba').replace(')',', '+ (1-d/100)*0.2 +')');
+                            ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke();
                         }}
-                    }}
+                    }});
                 }});
                 requestAnimationFrame(animateBg);
             }}
             animateBg();
 
-            // THEME TOGGLE
+            // INIT
+            renderHistory(); renderSuggestions();
             function setTheme(mode) {{
                 document.body.className = mode;
                 document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn';
                 document.getElementById('btn-light').className = mode==='light'?'theme-btn active':'theme-btn';
             }}
-
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
-            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
+            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 150) + 'px'; }}
+            function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; toggleSidebar(); }}
+            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             
-            // SIDEBAR LOGIC
-            function toggleSidebar() {{ 
-                sidebar.classList.toggle('closed'); 
-                overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; 
-            }}
+            // 🔥 CLEAR HISTORY FIX
+            function confirmDelete() {{ localStorage.removeItem('flux_v27_1_history'); location.reload(); }}
 
             function renderSuggestions() {{
-                const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 4);
+                const shuffled = allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 4);
                 let html = '';
-                selected.forEach(s => {{
-                    html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
-                }});
+                shuffled.forEach(s => {{ html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>'; }});
                 document.getElementById('suggestion-box').innerHTML = html;
             }}
 
             function startNewChat() {{
                 currentChatId = Date.now();
-                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
-                saveData();
-                renderHistory();
-                renderSuggestions();
-                
-                chatBox.innerHTML = '';
-                chatBox.appendChild(welcomeScreen);
-                welcomeScreen.style.display = 'flex';
-                
-                sidebar.classList.add('closed');
-                overlay.style.display = 'none';
+                chats.unshift({{ id: currentChatId, title: "New Chat", messages: [] }});
+                saveData(); renderHistory(); renderSuggestions();
+                // 🔥 SHOW WELCOME SCREEN
+                chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
+                sidebar.classList.add('closed'); overlay.style.display = 'none';
                 msgInput.value = '';
-                resizeInput(msgInput);
             }}
 
             function saveData() {{ localStorage.setItem('flux_v27_1_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
-                const list = document.getElementById('history-list');
-                list.innerHTML = '';
+                const list = document.getElementById('history-list'); list.innerHTML = '';
                 chats.forEach(chat => {{
-                    const div = document.createElement('div');
-                    div.className = 'history-item';
-                    div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
-                    div.onclick = () => loadChat(chat.id);
-                    list.appendChild(div);
+                    const div = document.createElement('div'); div.className = 'history-item';
+                    div.innerHTML = '<i class="far fa-comment"></i> ' + (chat.title || 'Chat').substring(0, 20);
+                    div.onclick = () => loadChat(chat.id); list.appendChild(div);
                 }});
             }}
 
             function loadChat(id) {{
-                currentChatId = id;
-                const chat = chats.find(c => c.id === id);
-                if(!chat) return;
-                
-                chatBox.innerHTML = '';
-                welcomeScreen.style.display = 'none'; 
-                
+                currentChatId = id; const chat = chats.find(c => c.id === id);
+                chatBox.innerHTML = ''; welcomeScreen.style.display = 'none';
                 chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false));
-                
-                sidebar.classList.add('closed');
-                overlay.style.display = 'none';
-                setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
+                sidebar.classList.add('closed'); overlay.style.display = 'none';
             }}
 
-            // COPY BUTTON LOGIC
             function addCopyButtons() {{
                 document.querySelectorAll('pre').forEach(pre => {{
-                    if (pre.querySelector('.copy-btn')) return;
-                    const btn = document.createElement('button');
-                    btn.className = 'copy-btn';
-                    btn.innerHTML = '<i class="fas fa-copy"></i>';
-                    btn.onclick = () => {{
-                        const code = pre.querySelector('code').innerText;
-                        navigator.clipboard.writeText(code);
-                        btn.innerHTML = '<i class="fas fa-check"></i>';
-                        setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i>', 2000);
-                    }};
+                    if(pre.querySelector('.copy-btn')) return;
+                    const btn = document.createElement('button'); btn.className='copy-btn'; btn.innerHTML='Copy';
+                    btn.onclick = () => {{ navigator.clipboard.writeText(pre.querySelector('code').innerText); btn.innerHTML='Copied!'; setTimeout(()=>btn.innerHTML='Copy',2000); }};
                     pre.appendChild(btn);
                 }});
             }}
 
-            // LIVE PREVIEW LOGIC
             function checkForCode(text, bubble) {{
                 if(text.includes('```html')) {{
-                    const btn = document.createElement('button');
-                    btn.className = 'run-code-btn';
-                    btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+                    const btn = document.createElement('button'); btn.className='run-code-btn'; btn.innerHTML='▶ Run Code';
                     btn.onclick = () => {{
-                        const code = text.match(/```html([\\s\\S]*?)```/)[1];
-                        document.getElementById('preview-modal').style.display = 'flex';
-                        document.getElementById('code-frame').srcdoc = code;
+                        document.getElementById('preview-modal').style.display='flex';
+                        document.getElementById('code-frame').srcdoc = text.match(/```html([\\s\\S]*?)```/)[1];
                     }};
                     bubble.appendChild(btn);
                 }}
             }}
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
-            // ENERGY TRAIL
-            function playSentAnimation() {{
-                const ball = document.createElement('div');
-                ball.className = 'energy-ball';
-                ball.style.left = '50%';
-                document.body.appendChild(ball);
-                setTimeout(() => ball.remove(), 500);
-            }}
-
             function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div');
-                wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
-                const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
-                wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble"></div></div>`;
-                chatBox.appendChild(wrapper);
-                
-                const bubble = wrapper.querySelector('.bubble');
-                bubble.innerHTML = marked.parse(text);
-                
-                if(!isUser) {{
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    checkForCode(text, bubble);
-                }}
-                
+                const div = document.createElement('div'); div.className = `message-wrapper ${{isUser?'user':'bot'}}`;
+                div.innerHTML = `<div class="avatar ${{isUser?'user-avatar':'bot-avatar'}}">${{isUser?'<i class="fas fa-user"></i>':'<i class="fas fa-bolt"></i>'}}</div><div class="bubble-container"><div class="bubble">${{marked.parse(text)}}</div></div>`;
+                chatBox.appendChild(div);
+                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, div.querySelector('.bubble')); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
-            function showTyping() {{
-                const wrapper = document.createElement('div');
-                wrapper.id = 'typing-indicator';
-                wrapper.className = 'message-wrapper bot';
-                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-            }}
-
-            function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
-                const text = msgInput.value.trim();
-                if(!text) return;
-
-                if(text === '!admin') {{
-                    msgInput.value = '';
-                    openModal('admin-auth-modal');
-                    document.getElementById('admin-error-msg').style.display = 'none';
-                    return;
-                }}
-
-                playSentAnimation(); // 🔥 Visual Effect
+                const text = msgInput.value.trim(); if(!text) return;
+                
+                if(text==='!admin') {{ msgInput.value=''; document.getElementById('admin-auth-modal').style.display='flex'; return; }}
+                
+                const ball = document.createElement('div'); ball.className='energy-ball'; ball.style.left='50%'; 
+                document.body.appendChild(ball); setTimeout(()=>ball.remove(),500);
 
                 if(!currentChatId) startNewChat();
-                const chat = chats.find(c => c.id === currentChatId);
-                
-                chat.messages.push({{ role: 'user', text: text }});
-                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
-                saveData();
-                msgInput.value = '';
-                appendBubble(text, true);
+                const chat = chats.find(c=>c.id===currentChatId);
+                chat.messages.push({{role:'user', text:text}});
+                if(chat.messages.length===1) {{ chat.title = text.substring(0,18); renderHistory(); }}
+                saveData(); msgInput.value=''; appendBubble(text, true);
 
-                if(!userName && !awaitingName) {{
-                    awaitingName = true;
-                    setTimeout(() => {{
-                        appendBubble("Hello! Welcome to Flux AI. Before we start, may I know your name?", false);
-                    }}, 600);
-                    return;
-                }}
-                if(awaitingName) {{
-                    userName = text;
-                    localStorage.setItem('flux_user_name', userName);
-                    awaitingName = false;
-                    setTimeout(() => {{
-                        appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false);
-                    }}, 600);
-                    return;
-                }}
+                if(!userName && !awaitingName) {{ awaitingName=true; setTimeout(()=>appendBubble("Hello! What is your name?", false),600); return; }}
+                if(awaitingName) {{ userName=text; localStorage.setItem('flux_user_name',userName); awaitingName=false; setTimeout(()=>appendBubble(`Nice to meet you, ${{userName}}!`, false),600); return; }}
 
-                showTyping();
-                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                
+                const context = chat.messages.map(m=>({{role:m.role, content:m.text}}));
                 try {{
-                    const res = await fetch('/chat', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context, user_name: userName }})
-                    }});
-                    
-                    removeTyping();
-                    if(!res.ok) throw new Error("System Offline");
-                    
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let botResp = '';
-                    
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper bot';
-                    wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
-                    chatBox.appendChild(wrapper);
-                    const bubbleDiv = wrapper.querySelector('.bubble');
-
+                    const res = await fetch('/chat', {{ method:'POST', headers:{{'Content-Type':'application/json'}}, body:JSON.stringify({{messages:context, user_name:userName}}) }});
+                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp='';
+                    const div = document.createElement('div'); div.className='message-wrapper bot';
+                    div.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="bubble"></div></div>`;
+                    chatBox.appendChild(div); const bubble = div.querySelector('.bubble');
                     while(true) {{
-                        const {{ done, value }} = await reader.read();
-                        if(done) break;
-                        botResp += decoder.decode(value);
-                        bubbleDiv.innerHTML = marked.parse(botResp);
-                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
+                        const {{done, value}} = await reader.read(); if(done) break;
+                        botResp += decoder.decode(value); bubble.innerHTML = marked.parse(botResp);
+                        chatBox.scrollTo({{ top: chatBox.scrollHeight }});
                     }}
-                    chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData();
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    checkForCode(botResp, bubbleDiv);
-
-                }} catch(e) {{
-                    removeTyping();
-                    appendBubble("⚠️ System is currently offline by Admin or connection failed.", false);
-                }}
+                    chat.messages.push({{role:'assistant', text:botResp}}); saveData();
+                    hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubble);
+                }} catch(e) {{ appendBubble("⚠️ Connection Error", false); }}
             }}
-
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
-            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function openDeleteModal(id) {{ openModal(id); }}
-            
-            // 🔥 FIXED CLEAR HISTORY
-            function confirmDelete() {{ localStorage.removeItem('flux_v27_1_history'); location.reload(); }}
 
             async function verifyAdmin() {{
-                const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
-                
-                if(pass === '{ADMIN_PASSWORD}') {{
-                    errorMsg.style.display = 'none';
-                    closeModal('admin-auth-modal');
-                    openModal('admin-panel-modal');
-                    document.getElementById('admin-pass').value = '';
-                    try {{
-                        const res = await fetch('/admin/stats');
-                        const data = await res.json();
-                        document.getElementById('stat-uptime').innerText = data.uptime;
-                        document.getElementById('stat-msgs').innerText = data.total_messages;
-                        updateSysBtn(data.active);
-                    }} catch(e) {{ alert('Error fetching stats'); }}
-                }} else {{
-                    errorMsg.style.display = 'block';
+                if(document.getElementById('admin-pass').value === '{ADMIN_PASSWORD}') {{
+                    closeModal('admin-auth-modal'); document.getElementById('admin-panel-modal').style.display='flex';
+                    const res = await fetch('/admin/stats'); const data = await res.json();
+                    document.getElementById('stat-msgs').innerText = data.total_messages;
+                    document.getElementById('stat-uptime').innerText = data.uptime;
                 }}
             }}
-
             async function toggleSystem() {{
-                try {{
-                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
-                    const data = await res.json();
-                    updateSysBtn(data.active);
-                }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-
-            function updateSysBtn(isActive) {{
+                const res = await fetch('/admin/toggle_system', {{method:'POST'}}); const data = await res.json();
                 const btn = document.getElementById('btn-toggle-sys');
-                if(isActive) {{
-                    btn.innerText = "Turn System OFF";
-                    btn.style.background = "var(--danger)";
-                }} else {{
-                    btn.innerText = "Turn System ON";
-                    btn.style.background = "var(--success)";
-                }}
+                btn.innerText = data.active ? "System Online" : "System Offline";
+                btn.style.background = data.active ? "var(--success)" : "var(--danger)";
             }}
-
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
     </body>
@@ -831,39 +615,30 @@ def chat():
     messages = data.get("messages", [])
     user_name = data.get("user_name", None)
 
-    # MATH ENGINE
     if messages and messages[-1]['role'] == 'user':
-        last_msg = messages[-1]['content']
-        math_result = solve_math_problem(last_msg)
+        math_result = solve_math_problem(messages[-1]['content'])
         if math_result:
-            system_note = {
-                "role": "system",
-                "content": f"⚡ FLUX TOOL: Math detected. Answer is {math_result}. Use this exact value."
-            }
-            messages.insert(-1, system_note)
+            messages.insert(-1, {"role": "system", "content": f"⚡ FLUX MATH: Answer is {math_result}. Use this."})
 
     ctx = get_current_context()
     
-    # 🧠 BRAIN UPDATE: Force Natural Conversation
-    sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent AI assistant.
-    
-    IDENTITY:
-    - Name: {APP_NAME}
-    - Created by: {OWNER_NAME} (Bangla: {OWNER_NAME_BN})
-    
-    CONTEXT:
-    - Time: {ctx['time_local']}
-    
-    RULES:
-    1. **NO SCRIPT FORMAT**: Never use "Flux AI:" or "User:" prefixes. Just reply directly.
-    2. **NATURAL**: Speak like a helpful human friend.
-    3. **NAME**: You know the user's name is {user_name if user_name else 'Unknown'}. Use it rarely and naturally.
-    4. **CODING**: When asked for code (especially HTML), provide the full code block ```html ... ``` so the user can preview it.
-    5. **IMAGE**: Only output: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-    """
-
-    sys_message = {"role": "system", "content": sys_prompt_content}
+    sys_prompt = {
+        "role": "system",
+        "content": f"""
+        You are {APP_NAME}, an expert AI assistant.
+        
+        IDENTITY:
+        - Created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        
+        CONTEXT:
+        - Time: {ctx['time_local']}
+        
+        RULES:
+        1. **NO SCRIPTS**: Reply naturally.
+        2. **CODE**: Use ```html for web code.
+        3. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+        """
+    }
 
     def generate():
         global current_key_index
@@ -874,17 +649,15 @@ def chat():
             try:
                 client = get_groq_client()
                 if not client: yield "⚠️ Config Error."; return
-                
                 stream = client.chat.completions.create(
                     model="llama-3.3-70b-versatile",
-                    messages=[sys_message] + messages,
+                    messages=[sys_prompt] + messages,
                     stream=True,
                     temperature=0.7, 
                     max_tokens=1024
                 )
                 for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
+                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
                 return
             except Exception as e:
                 current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
