@@ -10,15 +10,15 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Final Polish - Build 27.0.0) 💎
+# 🔹 Flux AI (Brain Edition - Build 27.1.0) 🧠
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "27.0.0"
+VERSION = "27.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
-# Links (Restored)
+# Links
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"      
 
@@ -106,7 +106,6 @@ def home():
                 --text-secondary: #94a3b8;
                 --accent: #00f3ff;
                 --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
-                /* 🔥 YOUR LOGO GRADIENT (Purple to Blue) */
                 --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
                 --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
                 --danger: #ff0f7b;
@@ -126,6 +125,12 @@ def home():
                 margin: 0; background: var(--bg-gradient); color: var(--text); 
                 font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
                 height: 100vh; display: flex; overflow: hidden; 
+            }}
+
+            /* 🌌 NEURAL BRAIN BACKGROUND (ADDED BACK) */
+            #neuro-bg {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                z-index: -1; pointer-events: none; opacity: 0.3;
             }}
 
             .glass {{
@@ -149,7 +154,6 @@ def home():
                 display: flex; align-items: center; gap: 12px; color: white; 
                 text-shadow: var(--accent-glow);
             }}
-            /* 🔥 LOGO GRADIENT FIX */
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
@@ -170,7 +174,7 @@ def home():
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
-            /* ABOUT SECTION (RESTORED) */
+            /* ABOUT SECTION */
             .about-section {{ 
                 display: none; background: rgba(0, 0, 0, 0.4); padding: 20px; border-radius: 16px;
                 margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
@@ -195,7 +199,7 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* WELCOME SCREEN (UPDATED LOGO) */
+            /* WELCOME SCREEN */
             .welcome-container {{
                 display: flex; flex-direction: column; align-items: center; justify-content: center;
                 height: 100%; text-align: center; padding-top: 120px; padding-bottom: 100px;
@@ -240,7 +244,7 @@ def home():
             .bubble img {{ max-width: 100%; border-radius: 18px; margin-top: 12px; cursor: pointer; box-shadow: 0 8px 30px rgba(0,0,0,0.4); border: 1px solid var(--glass-border); }}
             .img-brand {{ font-size: 0.75rem; color: var(--text-secondary); margin-top: 10px; display: flex; align-items: center; gap: 6px; font-weight: 600; opacity: 0.8; }}
 
-            /* 🔥 CODE BLOCK & COPY BUTTON */
+            /* CODE & COPY BUTTON */
             pre {{ background: #0d1117 !important; padding: 20px; border-radius: 16px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.9rem; }}
             .copy-btn {{
@@ -250,7 +254,7 @@ def home():
             }}
             .copy-btn:hover {{ background: var(--accent); }}
 
-            /* 🔥 LIVE PREVIEW BUTTON */
+            /* LIVE PREVIEW BUTTON */
             .run-code-btn {{
                 display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
                 padding: 10px 16px; background: rgba(255,255,255,0.05); color: var(--accent);
@@ -282,7 +286,7 @@ def home():
             }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
-            /* 🔥 ENERGY TRAIL ANIMATION */
+            /* ENERGY TRAIL ANIMATION */
             .energy-ball {{
                 position: fixed; width: 20px; height: 20px; background: var(--accent);
                 border-radius: 50%; pointer-events: none; z-index: 9999;
@@ -290,7 +294,7 @@ def home():
                 animation: shootUp 0.6s ease-in-out forwards;
             }}
 
-            /* 🔥 PREVIEW MODAL */
+            /* PREVIEW MODAL */
             #preview-modal {{
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
@@ -344,7 +348,8 @@ def home():
         </style>
     </head>
     <body class="dark">
-        
+        <canvas id="neuro-bg"></canvas>
+
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
                 <div class="modal-title">Clear History?</div>
@@ -442,7 +447,7 @@ def home():
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Type a message..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Message {APP_NAME}..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -453,7 +458,7 @@ def home():
             
             const allSuggestions = {suggestions_json};
             
-            let chats = JSON.parse(localStorage.getItem('flux_v27_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v27_1_history')) || [];
             let userName = localStorage.getItem('flux_user_name'); 
             let awaitingName = false; 
 
@@ -467,6 +472,57 @@ def home():
 
             renderHistory();
             renderSuggestions(); 
+
+            // 🧠 1. NEURAL BACKGROUND ANIMATION (BRAIN EFFECT)
+            const canvas = document.getElementById('neuro-bg');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {{
+                constructor() {{
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2;
+                }}
+                update() {{
+                    this.x += this.vx; this.y += this.vy;
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }}
+                draw() {{
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }}
+            }}
+
+            for(let i=0; i<60; i++) particles.push(new Particle());
+
+            function animateBg() {{
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {{
+                    p.update(); p.draw();
+                    for(let j=index; j<particles.length; j++) {{
+                        const dx = p.x - particles[j].x;
+                        const dy = p.y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 100) {{
+                            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent');
+                            // Create subtle lines
+                            ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')');
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                        }}
+                    }}
+                }});
+                requestAnimationFrame(animateBg);
+            }}
+            animateBg();
 
             // THEME TOGGLE
             function setTheme(mode) {{
@@ -501,19 +557,17 @@ def home():
                 renderHistory();
                 renderSuggestions();
                 
-                // 🔥 FIX: Welcome screen reappears logic
                 chatBox.innerHTML = '';
                 chatBox.appendChild(welcomeScreen);
                 welcomeScreen.style.display = 'flex';
                 
-                // Close sidebar on mobile
                 sidebar.classList.add('closed');
                 overlay.style.display = 'none';
                 msgInput.value = '';
                 resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v27_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v27_1_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list');
@@ -535,12 +589,7 @@ def home():
                 chatBox.innerHTML = '';
                 welcomeScreen.style.display = 'none'; 
                 
-                if (chat.messages.length === 0) {{
-                     chatBox.appendChild(welcomeScreen);
-                     welcomeScreen.style.display = 'flex';
-                }} else {{
-                    chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false));
-                }}
+                chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false));
                 
                 sidebar.classList.add('closed');
                 overlay.style.display = 'none';
@@ -663,7 +712,6 @@ def home():
 
                 showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                // Use system prompt only in backend logic
                 
                 try {{
                     const res = await fetch('/chat', {{
@@ -709,7 +757,7 @@ def home():
             function openDeleteModal(id) {{ openModal(id); }}
             
             // 🔥 FIXED CLEAR HISTORY
-            function confirmDelete() {{ localStorage.removeItem('flux_v27_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v27_1_history'); location.reload(); }}
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
