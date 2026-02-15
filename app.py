@@ -466,4 +466,154 @@ def home():
             }}
 
             function appendBubble(text, isUser, animate=true) {{
-                welcomeScreen.style.display =
+                welcomeScreen.style.display = 'none';
+                const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
+                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
+                wrapper.innerHTML = `${{avatar}}<div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
+                chatBox.appendChild(wrapper);
+                const bubble = wrapper.querySelector('.bubble');
+                bubble.innerHTML = marked.parse(text);
+                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, bubble); }}
+                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+            }}
+
+            function showTyping() {{
+                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
+                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
+                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+            }}
+            function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
+
+            async function sendMessage() {{
+                const text = msgInput.value.trim(); if(!text) return;
+                if(text === '!admin') {{ msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display='none'; return; }}
+
+                playSentAnimation();
+                if(!currentChatId) startNewChat();
+                const chat = chats.find(c => c.id === currentChatId);
+                chat.messages.push({{ role: 'user', text: text }});
+                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
+                saveData(); msgInput.value = ''; appendBubble(text, true);
+
+                if(!userName && !awaitingName) {{
+                    awaitingName = true; setTimeout(() => appendBubble("Hello! I am Flux AI. What should I call you?", false), 600); return;
+                }}
+                if(awaitingName) {{
+                    userName = text; localStorage.setItem('flux_user_name_v2', userName); awaitingName = false;
+                    setTimeout(() => appendBubble(`Nice to meet you, ${{userName}}! I'll remember that.`, false), 600); return;
+                }}
+
+                showTyping();
+                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
+                try {{
+                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ messages: context, user_name: userName }}) }});
+                    removeTyping();
+                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
+                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
+                    wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
+                    chatBox.appendChild(wrapper); const bubble = wrapper.querySelector('.bubble');
+                    while(true) {{
+                        const {{ done, value }} = await reader.read(); if(done) break;
+                        botResp += decoder.decode(value); bubble.innerHTML = marked.parse(botResp); chatBox.scrollTo({{ top: chatBox.scrollHeight }});
+                    }}
+                    chat.messages.push({{ role: 'assistant', text: botResp }});
+                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubble);
+                }} catch(e) {{ removeTyping(); appendBubble("⚠️ Connection Error.", false); }}
+            }}
+
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
+            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
+            function openDeleteModal(id) {{ openModal(id); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v29_history'); location.reload(); }}
+            async function verifyAdmin() {{ if(document.getElementById('admin-pass').value==='{ADMIN_PASSWORD}'){{ closeModal('admin-auth-modal'); openModal('admin-panel-modal'); }} else {{ document.getElementById('admin-error-msg').style.display='block'; }} }}
+            async function toggleSystem() {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); document.getElementById('btn-toggle-sys').innerText = data.active?"Turn System OFF":"Turn System ON"; }}
+
+            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
+            renderHistory(); renderSuggestions();
+        </script>
+    </body>
+    </html>
+    """
+
+# 🛡️ ADMIN API ROUTES
+@app.route("/admin/stats")
+def admin_stats():
+    return jsonify({
+        "uptime": get_uptime(),
+        "total_messages": TOTAL_MESSAGES,
+        "active": SYSTEM_ACTIVE
+    })
+
+@app.route("/admin/toggle_system", methods=["POST"])
+def toggle_system():
+    global SYSTEM_ACTIVE
+    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
+    return jsonify({"active": SYSTEM_ACTIVE})
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    global TOTAL_MESSAGES
+    if not SYSTEM_ACTIVE:
+        return Response("System is currently under maintenance.", status=503)
+
+    TOTAL_MESSAGES += 1
+    data = request.json
+    messages = data.get("messages", [])
+    user_name = data.get("user_name", "User") 
+
+    if messages and messages[-1]['role'] == 'user':
+        math_result = solve_math_problem(messages[-1]['content'])
+        if math_result:
+            messages.insert(-1, {{"role": "system", "content": f"⚡ MATH TOOL: Answer is {{math_result}}. State it clearly."}})
+
+    ctx = get_current_context()
+    
+    sys_prompt_content = f"""
+    You are {APP_NAME}, a smart and concise AI assistant for students.
+    
+    IDENTITY:
+    - Name: {APP_NAME}
+    - Created by: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). Only mention if asked.
+    - User Name: {user_name}. Use this name.
+    
+    CONTEXT:
+    - Time: {ctx['time_utc']} (UTC). Only give Local Time ({ctx['time_local']}) if explicitly asked.
+    
+    RULES:
+    1. **CONCISE**: Be direct and helpful. No fluff.
+    2. **CODING**: Always use markdown blocks (```python, ```html) so the 'Run Code' button works.
+    3. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+    """
+
+    sys_message = {"role": "system", "content": sys_prompt_content}
+
+    def generate():
+        global current_key_index
+        attempts = 0
+        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
+        
+        while attempts < max_retries:
+            try:
+                client = get_groq_client()
+                if not client: yield "⚠️ Config Error."; return
+                stream = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[sys_message] + messages,
+                    stream=True,
+                    temperature=0.7, 
+                    max_tokens=1024
+                )
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
+                return
+            except Exception as e:
+                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+                attempts += 1
+                time.sleep(1)
+        yield "⚠️ System overloaded."
+
+    return Response(generate(), mimetype="text/plain")
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
