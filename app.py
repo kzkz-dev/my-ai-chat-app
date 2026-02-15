@@ -10,12 +10,12 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Python Engine - Build 28.0.0) 🐍
+# 🔹 Flux AI (Ultimate Fixed - Build 28.2.0) 🚀
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "28.0.0"
+VERSION = "28.2.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -69,14 +69,14 @@ def solve_math_problem(text):
 
 SUGGESTION_POOL = [
     {"icon": "fas fa-code", "text": "Create a login page in HTML"},
-    {"icon": "fas fa-brain", "text": "Explain Quantum Physics simply"},
-    {"icon": "fas fa-dumbbell", "text": "30-minute home workout plan"},
-    {"icon": "fas fa-utensils", "text": "Suggest a healthy dinner recipe"},
-    {"icon": "fas fa-plane", "text": "Plan a trip to Cox's Bazar"},
-    {"icon": "fas fa-lightbulb", "text": "Creative business ideas"},
+    {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
+    {"icon": "fas fa-dumbbell", "text": "30-minute home workout"},
+    {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"},
+    {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"},
+    {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
     {"icon": "fas fa-laptop-code", "text": "Write a Python calculator"},
-    {"icon": "fas fa-paint-brush", "text": "Generate a cyberpunk city image"},
-    {"icon": "fas fa-calculator", "text": "Solve this puzzle: 50 * 3 + 20"}
+    {"icon": "fas fa-paint-brush", "text": "Generate a cyberpunk image"},
+    {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"}
 ]
 
 @app.route("/")
@@ -101,6 +101,7 @@ def home():
             :root {{
                 --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
                 --glass-bg: rgba(20, 20, 35, 0.65);
+                --sidebar-bg: rgba(15, 15, 30, 0.95);
                 --glass-border: rgba(255, 255, 255, 0.08);
                 --text: #e0e6ed;
                 --text-secondary: #94a3b8;
@@ -110,7 +111,6 @@ def home():
                 --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
                 --danger: #ff0f7b;
                 --success: #00ff87;
-                --sidebar-bg: rgba(15, 15, 30, 0.95);
             }}
 
             body.light {{
@@ -133,7 +133,6 @@ def home():
                 transition: background 0.3s ease;
             }}
 
-            /* NEURAL BG */
             #neuro-bg {{
                 position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 z-index: -1; pointer-events: none; opacity: 0.3;
@@ -141,7 +140,6 @@ def home():
 
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
 
-            /* SIDEBAR */
             #sidebar {{
                 width: 280px; height: 100%; display: flex; flex-direction: column;
                 padding: 20px; border-right: 1px solid var(--glass-border);
@@ -162,7 +160,7 @@ def home():
             }}
             .new-chat-btn:active {{ transform: scale(0.97); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
             .history-item {{
                 padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
                 white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
@@ -231,9 +229,9 @@ def home():
             body.light .bubble strong {{ color: #2563eb; }}
             .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; }}
 
-            /* CODE & RUN BUTTON */
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
+            
             .copy-btn {{
                 position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none;
                 padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;
@@ -307,7 +305,7 @@ def home():
         <div id="admin-auth-modal" class="modal-overlay">
             <div class="modal-box">
                 <h3 style="margin-bottom:15px;">Admin Access</h3>
-                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; text-align:center;" placeholder="••••••••">
+                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
                 <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;">Invalid Password</div>
                 <div style="display:flex;">
                     <button class="btn-modal" onclick="closeModal('admin-auth-modal')" style="background:transparent; color:var(--text);">Cancel</button>
@@ -358,7 +356,7 @@ def home():
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026</small>
+                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
                 </div>
                 <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -392,7 +390,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v28_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v28_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name_v2'); 
             let awaitingName = false; 
             let currentChatId = null;
@@ -403,7 +401,6 @@ def home():
             const msgInput = document.getElementById('msg');
             const overlay = document.querySelector('.overlay');
 
-            // 🧠 NEURAL BG
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
@@ -455,7 +452,7 @@ def home():
                 msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v28_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v28_2_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -483,22 +480,21 @@ def home():
             }}
 
             function checkForCode(text, bubble) {{
-                // HTML/JS PREVIEW
                 if(text.includes('```html')) {{
                     const btn = document.createElement('button'); btn.className = 'run-code-btn'; btn.innerHTML = '<i class="fas fa-play"></i> Preview';
+                    const code = text.match(/```html([\\s\\S]*?)```/)[1];
                     btn.onclick = () => {{ 
                         document.getElementById('preview-modal').style.display = 'flex'; 
-                        document.getElementById('code-frame').srcdoc = text.match(/```html([\\s\\S]*?)```/)[1]; 
+                        document.getElementById('code-frame').srcdoc = code; 
                     }};
                     bubble.appendChild(btn);
                 }}
-                // PYTHON RUNNER (Client-side via Pyodide logic simulation or Server if safe - here we use simulation for HTML preview for now, but text implies full python)
                 if(text.includes('```python')) {{
                     const btn = document.createElement('button'); btn.className = 'run-code-btn'; btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+                    const code = text.match(/```python([\\s\\S]*?)```/)[1];
                     btn.onclick = () => {{
-                        const code = text.match(/```python([\\s\\S]*?)```/)[1];
-                        // Inject Pyodide runner into iframe
-                        const html = `<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{background:#111;color:#0f0;font-family:monospace;padding:20px;}</style></head><body><div id="out">Initializing Python...</div><script>async function main(){let pyodide=await loadPyodide();document.getElementById("out").innerText=">> Python Ready\\n";pyodide.setStdout({batched:(m)=>{document.getElementById("out").innerText+=m+"\\n"}});try{await pyodide.runPythonAsync(\`${{code.replace(/`/g, '\\`').replace(/\$/g, '\\$')}}\`)}catch(e){document.getElementById("out").innerText+="Error: "+e}}main()<\/script></body></html>`;
+                        const encoded = btoa(unescape(encodeURIComponent(code)));
+                        const html = `<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{background:#111;color:#0f0;font-family:monospace;padding:15px;margin:0;}</style></head><body><div id="out">Initializing Python Environment...</div><script>async function main(){try{let pyodide=await loadPyodide();document.getElementById("out").innerText=">>> Python Ready\\n";pyodide.setStdout({batched:(m)=>{document.getElementById("out").innerText+=m+"\\n"}});let code=decodeURIComponent(escape(atob("${{encoded}}")));await pyodide.runPythonAsync(code);}catch(e){document.getElementById("out").innerText+="\\nError: "+e;}}main();<\/script></body></html>`;
                         document.getElementById('preview-modal').style.display = 'flex'; 
                         document.getElementById('code-frame').srcdoc = html;
                     }};
@@ -571,7 +567,7 @@ def home():
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v28_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v28_2_history'); location.reload(); }}
             async function verifyAdmin() {{ if(document.getElementById('admin-pass').value==='{ADMIN_PASSWORD}'){{ closeModal('admin-auth-modal'); openModal('admin-panel-modal'); }} else {{ document.getElementById('admin-error-msg').style.display='block'; }} }}
             async function toggleSystem() {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); document.getElementById('btn-toggle-sys').innerText = data.active?"Turn System OFF":"Turn System ON"; }}
 
