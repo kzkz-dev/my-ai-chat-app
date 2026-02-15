@@ -8,10 +8,10 @@ import json
 import random
 import re
 import math
-import base64  # Added for safe Python coding
+import base64
 
 # ==========================================
-# 🔹 Flux AI (Syntax Fix Edition - Build 29.0.0) 🛠️
+# 🔹 Flux AI (Syntax Fixed - Build 29.0.0) 🛠️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
@@ -50,9 +50,7 @@ def get_uptime():
 def get_current_context(): 
     tz_dhaka = pytz.timezone('Asia/Dhaka')
     now_dhaka = datetime.now(tz_dhaka)
-    now_utc = datetime.now(pytz.utc)
     return {
-        "time_utc": now_utc.strftime("%I:%M %p"),
         "time_local": now_dhaka.strftime("%I:%M %p"),
         "date": now_dhaka.strftime("%d %B, %Y")
     }
@@ -86,6 +84,7 @@ SUGGESTION_POOL = [
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
     
+    # ⚠️ CRITICAL FIX: All Javascript braces { } inside this f-string are doubled {{ }} to prevent SyntaxError
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -129,7 +128,12 @@ def home():
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; transition: background 0.3s ease; }}
+            body {{ 
+                margin: 0; background: var(--bg-gradient); color: var(--text); 
+                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
+                height: 100vh; display: flex; overflow: hidden; 
+                transition: background 0.3s ease;
+            }}
 
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
@@ -137,7 +141,8 @@ def home():
             #sidebar {{
                 width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border);
                 transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease;
-                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg);
+                position: absolute; z-index: 200; left: 0; top: 0; 
+                box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
@@ -145,7 +150,8 @@ def home():
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border);
+                width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); 
+                color: var(--text); border: 1px solid var(--glass-border);
                 border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
                 margin-bottom: 20px; transition: all 0.3s ease;
             }}
@@ -178,7 +184,8 @@ def home():
 
             .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
             .icon-wrapper {{ 
-                width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; 
+                width: 90px; height: 90px; background: rgba(255,255,255,0.03);
+                border: 1px solid var(--glass-border); border-radius: 25px; 
                 display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; 
                 margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite;
             }}
@@ -434,7 +441,6 @@ def home():
                 }});
             }}
 
-            // 🔥 FIX: PYTHON RUNNER WITH BASE64 (NO CRASH)
             function checkForCode(text, bubble) {{
                 if(text.includes('```html')) {{
                     const btn = document.createElement('button'); btn.className = 'run-code-btn'; btn.innerHTML = '<i class="fas fa-play"></i> Preview';
@@ -450,8 +456,8 @@ def home():
                     const code = text.match(/```python([\\s\\S]*?)```/)[1];
                     btn.onclick = () => {{
                         const encoded = btoa(unescape(encodeURIComponent(code)));
-                        // Safe HTML string without complex nested f-strings
-                        const html = '<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{background:#111;color:#0f0;font-family:monospace;padding:15px;margin:0;}</style></head><body><div id="out">Initializing Python...</div><script>async function main(){try{let pyodide=await loadPyodide();document.getElementById("out").innerText=">>> Python Ready\\n";pyodide.setStdout({batched:(m)=>{document.getElementById("out").innerText+=m+"\\n"}});let code=decodeURIComponent(escape(atob("' + encoded + '")));await pyodide.runPythonAsync(code);}catch(e){document.getElementById("out").innerText+="\\nError: "+e;}}main();<\/script></body></html>';
+                        // Double curly braces to escape them in Python f-string
+                        const html = `<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{{background:#111;color:#0f0;font-family:monospace;padding:15px;margin:0;}}</style></head><body><div id="out">Initializing Python...</div><script>async function main(){{try{{let pyodide=await loadPyodide();document.getElementById("out").innerText=">>> Python Ready\\n";pyodide.setStdout({{batched:(m)=>{{document.getElementById("out").innerText+=m+"\\n"}}}});let code=decodeURIComponent(escape(atob("${{encoded}}")));await pyodide.runPythonAsync(code);}}catch(e){{document.getElementById("out").innerText+="\\nError: "+e;}}}}main();<\/script></body></html>`;
                         document.getElementById('preview-modal').style.display = 'flex'; 
                         document.getElementById('code-frame').srcdoc = html;
                     }};
