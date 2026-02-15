@@ -8,14 +8,15 @@ import json
 import random
 import re
 import math
+import base64  # Added for safe Python coding
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Fixed - Build 28.2.0) 🚀
+# 🔹 Flux AI (Syntax Fix Edition - Build 29.0.0) 🛠️
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "28.2.0"
+VERSION = "29.0.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -49,7 +50,9 @@ def get_uptime():
 def get_current_context(): 
     tz_dhaka = pytz.timezone('Asia/Dhaka')
     now_dhaka = datetime.now(tz_dhaka)
+    now_utc = datetime.now(pytz.utc)
     return {
+        "time_utc": now_utc.strftime("%I:%M %p"),
         "time_local": now_dhaka.strftime("%I:%M %p"),
         "date": now_dhaka.strftime("%d %B, %Y")
     }
@@ -126,26 +129,15 @@ def home():
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ 
-                margin: 0; background: var(--bg-gradient); color: var(--text); 
-                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
-                height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.3s ease;
-            }}
+            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; transition: background 0.3s ease; }}
 
-            #neuro-bg {{
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                z-index: -1; pointer-events: none; opacity: 0.3;
-            }}
-
+            #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
 
             #sidebar {{
-                width: 280px; height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--glass-border);
+                width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border);
                 transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease;
-                position: absolute; z-index: 200; left: 0; top: 0; 
-                box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg);
+                position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg);
             }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
@@ -153,30 +145,23 @@ def home():
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
             .new-chat-btn {{
-                width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); 
-                color: var(--text); border: 1px solid var(--glass-border);
+                width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border);
                 border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
                 margin-bottom: 20px; transition: all 0.3s ease;
             }}
             .new-chat-btn:active {{ transform: scale(0.97); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
-            .history-item {{
-                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
-                transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
-            }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }}
+            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
-            .about-section {{ 
-                display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px;
-                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
-            }}
+            .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
-            
+            .about-link:hover {{ color: var(--accent); }}
+
             .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
             .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
@@ -193,11 +178,9 @@ def home():
 
             .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
             .icon-wrapper {{ 
-                width: 90px; height: 90px; background: rgba(255,255,255,0.03);
-                border: 1px solid var(--glass-border); border-radius: 25px; 
+                width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; 
                 display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; 
-                margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
-                animation: levitate 4s ease-in-out infinite;
+                margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite;
             }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
@@ -217,11 +200,10 @@ def home():
             .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
-            
             .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
-            
+            .message-wrapper.user .sender-name {{ display: none; }}
             .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
             .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
@@ -232,46 +214,19 @@ def home():
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             
-            .copy-btn {{
-                position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none;
-                padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;
-            }}
-            
-            .run-code-btn {{
-                display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-                padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent);
-                border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer;
-                transition: 0.3s; font-size: 0.9rem;
-            }}
+            .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }}
+            .run-code-btn {{ display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }}
             .run-code-btn:hover {{ background: var(--accent); color: black; }}
 
-            #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
-                background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); 
-                display: flex; justify-content: center; z-index: 50;
-            }}
-            .input-box {{
-                width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px;
-                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-                backdrop-filter: blur(20px); transition: all 0.3s ease;
-            }}
+            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; }}
+            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
             textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; }}
             .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; font-size: 1.2rem; }}
 
-            .energy-ball {{
-                position: fixed; width: 18px; height: 18px; background: var(--accent);
-                border-radius: 50%; pointer-events: none; z-index: 9999;
-                box-shadow: 0 0 15px var(--accent), 0 0 30px white;
-                animation: shootUp 0.6s ease-in-out forwards;
-            }}
+            .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s ease-in-out forwards; }}
 
-            #preview-modal {{
-                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
-                backdrop-filter: blur(8px);
-            }}
+            #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
             .preview-box {{ width: 95%; max-width: 600px; height: 85%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }}
             .preview-header {{ padding: 12px 20px; background: #111; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; color: white; }}
             iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
@@ -390,7 +345,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v28_2_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v29_history')) || [];
             let userName = localStorage.getItem('flux_user_name_v2'); 
             let awaitingName = false; 
             let currentChatId = null;
@@ -452,7 +407,7 @@ def home():
                 msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v28_2_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v29_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -479,6 +434,7 @@ def home():
                 }});
             }}
 
+            // 🔥 FIX: PYTHON RUNNER WITH BASE64 (NO CRASH)
             function checkForCode(text, bubble) {{
                 if(text.includes('```html')) {{
                     const btn = document.createElement('button'); btn.className = 'run-code-btn'; btn.innerHTML = '<i class="fas fa-play"></i> Preview';
@@ -494,7 +450,8 @@ def home():
                     const code = text.match(/```python([\\s\\S]*?)```/)[1];
                     btn.onclick = () => {{
                         const encoded = btoa(unescape(encodeURIComponent(code)));
-                        const html = `<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{background:#111;color:#0f0;font-family:monospace;padding:15px;margin:0;}</style></head><body><div id="out">Initializing Python Environment...</div><script>async function main(){try{let pyodide=await loadPyodide();document.getElementById("out").innerText=">>> Python Ready\\n";pyodide.setStdout({batched:(m)=>{document.getElementById("out").innerText+=m+"\\n"}});let code=decodeURIComponent(escape(atob("${{encoded}}")));await pyodide.runPythonAsync(code);}catch(e){document.getElementById("out").innerText+="\\nError: "+e;}}main();<\/script></body></html>`;
+                        // Safe HTML string without complex nested f-strings
+                        const html = '<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{background:#111;color:#0f0;font-family:monospace;padding:15px;margin:0;}</style></head><body><div id="out">Initializing Python...</div><script>async function main(){try{let pyodide=await loadPyodide();document.getElementById("out").innerText=">>> Python Ready\\n";pyodide.setStdout({batched:(m)=>{document.getElementById("out").innerText+=m+"\\n"}});let code=decodeURIComponent(escape(atob("' + encoded + '")));await pyodide.runPythonAsync(code);}catch(e){document.getElementById("out").innerText+="\\nError: "+e;}}main();<\/script></body></html>';
                         document.getElementById('preview-modal').style.display = 'flex'; 
                         document.getElementById('code-frame').srcdoc = html;
                     }};
@@ -509,154 +466,4 @@ def home():
             }}
 
             function appendBubble(text, isUser, animate=true) {{
-                welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
-                wrapper.innerHTML = `${{avatar}}<div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
-                chatBox.appendChild(wrapper);
-                const bubble = wrapper.querySelector('.bubble');
-                bubble.innerHTML = marked.parse(text);
-                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, bubble); }}
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-            }}
-
-            function showTyping() {{
-                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
-                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
-                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-            }}
-            function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
-
-            async function sendMessage() {{
-                const text = msgInput.value.trim(); if(!text) return;
-                if(text === '!admin') {{ msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display='none'; return; }}
-
-                playSentAnimation();
-                if(!currentChatId) startNewChat();
-                const chat = chats.find(c => c.id === currentChatId);
-                chat.messages.push({{ role: 'user', text: text }});
-                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
-                saveData(); msgInput.value = ''; appendBubble(text, true);
-
-                if(!userName && !awaitingName) {{
-                    awaitingName = true; setTimeout(() => appendBubble("Hello! I am Flux AI. What should I call you?", false), 600); return;
-                }}
-                if(awaitingName) {{
-                    userName = text; localStorage.setItem('flux_user_name_v2', userName); awaitingName = false;
-                    setTimeout(() => appendBubble(`Nice to meet you, ${{userName}}! I'll remember that.`, false), 600); return;
-                }}
-
-                showTyping();
-                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                try {{
-                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ messages: context, user_name: userName }}) }});
-                    removeTyping();
-                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
-                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
-                    wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
-                    chatBox.appendChild(wrapper); const bubble = wrapper.querySelector('.bubble');
-                    while(true) {{
-                        const {{ done, value }} = await reader.read(); if(done) break;
-                        botResp += decoder.decode(value); bubble.innerHTML = marked.parse(botResp); chatBox.scrollTo({{ top: chatBox.scrollHeight }});
-                    }}
-                    chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubble);
-                }} catch(e) {{ removeTyping(); appendBubble("⚠️ Connection Error.", false); }}
-            }}
-
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
-            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v28_2_history'); location.reload(); }}
-            async function verifyAdmin() {{ if(document.getElementById('admin-pass').value==='{ADMIN_PASSWORD}'){{ closeModal('admin-auth-modal'); openModal('admin-panel-modal'); }} else {{ document.getElementById('admin-error-msg').style.display='block'; }} }}
-            async function toggleSystem() {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); document.getElementById('btn-toggle-sys').innerText = data.active?"Turn System OFF":"Turn System ON"; }}
-
-            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
-            renderHistory(); renderSuggestions();
-        </script>
-    </body>
-    </html>
-    """
-
-# 🛡️ ADMIN API ROUTES
-@app.route("/admin/stats")
-def admin_stats():
-    return jsonify({
-        "uptime": get_uptime(),
-        "total_messages": TOTAL_MESSAGES,
-        "active": SYSTEM_ACTIVE
-    })
-
-@app.route("/admin/toggle_system", methods=["POST"])
-def toggle_system():
-    global SYSTEM_ACTIVE
-    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
-    return jsonify({"active": SYSTEM_ACTIVE})
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    global TOTAL_MESSAGES
-    if not SYSTEM_ACTIVE:
-        return Response("System is currently under maintenance.", status=503)
-
-    TOTAL_MESSAGES += 1
-    data = request.json
-    messages = data.get("messages", [])
-    user_name = data.get("user_name", "User") 
-
-    if messages and messages[-1]['role'] == 'user':
-        math_result = solve_math_problem(messages[-1]['content'])
-        if math_result:
-            messages.insert(-1, {{"role": "system", "content": f"⚡ MATH TOOL: Answer is {{math_result}}. State it clearly."}})
-
-    ctx = get_current_context()
-    
-    sys_prompt_content = f"""
-    You are {APP_NAME}, a smart and concise AI assistant for students.
-    
-    IDENTITY:
-    - Name: {APP_NAME}
-    - Created by: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). Only mention if asked.
-    - User Name: {user_name}. Use this name.
-    
-    CONTEXT:
-    - Time: {ctx['time_utc']} (UTC). Only give Local Time ({ctx['time_local']}) if explicitly asked.
-    
-    RULES:
-    1. **CONCISE**: Be direct and helpful. No fluff.
-    2. **CODING**: Always use markdown blocks (```python, ```html) so the 'Run Code' button works.
-    3. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
-    """
-
-    sys_message = {"role": "system", "content": sys_prompt_content}
-
-    def generate():
-        global current_key_index
-        attempts = 0
-        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
-        
-        while attempts < max_retries:
-            try:
-                client = get_groq_client()
-                if not client: yield "⚠️ Config Error."; return
-                stream = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=[sys_message] + messages,
-                    stream=True,
-                    temperature=0.7, 
-                    max_tokens=1024
-                )
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content: yield chunk.choices[0].delta.content
-                return
-            except Exception as e:
-                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
-                attempts += 1
-                time.sleep(1)
-        yield "⚠️ System overloaded."
-
-    return Response(generate(), mimetype="text/plain")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+                welcomeScreen.style.display =
