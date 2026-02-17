@@ -8,14 +8,15 @@ import json
 import random
 import re
 import math
+import base64
 
 # ==========================================
-# 🔹 Flux AI (Voice Edition - Build 30.0.0) 🎙️
+# 🔹 Flux AI (Voice Fixed - Build 30.1.0) 🔊
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "30.0.0"
+VERSION = "30.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -49,9 +50,7 @@ def get_uptime():
 def get_current_context(): 
     tz_dhaka = pytz.timezone('Asia/Dhaka')
     now_dhaka = datetime.now(tz_dhaka)
-    now_utc = datetime.now(pytz.utc)
     return {
-        "time_utc": now_utc.strftime("%I:%M %p"),
         "time_local": now_dhaka.strftime("%I:%M %p"),
         "date": now_dhaka.strftime("%d %B, %Y")
     }
@@ -128,19 +127,13 @@ def home():
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ 
-                margin: 0; background: var(--bg-gradient); color: var(--text); 
-                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
-                height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.3s ease;
-            }}
+            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; transition: background 0.3s ease; }}
 
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
 
             #sidebar {{
-                width: 280px; height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--glass-border);
+                width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border);
                 transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease;
                 position: absolute; z-index: 200; left: 0; top: 0; 
                 box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg);
@@ -158,12 +151,8 @@ def home():
             }}
             .new-chat-btn:active {{ transform: scale(0.97); }}
 
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
-            .history-item {{
-                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
-                transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
-            }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }}
+            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
@@ -171,7 +160,8 @@ def home():
             .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
-            
+            .about-link:hover {{ color: var(--accent); }}
+
             .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
             .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
@@ -184,15 +174,14 @@ def home():
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; }}
 
             .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
             .icon-wrapper {{ 
                 width: 90px; height: 90px; background: rgba(255,255,255,0.03);
                 border: 1px solid var(--glass-border); border-radius: 25px; 
                 display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; 
-                margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
-                animation: levitate 4s ease-in-out infinite;
+                margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite;
             }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
@@ -212,12 +201,10 @@ def home():
             .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
-            
             .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
-
             .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
             .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
@@ -228,63 +215,33 @@ def home():
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             
-            .copy-btn {{
-                position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none;
-                padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;
-            }}
-            .run-code-btn {{
-                display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
-                padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent);
-                border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer;
-                transition: 0.3s; font-size: 0.9rem;
-            }}
+            /* BUTTONS */
+            .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }}
+            
+            .run-code-btn {{ display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }}
             .run-code-btn:hover {{ background: var(--accent); color: black; }}
 
-            #input-area {{
-                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
-                background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); 
-                display: flex; justify-content: center; z-index: 50; gap: 10px;
+            /* 🔥 VOICE BUTTON STYLE */
+            .speak-btn {{
+                background: rgba(125,125,125,0.15); color: var(--accent); border: 1px solid var(--glass-border);
+                width: 32px; height: 32px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center;
+                margin-left: 8px; transition: 0.3s; margin-top: 5px;
             }}
-            .input-box {{
-                width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
-                background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px;
-                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1);
-                backdrop-filter: blur(20px); transition: all 0.3s ease;
-            }}
+            .speak-btn:hover {{ background: var(--accent); color: black; }}
+
+            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; gap: 8px; }}
+            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
-            textarea {{
-                flex: 1; background: transparent; border: none; outline: none;
-                color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit;
-            }}
-            /* BUTTON STYLES */
-            .action-btn {{
-                background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px;
-                border-radius: 50%; cursor: pointer; margin-left: 5px; margin-bottom: 2px;
-                display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s;
-            }}
+            textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; }}
+            .action-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 5px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; }}
             .action-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
             .mic-active {{ background: var(--danger) !important; color: white !important; animation: pulse 1s infinite; }}
 
-            .energy-ball {{
-                position: fixed; width: 18px; height: 18px; background: var(--accent);
-                border-radius: 50%; pointer-events: none; z-index: 9999;
-                box-shadow: 0 0 15px var(--accent), 0 0 30px white;
-                animation: shootUp 0.6s ease-in-out forwards;
-            }}
+            .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s ease-in-out forwards; }}
 
-            #preview-modal {{
-                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
-                backdrop-filter: blur(8px);
-            }}
-            .preview-box {{
-                width: 90%; height: 85%; background: white; border-radius: 16px; overflow: hidden;
-                display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-            }}
-            .preview-header {{
-                padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
-                display: flex; justify-content: space-between; align-items: center;
-            }}
+            #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
+            .preview-box {{ width: 95%; max-width: 600px; height: 85%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }}
+            .preview-header {{ padding: 12px 20px; background: #111; border-bottom: 1px solid #333; display: flex; justify-content: space-between; align-items: center; color: white; }}
             iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
@@ -296,7 +253,6 @@ def home():
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes shootUp {{ 0% {{ bottom: 80px; left: 50%; opacity: 1; transform: scale(1); }} 100% {{ bottom: 70%; left: 50%; opacity: 0; transform: scale(0.2); }} }}
             @keyframes pulse {{ 0% {{ transform: scale(1); }} 50% {{ transform: scale(1.1); box-shadow: 0 0 15px var(--danger); }} 100% {{ transform: scale(1); }} }}
-            
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
             .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
@@ -342,7 +298,7 @@ def home():
         <div id="preview-modal">
             <div class="preview-box">
                 <div class="preview-header">
-                    <span style="font-weight:700; color:#111;">Live Preview</span>
+                    <span>Live Preview</span>
                     <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:5px 12px; border-radius:6px; cursor:pointer;">Close</button>
                 </div>
                 <iframe id="code-frame"></iframe>
@@ -404,11 +360,10 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v30_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v30_1_history')) || [];
             let userName = localStorage.getItem('flux_user_name_v2'); 
             let awaitingName = false; 
             let currentChatId = null;
-            let isSpeaking = false;
             
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -417,7 +372,57 @@ def home():
             const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
-            // 🎙️ VOICE SETUP
+            // 🧠 1. NEURAL BACKGROUND ANIMATION (BRAIN EFFECT)
+            const canvas = document.getElementById('neuro-bg');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            class Particle {{
+                constructor() {{
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2;
+                }}
+                update() {{
+                    this.x += this.vx; this.y += this.vy;
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }}
+                draw() {{
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }}
+            }}
+
+            for(let i=0; i<60; i++) particles.push(new Particle());
+
+            function animateBg() {{
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                particles.forEach((p, index) => {{
+                    p.update(); p.draw();
+                    for(let j=index; j<particles.length; j++) {{
+                        const dx = p.x - particles[j].x;
+                        const dy = p.y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
+                        if(dist < 100) {{
+                            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent');
+                            ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')');
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                        }}
+                    }}
+                }});
+                requestAnimationFrame(animateBg);
+            }}
+            animateBg();
+
+            // 🎙️ VOICE SETUP (FIXED)
             const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
             let recognition;
             if (SpeechRecognition) {{
@@ -431,10 +436,11 @@ def home():
                     sendMessage();
                 }};
                 recognition.onend = () => {{ document.getElementById('mic-btn').classList.remove('mic-active'); }};
+                recognition.onerror = (e) => {{ alert("Mic Error: " + e.error); document.getElementById('mic-btn').classList.remove('mic-active'); }};
             }}
 
             function toggleMic() {{
-                if (!SpeechRecognition) return alert("Voice not supported in this browser.");
+                if (!SpeechRecognition) return alert("Sorry, your browser doesn't support Voice.");
                 const btn = document.getElementById('mic-btn');
                 if (btn.classList.contains('mic-active')) {{
                     recognition.stop();
@@ -446,42 +452,14 @@ def home():
 
             function speak(text) {{
                 if (!window.speechSynthesis) return;
-                // Stop any current speech
                 window.speechSynthesis.cancel();
-                // Strip markdown for speaking
                 const cleanText = text.replace(/[*`#_]/g, ''); 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 utterance.lang = 'en-US';
-                utterance.rate = 1.0;
-                utterance.pitch = 1.0;
                 window.speechSynthesis.speak(utterance);
             }}
 
-            // 🧠 NEURAL BACKGROUND ANIMATION
-            const canvas = document.getElementById('neuro-bg');
-            const ctx = canvas.getContext('2d');
-            let particles = [];
-            function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
-            window.addEventListener('resize', resizeCanvas); resizeCanvas();
-            class Particle {{
-                constructor() {{ this.x=Math.random()*canvas.width; this.y=Math.random()*canvas.height; this.vx=(Math.random()-.5)*0.5; this.vy=(Math.random()-.5)*0.5; }}
-                update() {{ this.x+=this.vx; this.y+=this.vy; if(this.x<0||this.x>canvas.width)this.vx*=-1; if(this.y<0||this.y>canvas.height)this.vy*=-1; }}
-                draw() {{ ctx.fillStyle=getComputedStyle(document.body).getPropertyValue('--accent'); ctx.beginPath(); ctx.arc(this.x,this.y,2,0,Math.PI*2); ctx.fill(); }}
-            }}
-            for(let i=0; i<60; i++) particles.push(new Particle());
-            function animateBg() {{
-                ctx.clearRect(0,0,canvas.width,canvas.height);
-                particles.forEach((p,i)=>{{
-                    p.update(); p.draw();
-                    particles.slice(i+1).forEach(p2=>{{
-                        let d=Math.hypot(p.x-p2.x, p.y-p2.y);
-                        if(d<100) {{ ctx.strokeStyle=getComputedStyle(document.body).getPropertyValue('--accent').replace('rgb','rgba').replace(')',', '+(1-d/100)*0.2+')'); ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(p2.x,p2.y); ctx.stroke(); }}
-                    }});
-                }});
-                requestAnimationFrame(animateBg);
-            }}
-            animateBg();
-
+            // THEME TOGGLE
             function setTheme(mode) {{
                 document.body.className = mode;
                 document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn';
@@ -495,7 +473,9 @@ def home():
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 4);
                 let html = '';
-                shuffled.forEach(s => {{ html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>'; }});
+                shuffled.forEach(s => {{
+                    html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
+                }});
                 document.getElementById('suggestion-box').innerHTML = html;
             }}
 
@@ -509,7 +489,7 @@ def home():
                 msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v30_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v30_1_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -546,6 +526,17 @@ def home():
                     }};
                     bubble.appendChild(btn);
                 }}
+                if(text.includes('```python')) {{
+                    const btn = document.createElement('button'); btn.className = 'run-code-btn'; btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+                    const code = text.match(/```python([\\s\\S]*?)```/)[1];
+                    btn.onclick = () => {{
+                        const encoded = btoa(unescape(encodeURIComponent(code)));
+                        const html = `<html><head><script src="https://cdn.jsdelivr.net/pyodide/v0.25.0/full/pyodide.js"><\/script><style>body{{background:#111;color:#0f0;font-family:monospace;padding:15px;margin:0;}}</style></head><body><div id="out">Initializing Python...</div><script>async function main(){{try{{let pyodide=await loadPyodide();document.getElementById("out").innerText=">>> Python Ready\\n";pyodide.setStdout({{batched:(m)=>{{document.getElementById("out").innerText+=m+"\\n"}}}});let code=decodeURIComponent(escape(atob("${{encoded}}")));await pyodide.runPythonAsync(code);}}catch(e){{document.getElementById("out").innerText+="\\nError: "+e;}}}}main();<\/script></body></html>`;
+                        document.getElementById('preview-modal').style.display = 'flex'; 
+                        document.getElementById('code-frame').srcdoc = html;
+                    }};
+                    bubble.appendChild(btn);
+                }}
             }}
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
@@ -558,10 +549,22 @@ def home():
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
                 const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
-                wrapper.innerHTML = `${{avatar}}<div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
+                
+                let contentHTML = `<div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div>`;
+                
+                // Add Speaker Button for Bot
+                if (!isUser) {{
+                    const cleanText = text.replace(/"/g, '&quot;');
+                    contentHTML += `<button class="speak-btn" onclick="speak(\`${{cleanText}}\`)"><i class="fas fa-volume-up"></i></button>`;
+                }}
+                contentHTML += `</div>`;
+
+                wrapper.innerHTML = `${{avatar}}${{contentHTML}}`;
                 chatBox.appendChild(wrapper);
+                
                 const bubble = wrapper.querySelector('.bubble');
                 bubble.innerHTML = marked.parse(text);
+                
                 if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, bubble); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
@@ -572,6 +575,8 @@ def home():
                 chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
             function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
+
+            function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
                 const text = msgInput.value.trim(); if(!text) return;
@@ -585,11 +590,11 @@ def home():
                 saveData(); msgInput.value = ''; appendBubble(text, true);
 
                 if(!userName && !awaitingName) {{
-                    awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); speak("Hello! I am Flux AI. What should I call you?"); }}, 600); return;
+                    awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return;
                 }}
                 if(awaitingName) {{
                     userName = text; localStorage.setItem('flux_user_name_v2', userName); awaitingName = false;
-                    setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! I'll remember that.`, false); speak(`Nice to meet you, ${{userName}}!`); }}, 600); return;
+                    setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! I'll remember that.`, false); }}, 600); return;
                 }}
 
                 showTyping();
@@ -599,22 +604,29 @@ def home():
                     removeTyping();
                     const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
                     const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
+                    
+                    // Temp container for streaming
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
                     chatBox.appendChild(wrapper); const bubble = wrapper.querySelector('.bubble');
+
                     while(true) {{
                         const {{ done, value }} = await reader.read(); if(done) break;
                         botResp += decoder.decode(value); bubble.innerHTML = marked.parse(botResp); chatBox.scrollTo({{ top: chatBox.scrollHeight }});
                     }}
+                    
+                    // Replace temp container with full UI (including Speak button)
+                    wrapper.remove();
+                    appendBubble(botResp, false); // This adds the speaker button
+                    
                     chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubble);
-                    speak(botResp); // 🗣️ AUTO SPEAK
+                    saveData();
                 }} catch(e) {{ removeTyping(); appendBubble("⚠️ Connection Error.", false); }}
             }}
 
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v30_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v30_1_history'); location.reload(); }}
             async function verifyAdmin() {{ if(document.getElementById('admin-pass').value==='{ADMIN_PASSWORD}'){{ closeModal('admin-auth-modal'); openModal('admin-panel-modal'); }} else {{ document.getElementById('admin-error-msg').style.display='block'; }} }}
             async function toggleSystem() {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); document.getElementById('btn-toggle-sys').innerText = data.active?"Turn System OFF":"Turn System ON"; }}
 
