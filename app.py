@@ -731,4 +731,169 @@ def home():
                     const decoder = new TextDecoder();
                     let botResp = '';
                     
-                    const wrap
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'message-wrapper bot';
+                    wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
+                    chatBox.appendChild(wrapper);
+                    const bubbleDiv = wrapper.querySelector('.bubble');
+
+                    while(true) {{
+                        const {{ done, value }} = await reader.read();
+                        if(done) break;
+                        botResp += decoder.decode(value);
+                        bubbleDiv.innerHTML = marked.parse(botResp);
+                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
+                    }}
+                    chat.messages.push({{ role: 'assistant', text: botResp }});
+                    saveData();
+                    hljs.highlightAll();
+                    addCopyButtons();
+                    checkForCode(botResp, bubbleDiv);
+
+                }} catch(e) {{
+                    removeTyping();
+                    appendBubble("⚠️ System connection error. Please try again.", false);
+                }}
+            }}
+
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
+            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
+            function openDeleteModal(id) {{ openModal(id); }}
+            
+            function confirmDelete() {{ localStorage.removeItem('flux_v27_2_history'); location.reload(); }}
+
+            async function verifyAdmin() {{
+                const pass = document.getElementById('admin-pass').value;
+                const errorMsg = document.getElementById('admin-error-msg');
+                if(pass === '{ADMIN_PASSWORD}') {{
+                    errorMsg.style.display = 'none';
+                    closeModal('admin-auth-modal');
+                    openModal('admin-panel-modal');
+                    document.getElementById('admin-pass').value = '';
+                    try {{
+                        const res = await fetch('/admin/stats');
+                        const data = await res.json();
+                        document.getElementById('stat-uptime').innerText = data.uptime;
+                        document.getElementById('stat-msgs').innerText = data.total_messages;
+                        updateSysBtn(data.active);
+                    }} catch(e) {{ alert('Error fetching stats'); }}
+                }} else {{
+                    errorMsg.style.display = 'block';
+                }}
+            }}
+
+            async function toggleSystem() {{
+                try {{
+                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
+                    const data = await res.json();
+                    updateSysBtn(data.active);
+                }} catch(e) {{ alert('Error toggling system'); }}
+            }}
+
+            function updateSysBtn(isActive) {{
+                const btn = document.getElementById('btn-toggle-sys');
+                if(isActive) {{
+                    btn.innerText = "Turn System OFF";
+                    btn.style.background = "var(--danger)";
+                }} else {{
+                    btn.innerText = "Turn System ON";
+                    btn.style.background = "var(--success)";
+                }}
+            }}
+
+            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
+        </script>
+    </body>
+    </html>
+    """
+
+# 🛡️ ADMIN API ROUTES
+@app.route("/admin/stats")
+def admin_stats():
+    return jsonify({
+        "uptime": get_uptime(),
+        "total_messages": TOTAL_MESSAGES,
+        "active": SYSTEM_ACTIVE
+    })
+
+@app.route("/admin/toggle_system", methods=["POST"])
+def toggle_system():
+    global SYSTEM_ACTIVE
+    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
+    return jsonify({"active": SYSTEM_ACTIVE})
+
+@app.route("/chat", methods=["POST"])
+def chat():
+    global TOTAL_MESSAGES
+    if not SYSTEM_ACTIVE:
+        return Response("System is currently under maintenance.", status=503)
+
+    TOTAL_MESSAGES += 1
+    data = request.json
+    messages = data.get("messages", [])
+    user_name = data.get("user_name", "User") # Get user name from frontend
+
+    # MATH ENGINE
+    if messages and messages[-1]['role'] == 'user':
+        last_msg = messages[-1]['content']
+        math_result = solve_math_problem(last_msg)
+        if math_result:
+            system_note = {
+                "role": "system",
+                "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."
+            }
+            messages.insert(-1, system_note)
+
+    ctx = get_current_context()
+    
+    # 🧠 BRAIN UPDATE: Enhanced Logic
+    sys_prompt_content = f"""
+    You are {APP_NAME}, a highly intelligent, creative, and concise AI assistant designed for students and professionals.
+    
+    IDENTITY & CONTEXT:
+    - Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). IMPORTANT: Only mention the creator if explicitly asked "Who created you?" or "Who is your owner?".
+    - Current User Name: {user_name}. (Address the user by this name if you know it. If the user corrects their name, accept it immediately).
+    - Current Time: {ctx['time_utc']} (UTC). Only provide Local Dhaka time ({ctx['time_local']}) if specifically asked for "Local time" or "Dhaka time". Do not mention time in every response.
+    
+    BEHAVIOR RULES:
+    1. **CONCISE & SMART**: Be direct. Avoid unnecessary chatter ("I hope you are doing well", etc.). Get straight to the answer.
+    2. **STUDENT FRIENDLY**: Explain complex topics simply and creatively.
+    3. **CODING**: If asked for code (HTML/CSS/JS/Python), ALWAYS provide the full code inside a markdown block (```language ... ```) so the Live Preview tool works.
+    4. **NO SCRIPT FORMAT**: Do not use "Flux AI:" or "User:" prefixes.
+    5. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
+    """
+
+    sys_message = {"role": "system", "content": sys_prompt_content}
+
+    def generate():
+        global current_key_index
+        attempts = 0
+        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
+        
+        while attempts < max_retries:
+            try:
+                client = get_groq_client()
+                if not client: yield "⚠️ Config Error."; return
+                
+                stream = client.chat.completions.create(
+                    model="llama-3.3-70b-versatile",
+                    messages=[sys_message] + messages,
+                    stream=True,
+                    temperature=0.7, 
+                    max_tokens=1024
+                )
+                for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+                return
+            except Exception as e:
+                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
+                attempts += 1
+                time.sleep(1)
+        yield "⚠️ System overloaded."
+
+    return Response(generate(), mimetype="text/plain")
+
+if __name__ == "__main__":
+    port = int(os.environ.get("PORT", 10000)) # Default to 10000 for Render
+    app.run(host="0.0.0.0", port=port, debug=True)
