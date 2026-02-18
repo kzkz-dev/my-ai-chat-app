@@ -1,4 +1,4 @@
 flask
-groq
-pytz
 gunicorn
+groq
+duckduckgo-search
