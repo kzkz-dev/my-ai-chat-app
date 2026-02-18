@@ -12,28 +12,19 @@ import math
 import base64
 
 # ==========================================
-# 🔹 Flux AI (Love/Prank Edition - Build 32.0.0) 💘
+# 🔹 Flux AI (Mobile Love Edition - Build 32.1.0) 💘
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "32.0.0"
-ADMIN_PASSWORD = "7rx9x2c0" 
-
-# Stats
-SERVER_START_TIME = time.time()
-TOTAL_MESSAGES = 0
-SYSTEM_ACTIVE = True 
-
-app = Flask(__name__)
-app.secret_key = os.urandom(24)
+VERSION = "32.1.0"
 
 # API Key Check
 GROQ_KEYS = [k.strip() for k in os.environ.get("GROQ_KEYS", "").split(",") if k.strip()]
 current_key_index = 0
 
-if not GROQ_KEYS:
-    print("⚠️ CRITICAL ERROR: GROQ_KEYS not found in environment variables!")
+app = Flask(__name__)
+app.secret_key = os.urandom(24)
 
 def get_groq_client():
     global current_key_index
@@ -75,97 +66,129 @@ def solve_math_problem(text):
         return f"{result:,.4f}" 
     except: return None
 
-# 💘 PROPOSE PAGE HTML (Viral Script)
+# 💘 PROPOSE PAGE HTML (Mobile Fixed Version)
 PROPOSE_HTML = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>For You ❤️</title>
     <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600&display=swap" rel="stylesheet">
     <style>
         body {
             background: #ffe6e9; font-family: 'Fredoka', sans-serif;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
-            height: 100vh; margin: 0; overflow: hidden;
+            height: 100vh; margin: 0; overflow: hidden; touch-action: none;
         }
-        .container { text-align: center; position: relative; z-index: 10; }
-        h1 { color: #ff4d6d; font-size: 2rem; margin-bottom: 20px; }
-        .gif-container img { width: 200px; border-radius: 15px; margin-bottom: 20px; }
-        .buttons { display: flex; gap: 20px; justify-content: center; margin-top: 20px; }
-        button {
-            padding: 12px 30px; font-size: 1.2rem; border: none; border-radius: 50px;
-            cursor: pointer; font-family: inherit; font-weight: 600; transition: 0.3s;
-        }
-        .yes-btn { background: #ff4d6d; color: white; box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4); }
-        .yes-btn:hover { transform: scale(1.1); }
-        .no-btn { background: white; color: #ff4d6d; border: 2px solid #ff4d6d; position: absolute; }
+        .container { text-align: center; position: relative; z-index: 10; width: 100%; }
+        h1 { color: #ff4d6d; font-size: 1.8rem; margin-bottom: 20px; padding: 0 10px; }
+        .gif-container img { width: 180px; border-radius: 15px; margin-bottom: 10px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
         
-        /* Success Message */
-        #success-msg { display: none; margin-top: 20px; color: #d63384; font-size: 1.5rem; animation: popIn 0.5s; }
-        @keyframes popIn { from { transform: scale(0); } to { transform: scale(1); } }
+        .buttons { 
+            display: flex; gap: 20px; justify-content: center; align-items: center; 
+            margin-top: 30px; position: relative; height: 60px; width: 100%;
+        }
+        
+        button {
+            padding: 12px 30px; font-size: 1.1rem; border: none; border-radius: 50px;
+            cursor: pointer; font-family: inherit; font-weight: 600; transition: 0.2s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        .yes-btn { 
+            background: #ff4d6d; color: white; 
+            box-shadow: 0 5px 15px rgba(255, 77, 109, 0.4); 
+            z-index: 20;
+        }
+        .yes-btn:active { transform: scale(0.95); }
+        
+        .no-btn { 
+            background: white; color: #ff4d6d; border: 2px solid #ff4d6d; 
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            position: absolute; /* Initially positioned relative to flex container, JS handles movement */
+            transition: all 0.1s ease; /* Fast movement */
+        }
     </style>
 </head>
 <body>
     <div class="container" id="main-content">
         <div class="gif-container">
-            <img id="main-img" src="https://media.tenor.com/zGm5acSjHCIAAAAj/cat-ask.gif" alt="Cute Cat">
+            <img src="https://media.tenor.com/zGm5acSjHCIAAAAj/cat-ask.gif" alt="Cute Cat">
         </div>
-        <h1 id="question">Hey {{ name }}, Do you love me? 🥺</h1>
+        <h1>Hey {{ name }}, Do you love me? 🥺</h1>
+        
         <div class="buttons">
             <button class="yes-btn" onclick="acceptLove()">Yes ❤️</button>
-            <button class="no-btn" id="noBtn" onmouseover="moveButton()" onclick="moveButton()">No 💔</button>
+            <button class="no-btn" id="noBtn" style="position: relative;">No 💔</button>
         </div>
     </div>
 
-    <div class="container" id="success-msg">
+    <div class="container" id="success-msg" style="display: none;">
         <div class="gif-container">
             <img src="https://media.tenor.com/gUiu1zyxfzYAAAAj/bear-kiss-bear-kisses.gif" alt="Happy Bear">
         </div>
-        <h1>Yayyy! I knew it! 😘</h1>
+        <h1 style="font-size: 2rem;">Yayyy! I knew it! 😘</h1>
     </div>
 
     <script>
         const noBtn = document.getElementById('noBtn');
-        const question = document.getElementById('question');
-        const mainImg = document.getElementById('main-img');
-        
+        const yesBtn = document.querySelector('.yes-btn');
+
+        // Mobile touch and Desktop hover support
+        noBtn.addEventListener('mouseover', moveButton);
+        noBtn.addEventListener('touchstart', (e) => { e.preventDefault(); moveButton(); });
+        noBtn.addEventListener('click', (e) => { e.preventDefault(); moveButton(); });
+
         function moveButton() {
-            // Make button run away
-            const x = Math.random() * (window.innerWidth - 100);
-            const y = Math.random() * (window.innerHeight - 50);
-            noBtn.style.left = `${x}px`;
-            noBtn.style.top = `${y}px`;
+            // 1. Make absolute if not already
+            if (noBtn.style.position !== 'absolute') {
+                noBtn.style.position = 'fixed'; 
+            }
+
+            // 2. Calculate SAFE boundaries (Screen size - Button size - Padding)
+            const buttonWidth = noBtn.offsetWidth;
+            const buttonHeight = noBtn.offsetHeight;
+            
+            // Keep 20px padding from edges
+            const maxWidth = window.innerWidth - buttonWidth - 20;
+            const maxHeight = window.innerHeight - buttonHeight - 20;
+
+            // Generate random position within safe zone
+            const randomX = Math.max(20, Math.random() * maxWidth);
+            const randomY = Math.max(20, Math.random() * maxHeight);
+
+            // Apply new position
+            noBtn.style.left = randomX + 'px';
+            noBtn.style.top = randomY + 'px';
         }
 
         function acceptLove() {
             document.getElementById('main-content').style.display = 'none';
             document.getElementById('success-msg').style.display = 'block';
             
-            // Confetti Effect (Simple)
-            for(let i=0; i<50; i++) {
-                createConfetti();
+            // Confetti
+            for(let i=0; i<60; i++) {
+                setTimeout(createConfetti, i * 20);
             }
         }
 
         function createConfetti() {
             const confetti = document.createElement('div');
-            confetti.innerText = '❤️';
+            confetti.innerText = ['❤️', '💖', '💘', '🌸'][Math.floor(Math.random() * 4)];
             confetti.style.position = 'fixed';
             confetti.style.left = Math.random() * 100 + 'vw';
-            confetti.style.top = '-10px';
-            confetti.style.fontSize = Math.random() * 20 + 10 + 'px';
-            confetti.style.animation = `fall ${Math.random() * 3 + 2}s linear`;
+            confetti.style.top = '-20px';
+            confetti.style.fontSize = Math.random() * 20 + 15 + 'px';
+            confetti.style.animation = `fall ${Math.random() * 2 + 2}s linear forwards`;
+            confetti.style.zIndex = '100';
             document.body.appendChild(confetti);
-            setTimeout(() => confetti.remove(), 5000);
+            setTimeout(() => confetti.remove(), 4000);
         }
-        
-        // CSS for falling
+
+        // Add CSS animation for confetti
         const style = document.createElement('style');
-        style.innerHTML = `
-            @keyframes fall { to { transform: translateY(100vh) rotate(360deg); } }
-        `;
+        style.innerHTML = `@keyframes fall { to { transform: translateY(105vh) rotate(360deg); } }`;
         document.head.appendChild(style);
     </script>
 </body>
@@ -176,16 +199,12 @@ SUGGESTION_POOL = [
     {"icon": "fas fa-heart", "text": "Create a propose link for Sadia"},
     {"icon": "fas fa-globe", "text": "Current Prime Minister of Bangladesh?"},
     {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
-    {"icon": "fas fa-code", "text": "Create a login page in HTML"},
-    {"icon": "fas fa-laptop-code", "text": "Write a Python calculator"}
+    {"icon": "fas fa-code", "text": "Create a login page in HTML"}
 ]
 
 @app.route("/")
 def home():
     suggestions_json = json.dumps(SUGGESTION_POOL)
-    
-    # ⚠️ NOTE: This HTML string is kept the same as Build 31.1.0 to preserve your Voice & Search features.
-    # I am injecting the logic in the backend routes below.
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -279,7 +298,7 @@ def home():
         <script>
             marked.use({{ breaks: true, gfm: true }});
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v32_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v32_1_history')) || [];
             let currentChatId = null;
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
@@ -310,7 +329,7 @@ def home():
                 welcomeScreen.style.display = 'flex';
                 sidebar.classList.add('closed'); overlay.style.display = 'none';
             }}
-            function saveData() {{ localStorage.setItem('flux_v32_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v32_1_history', JSON.stringify(chats)); }}
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
                 chats.forEach(chat => {{
@@ -369,10 +388,8 @@ def home():
     </html>
     """
 
-# 🔥 NEW ROUTE: LOVE PAGE (Prank)
 @app.route("/love/<name>")
 def love_page(name):
-    # This renders the viral proposal page with the provided name
     from flask import render_template_string
     return render_template_string(PROPOSE_HTML, name=name)
 
@@ -384,32 +401,25 @@ def chat():
         user_name = data.get("user_name", "User")
         last_msg = messages[-1]['content'] if messages else ""
 
-        # Check API KEY first
         client = get_groq_client()
         if not client:
             return jsonify({"reply": "⚠️ **System Error:** `GROQ_KEYS` not set properly.", "searched": False})
 
-        # 0. ❤️ LOVE LINK GENERATOR CHECK (Specific Trigger)
         if "propose link" in last_msg.lower() or "love link" in last_msg.lower() or "create link" in last_msg.lower():
-            # Extract name logic
             match = re.search(r"for\s+(.*)", last_msg, re.IGNORECASE)
             target_name = match.group(1).strip() if match else "Someone"
-            
-            # Generate Link
             base_url = request.host_url.rstrip('/')
             link = f"{base_url}/love/{target_name.replace(' ', '%20')}"
             
             return jsonify({
-                "reply": f"💘 **Here is your magic link!**\n\nSend this to **{target_name}**:\n\n🔗 [{link}]({link})\n\n*(Click to test it yourself first!)*", 
+                "reply": f"💘 **Here is your mobile-friendly magic link!**\n\nSend this to **{target_name}**:\n\n🔗 [{link}]({link})\n\n*(Buttons are now fixed!)*", 
                 "searched": False
             })
 
-        # 1. MATH CHECK
         math_res = solve_math_problem(last_msg)
         if math_res:
             return jsonify({"reply": f"The answer is: **{math_res}**", "searched": False})
 
-        # 2. INTERNET SEARCH CHECK
         search_keywords = ["current", "latest", "news", "weather", "today", "price", "who is", "what is", "prime minister", "president", "score"]
         searched = False
         search_context = ""
