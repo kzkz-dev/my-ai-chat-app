@@ -8,13 +8,13 @@ import json
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 28.0.0) 🧠
-# 🔥 WITH REAL-TIME VOICE CALL SYSTEM 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 28.1.0) 🧠
+# 🔥 BUGS FIXED: CSS RESTORED & VOICE OPTIMIZED 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "28.0.0"
+VERSION = "28.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -165,11 +165,30 @@ def home():
             .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
 
+            /* 🔥 RESTORED MODALS CSS (THIS FIXES YOUR BUG) 🔥 */
+            .modal-overlay {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
+                z-index: 9999; backdrop-filter: blur(8px);
+            }}
+            .modal-box {{
+                background: var(--sidebar-bg); border: 1px solid var(--glass-border); 
+                padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; 
+                text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text);
+            }}
+            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
+            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
+            
+            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
+            .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
+            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-confirm {{ background: var(--success); color: black; }}
+
             /* MAIN CHAT AREA */
             header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
             
-            /* 🔥 VOICE CALL BUTTON IN HEADER 🔥 */
+            /* VOICE CALL BUTTON */
             .call-btn {{ background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; animation: pulseCall 2s infinite; }}
             .call-btn:hover {{ background: var(--accent); color: black; }}
             @keyframes pulseCall {{ 0% {{ box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.4); }} 70% {{ box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }} 100% {{ box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }} }}
@@ -225,7 +244,7 @@ def home():
 
             /* 🔥 VOICE CALL OVERLAY SCREEN 🔥 */
             #voice-overlay {{
-                position: fixed; inset: 0; background: rgba(10, 10, 25, 0.95); backdrop-filter: blur(20px);
+                position: fixed; inset: 0; background: rgba(10, 10, 25, 0.98); backdrop-filter: blur(20px);
                 z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center;
                 color: white; font-family: 'Outfit', sans-serif;
             }}
@@ -298,8 +317,33 @@ def home():
                 <div class="modal-desc">This will permanently delete all your conversations.</div>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
-                    <button class="btn-modal" style="background:var(--danger); color:white;" onclick="confirmDelete()">Delete</button>
+                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete</button>
                 </div>
+            </div>
+        </div>
+
+        <div id="admin-auth-modal" class="modal-overlay">
+            <div class="modal-box">
+                <div class="modal-title"><i class="fas fa-shield-alt" style="color:var(--accent)"></i> Admin Access</div>
+                <div class="modal-desc">Enter authorization code</div>
+                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
+                <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
+                <div style="display:flex;">
+                    <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
+                    <button class="btn-modal btn-confirm" onclick="verifyAdmin()">Login</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="admin-panel-modal" class="modal-overlay">
+            <div class="modal-box" style="max-width: 450px;">
+                <div class="modal-title" style="margin-bottom:20px;">Admin Dashboard</div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:25px;">
+                    <div style="background:rgba(125,125,125,0.1); padding:15px; border-radius:14px;"><div id="stat-msgs" style="font-size:1.6rem; font-weight:700; color:var(--accent);">0</div><div style="font-size:0.8rem; opacity:0.7">TOTAL MSGS</div></div>
+                    <div style="background:rgba(125,125,125,0.1); padding:15px; border-radius:14px;"><div id="stat-uptime" style="font-size:1.2rem; font-weight:700; color:var(--accent);">0s</div><div style="font-size:0.8rem; opacity:0.7">UPTIME</div></div>
+                </div>
+                <button class="btn-modal btn-delete" id="btn-toggle-sys" onclick="toggleSystem()" style="width:100%; margin:0; padding:16px;">Turn System OFF</button>
+                <button class="btn-modal btn-cancel" onclick="closeModal('admin-panel-modal')" style="width:100%; margin:15px 0 0 0;">Close Panel</button>
             </div>
         </div>
 
@@ -346,8 +390,8 @@ def home():
                 <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
                 <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, var(--text), var(--text-secondary)); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
                 <div style="display:flex; gap:10px;">
-                    <button onclick="startVoiceCall()" class="call-btn"><i class="fas fa-phone-volume"></i></button>
-                    <button onclick="startNewChat()" style="background:none; border:none; color:var(--text-secondary); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
+                    <button onclick="startVoiceCall()" class="call-btn" title="Voice Call"><i class="fas fa-phone-volume"></i></button>
+                    <button onclick="startNewChat()" style="background:none; border:none; color:var(--text-secondary); font-size:1.4rem; cursor:pointer; padding: 8px;" title="New Chat"><i class="fas fa-pen-to-square"></i></button>
                 </div>
             </header>
 
@@ -421,9 +465,46 @@ def home():
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
+            
+            // MODAL LOGIC RESTORED
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function confirmDelete() {{ localStorage.removeItem('flux_v28_history'); location.reload(); }}
+
+            // ADMIN LOGIC RESTORED
+            async function verifyAdmin() {{
+                const pass = document.getElementById('admin-pass').value;
+                const errorMsg = document.getElementById('admin-error-msg');
+                if(pass === '{ADMIN_PASSWORD}') {{
+                    errorMsg.style.display = 'none';
+                    closeModal('admin-auth-modal');
+                    openModal('admin-panel-modal');
+                    document.getElementById('admin-pass').value = '';
+                    try {{
+                        const res = await fetch('/admin/stats');
+                        const data = await res.json();
+                        document.getElementById('stat-uptime').innerText = data.uptime;
+                        document.getElementById('stat-msgs').innerText = data.total_messages;
+                        updateSysBtn(data.active);
+                    }} catch(e) {{ alert('Error fetching stats'); }}
+                }} else {{
+                    errorMsg.style.display = 'block';
+                }}
+            }}
+
+            async function toggleSystem() {{
+                try {{
+                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
+                    const data = await res.json();
+                    updateSysBtn(data.active);
+                }} catch(e) {{ alert('Error toggling system'); }}
+            }}
+
+            function updateSysBtn(isActive) {{
+                const btn = document.getElementById('btn-toggle-sys');
+                if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} 
+                else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }}
+            }}
 
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
@@ -511,10 +592,11 @@ def home():
             const vStatus = document.getElementById('voice-status');
             const vTranscript = document.getElementById('voice-transcript');
 
-            // Setup STT (Speech to Text)
-            if ('webkitSpeechRecognition' in window) {{
-                speechRecognition = new webkitSpeechRecognition();
-                speechRecognition.continuous = false;
+            // Set up Speech Recognition
+            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+            if (SpeechRec) {{
+                speechRecognition = new SpeechRec();
+                speechRecognition.continuous = false; // Important for mobile
                 speechRecognition.interimResults = true;
                 
                 speechRecognition.onstart = () => {{
@@ -533,7 +615,8 @@ def home():
                     vTranscript.innerText = finalTranscript || interimTranscript;
                     
                     if (finalTranscript !== '') {{
-                        // User finished speaking a sentence
+                        // Stop listening to process input
+                        speechRecognition.stop();
                         processVoiceInput(finalTranscript);
                     }}
                 }};
@@ -541,26 +624,32 @@ def home():
                 speechRecognition.onerror = (event) => {{
                     console.log("Speech error:", event.error);
                     if(isVoiceMode && event.error !== 'no-speech') {{
-                        setTimeout(() => {{ if(isVoiceMode) speechRecognition.start(); }}, 1000);
+                        setTimeout(() => {{ if(isVoiceMode) try {{ speechRecognition.start(); }} catch(e) {{}} }}, 1000);
                     }}
                 }};
                 
                 speechRecognition.onend = () => {{
-                    // Auto-restart listening if voice mode is still active and AI is not currently speaking or thinking
+                    // Auto-restart if we are still in voice mode, not speaking, and not thinking
                     if(isVoiceMode && !synth.speaking && vStatus.innerText !== 'Thinking...') {{
                         try {{ speechRecognition.start(); }} catch(e) {{}}
                     }}
                 }};
             }} else {{
-                console.warn("Speech Recognition not supported in this browser.");
+                console.warn("Speech Recognition not supported.");
             }}
 
             function startVoiceCall() {{
-                if(!speechRecognition) return alert("Your browser doesn't support Voice Call. Try Chrome or Edge.");
+                if(!speechRecognition) return alert("Your browser doesn't support Voice Call. Try Chrome on Android.");
                 if(!currentChatId) startNewChat();
+                
+                // 🔥 CRITICAL FIX FOR MOBILE AUDIO: Unlock TTS by playing silent audio on click 🔥
+                synth.cancel();
+                let unlockAudio = new SpeechSynthesisUtterance('');
+                synth.speak(unlockAudio);
+                
                 isVoiceMode = true;
                 voiceOverlay.style.display = 'flex';
-                synth.cancel(); // Stop any ongoing speech
+                
                 try {{ speechRecognition.start(); }} catch(e) {{}}
             }}
 
@@ -579,26 +668,21 @@ def home():
 
             async function processVoiceInput(text) {{
                 if(!text) return;
-                speechRecognition.stop(); // Stop listening while thinking
                 setOrbState('thinking', 'Thinking...', text);
-                
-                // Send message to the backend via the existing sendMessage function but customized for voice
                 await sendMessage(text, true); 
             }}
 
-            // Setup TTS (Text to Speech)
+            // Text-to-Speech Output
             function speakResponse(text) {{
                 if(!isVoiceMode) return;
                 
-                // Clean markdown from text for reading
-                const cleanText = text.replace(/[*#_`]/g, '');
+                // Clean markdown so the robot doesn't read out symbols
+                const cleanText = text.replace(/[*#_`~]/g, '');
                 
                 const utterance = new SpeechSynthesisUtterance(cleanText);
-                // Optional: You can try setting a specific voice here if needed
-                // utterance.voice = synth.getVoices().find(v => v.lang === 'en-US');
                 
                 utterance.onstart = () => {{
-                    if(isVoiceMode) setOrbState('speaking', 'Speaking...', '');
+                    if(isVoiceMode) setOrbState('speaking', 'Speaking...', cleanText.length > 60 ? cleanText.substring(0, 60) + "..." : cleanText);
                 }};
                 
                 utterance.onend = () => {{
@@ -608,7 +692,8 @@ def home():
                     }}
                 }};
                 
-                utterance.onerror = () => {{
+                utterance.onerror = (e) => {{
+                    console.log("TTS Error: ", e);
                     if(isVoiceMode) {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}
                 }};
 
@@ -622,6 +707,10 @@ def home():
                 const text = overrideText || msgInput.value.trim();
                 if(!text) return;
 
+                if(!isFromVoice && text === '!admin') {{
+                    msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return;
+                }}
+
                 if(!currentChatId) startNewChat();
                 const chat = chats.find(c => c.id === currentChatId);
                 
@@ -630,11 +719,23 @@ def home():
                 saveData();
                 
                 if(!isFromVoice) {{
-                    msgInput.value = '';
-                    appendBubble(text, true);
+                    msgInput.value = ''; appendBubble(text, true);
                 }} else {{
-                    // For voice, just show it in the background chat so history is saved
-                    appendBubble(text, true);
+                    appendBubble(text, true); // Keep record in background chat
+                }}
+
+                // Check for Name
+                if(!userName && !awaitingName) {{
+                    awaitingName = true;
+                    let askName = "Hello! I am Flux AI. What should I call you?";
+                    setTimeout(() => {{ appendBubble(askName, false); if(isVoiceMode) speakResponse(askName); }}, 600);
+                    return;
+                }}
+                if(awaitingName && !isFromVoice) {{
+                    userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false;
+                    let greet = `Nice to meet you, ${{userName}}! How can I help you today?`;
+                    setTimeout(() => {{ appendBubble(greet, false); if(isVoiceMode) speakResponse(greet); }}, 600);
+                    return;
                 }}
 
                 if(!isFromVoice) showTyping();
@@ -672,7 +773,7 @@ def home():
                     saveData();
                     hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubbleDiv);
 
-                    // IF IN VOICE MODE, SPEAK THE RESPONSE!
+                    // If speaking on voice, trigger audio
                     if(isVoiceMode && isFromVoice) {{
                         speakResponse(botResp);
                     }}
@@ -689,6 +790,21 @@ def home():
     </body>
     </html>
     """
+
+# 🛡️ ADMIN API ROUTES
+@app.route("/admin/stats")
+def admin_stats():
+    return jsonify({
+        "uptime": get_uptime(),
+        "total_messages": TOTAL_MESSAGES,
+        "active": SYSTEM_ACTIVE
+    })
+
+@app.route("/admin/toggle_system", methods=["POST"])
+def toggle_system():
+    global SYSTEM_ACTIVE
+    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
+    return jsonify({"active": SYSTEM_ACTIVE})
 
 @app.route("/chat", methods=["POST"])
 def chat():
@@ -716,9 +832,8 @@ def chat():
     
     RULES:
     1. CONCISE & SMART. Avoid unnecessary greetings.
-    2. VOICE CONVERSATION AWARE: The user might be talking to you via Voice. Keep responses conversational and easy to read aloud if the prompt seems conversational.
+    2. VOICE CONVERSATION AWARE: If the prompt looks like conversational speech, keep your responses conversational and natural to read aloud. Keep it relatively short.
     3. CODING: Provide full code in markdown blocks.
-    4. NO SCRIPT FORMAT: Do not use "Flux AI:" prefixes.
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
