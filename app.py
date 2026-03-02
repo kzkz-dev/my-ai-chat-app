@@ -8,13 +8,13 @@ import json
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 28.1.0) 🧠
-# 🔥 BUGS FIXED: CSS RESTORED & VOICE OPTIMIZED 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 28.2.0) 🧠
+# 🔥 FIXED: MOBILE VOICE, PERMISSIONS & IN-APP BROWSER BUGS 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "28.1.0"
+VERSION = "28.2.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -55,7 +55,6 @@ def get_current_context():
         "date": now_dhaka.strftime("%d %B, %Y")
     }
 
-# 🧮 MATH ENGINE
 def solve_math_problem(text):
     try:
         clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
@@ -96,67 +95,21 @@ def home():
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
-            :root {{
-                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
-                --glass-bg: rgba(20, 20, 35, 0.65);
-                --sidebar-bg: rgba(15, 15, 30, 0.95);
-                --glass-border: rgba(255, 255, 255, 0.08);
-                --text: #e0e6ed;
-                --text-secondary: #94a3b8;
-                --accent: #00f3ff;
-                --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
-                --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
-                --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
-                --danger: #ff0f7b;
-                --success: #00ff87;
-            }}
-
-            body.light {{
-                --bg-gradient: #f8fafc;
-                --glass-bg: #ffffff;
-                --sidebar-bg: #ffffff;
-                --text: #1e293b;
-                --text-secondary: #64748b;
-                --glass-border: #e2e8f0;
-                --accent: #2563eb;
-                --bot-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-                --user-grad: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-            }}
-
+            :root {{ --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%); --glass-bg: rgba(20, 20, 35, 0.65); --sidebar-bg: rgba(15, 15, 30, 0.95); --glass-border: rgba(255, 255, 255, 0.08); --text: #e0e6ed; --text-secondary: #94a3b8; --accent: #00f3ff; --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5); --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%); --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%); --danger: #ff0f7b; --success: #00ff87; }}
+            body.light {{ --bg-gradient: #f8fafc; --glass-bg: #ffffff; --sidebar-bg: #ffffff; --text: #1e293b; --text-secondary: #64748b; --glass-border: #e2e8f0; --accent: #2563eb; --bot-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); --user-grad: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); }}
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ 
-                margin: 0; background: var(--bg-gradient); color: var(--text); 
-                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
-                height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.3s ease;
-            }}
-
+            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; transition: background 0.3s ease; }}
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
 
-            /* SIDEBAR */
-            #sidebar {{
-                width: 280px; height: 100%; display: flex; flex-direction: column;
-                padding: 20px; border-right: 1px solid var(--glass-border);
-                transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease;
-                position: absolute; z-index: 200; left: 0; top: 0; 
-                box-shadow: 10px 0 30px rgba(0,0,0,0.3);
-                background: var(--sidebar-bg);
-            }}
+            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
-            
             .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); text-shadow: var(--accent-glow); }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            
             .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.3s ease; }}
-            .new-chat-btn:active {{ transform: scale(0.97); }}
-
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
             .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
-
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            
-            /* ABOUT SECTION & THEME */
             .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.3s; }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
@@ -165,30 +118,18 @@ def home():
             .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
 
-            /* 🔥 RESTORED MODALS CSS (THIS FIXES YOUR BUG) 🔥 */
-            .modal-overlay {{
-                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-                background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
-                z-index: 9999; backdrop-filter: blur(8px);
-            }}
-            .modal-box {{
-                background: var(--sidebar-bg); border: 1px solid var(--glass-border); 
-                padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; 
-                text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text);
-            }}
+            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
+            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); }}
             .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
-            
             .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
             .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
             .btn-delete {{ background: var(--danger); color: white; }}
             .btn-confirm {{ background: var(--success); color: black; }}
 
-            /* MAIN CHAT AREA */
             header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
             
-            /* VOICE CALL BUTTON */
             .call-btn {{ background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; animation: pulseCall 2s infinite; }}
             .call-btn:hover {{ background: var(--accent); color: black; }}
             @keyframes pulseCall {{ 0% {{ box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.4); }} 70% {{ box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }} 100% {{ box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }} }}
@@ -201,7 +142,6 @@ def home():
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1rem; max-width: 80%; line-height: 1.5; }}
-
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
             .chip {{ padding: 16px 20px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 18px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
@@ -212,26 +152,20 @@ def home():
             .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
-            
             .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
-
             .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
             .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
-            
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
             body.light .bubble strong {{ color: #2563eb; }}
 
-            /* CODE & COPY BUTTON */
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }}
             .copy-btn:hover {{ background: var(--accent); }}
-
-            /* LIVE PREVIEW BUTTON */
             .run-code-btn {{ display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }}
             .run-code-btn:hover {{ background: var(--accent); color: black; }}
 
@@ -243,38 +177,23 @@ def home():
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
             /* 🔥 VOICE CALL OVERLAY SCREEN 🔥 */
-            #voice-overlay {{
-                position: fixed; inset: 0; background: rgba(10, 10, 25, 0.98); backdrop-filter: blur(20px);
-                z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center;
-                color: white; font-family: 'Outfit', sans-serif;
-            }}
+            #voice-overlay {{ position: fixed; inset: 0; background: rgba(10, 10, 25, 0.98); backdrop-filter: blur(20px); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: 'Outfit', sans-serif; }}
             .voice-header {{ position: absolute; top: 30px; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }}
             .voice-header i {{ color: var(--accent); }}
-            
             .ai-orb-container {{ position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin-bottom: 50px; }}
-            .ai-orb {{
-                width: 120px; height: 120px; border-radius: 50%;
-                background: linear-gradient(135deg, var(--accent), #bc13fe);
-                box-shadow: 0 0 50px rgba(0, 243, 255, 0.8), inset 0 0 20px rgba(255,255,255,0.5);
-                transition: all 0.3s ease;
-            }}
-            /* Orb States */
+            .ai-orb {{ width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #bc13fe); box-shadow: 0 0 50px rgba(0, 243, 255, 0.8), inset 0 0 20px rgba(255,255,255,0.5); transition: all 0.3s ease; }}
+            
             .orb-listening {{ animation: breathe 1.5s infinite alternate; }}
             .orb-thinking {{ animation: spinOrb 2s linear infinite, glowPulse 1s infinite alternate; background: linear-gradient(135deg, #facc15, #fb923c); box-shadow: 0 0 50px rgba(250, 204, 21, 0.8); }}
             .orb-speaking {{ animation: talkBounce 0.3s infinite alternate; box-shadow: 0 0 80px rgba(0, 243, 255, 1); }}
+            .orb-error {{ background: var(--danger); box-shadow: 0 0 50px rgba(255, 15, 123, 0.8); animation: none; }}
 
-            .voice-status {{ font-size: 1.5rem; font-weight: 300; margin-bottom: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary); }}
-            .voice-transcript {{ font-size: 1.2rem; max-width: 80%; text-align: center; color: white; opacity: 0.9; min-height: 60px; line-height: 1.4; }}
+            .voice-status {{ font-size: 1.5rem; font-weight: 300; margin-bottom: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary); text-align:center; }}
+            .voice-transcript {{ font-size: 1.2rem; max-width: 85%; text-align: center; color: white; opacity: 0.9; min-height: 80px; line-height: 1.5; }}
             
-            .end-call-btn {{
-                position: absolute; bottom: 50px; background: var(--danger); color: white; border: none;
-                width: 70px; height: 70px; border-radius: 50%; font-size: 2rem; cursor: pointer;
-                box-shadow: 0 10px 30px rgba(255, 15, 123, 0.4); transition: 0.3s;
-                display: flex; justify-content: center; align-items: center;
-            }}
+            .end-call-btn {{ position: absolute; bottom: 50px; background: var(--danger); color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 2rem; cursor: pointer; box-shadow: 0 10px 30px rgba(255, 15, 123, 0.4); transition: 0.3s; display: flex; justify-content: center; align-items: center; }}
             .end-call-btn:active {{ transform: scale(0.9); }}
 
-            /* Animations */
             @keyframes breathe {{ 0% {{ transform: scale(1); box-shadow: 0 0 30px rgba(0,243,255,0.5); }} 100% {{ transform: scale(1.15); box-shadow: 0 0 60px rgba(0,243,255,1); }} }}
             @keyframes spinOrb {{ 0% {{ transform: rotate(0deg) scale(1.1); }} 100% {{ transform: rotate(360deg) scale(1.1); }} }}
             @keyframes glowPulse {{ 0% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
@@ -288,7 +207,6 @@ def home():
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
             .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
             
-            /* PREVIEW MODAL */
             #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
             .preview-box {{ width: 90%; height: 85%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }}
             .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
@@ -300,14 +218,9 @@ def home():
 
         <div id="voice-overlay">
             <div class="voice-header"><i class="fas fa-bolt"></i> {APP_NAME} Voice</div>
-            
-            <div class="ai-orb-container">
-                <div id="ai-orb" class="ai-orb orb-listening"></div>
-            </div>
-            
-            <div id="voice-status" class="voice-status">Listening...</div>
-            <div id="voice-transcript" class="voice-transcript">Speak now...</div>
-            
+            <div class="ai-orb-container"><div id="ai-orb" class="ai-orb orb-listening"></div></div>
+            <div id="voice-status" class="voice-status">Connecting...</div>
+            <div id="voice-transcript" class="voice-transcript">Please wait...</div>
             <button class="end-call-btn" onclick="stopVoiceCall()"><i class="fas fa-phone-slash"></i></button>
         </div>
 
@@ -370,7 +283,6 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
                 </div>
-
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
                 <div id="about-info" class="about-section">
                     <strong style="font-size:1.2rem; display:block; margin-bottom:5px; color:var(--text);">{APP_NAME}</strong>
@@ -416,7 +328,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v28_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v28_1_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
@@ -466,40 +378,26 @@ def home():
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
             
-            // MODAL LOGIC RESTORED
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v28_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v28_1_history'); location.reload(); }}
 
-            // ADMIN LOGIC RESTORED
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value;
                 const errorMsg = document.getElementById('admin-error-msg');
                 if(pass === '{ADMIN_PASSWORD}') {{
-                    errorMsg.style.display = 'none';
-                    closeModal('admin-auth-modal');
-                    openModal('admin-panel-modal');
-                    document.getElementById('admin-pass').value = '';
+                    errorMsg.style.display = 'none'; closeModal('admin-auth-modal'); openModal('admin-panel-modal'); document.getElementById('admin-pass').value = '';
                     try {{
-                        const res = await fetch('/admin/stats');
-                        const data = await res.json();
-                        document.getElementById('stat-uptime').innerText = data.uptime;
-                        document.getElementById('stat-msgs').innerText = data.total_messages;
+                        const res = await fetch('/admin/stats'); const data = await res.json();
+                        document.getElementById('stat-uptime').innerText = data.uptime; document.getElementById('stat-msgs').innerText = data.total_messages;
                         updateSysBtn(data.active);
                     }} catch(e) {{ alert('Error fetching stats'); }}
-                }} else {{
-                    errorMsg.style.display = 'block';
-                }}
+                }} else {{ errorMsg.style.display = 'block'; }}
             }}
 
             async function toggleSystem() {{
-                try {{
-                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
-                    const data = await res.json();
-                    updateSysBtn(data.active);
-                }} catch(e) {{ alert('Error toggling system'); }}
+                try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }}
             }}
-
             function updateSysBtn(isActive) {{
                 const btn = document.getElementById('btn-toggle-sys');
                 if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} 
@@ -508,8 +406,7 @@ def home():
 
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 4);
-                let html = '';
+                const selected = shuffled.slice(0, 4); let html = '';
                 selected.forEach(s => {{ 
                     if(s.text.includes("voice call")) html += '<div class="chip" onclick="startVoiceCall()"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                     else html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
@@ -518,14 +415,13 @@ def home():
             }}
 
             function startNewChat() {{
-                currentChatId = Date.now();
-                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
+                currentChatId = Date.now(); chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
                 saveData(); renderHistory(); renderSuggestions();
                 chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v28_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v28_1_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -582,7 +478,7 @@ def home():
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             // ==========================================
-            // 🔥 REAL-TIME VOICE SYSTEM LOGIC 🔥
+            // 🔥 FIXED: ERROR-DETECTING VOICE SYSTEM 🔥
             // ==========================================
             let isVoiceMode = false;
             let speechRecognition;
@@ -592,12 +488,12 @@ def home():
             const vStatus = document.getElementById('voice-status');
             const vTranscript = document.getElementById('voice-transcript');
 
-            // Set up Speech Recognition
             const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
             if (SpeechRec) {{
                 speechRecognition = new SpeechRec();
-                speechRecognition.continuous = false; // Important for mobile
+                speechRecognition.continuous = false; 
                 speechRecognition.interimResults = true;
+                speechRecognition.lang = window.navigator.language || 'en-US'; // Adapts to phone language
                 
                 speechRecognition.onstart = () => {{
                     if(!isVoiceMode) return;
@@ -615,40 +511,66 @@ def home():
                     vTranscript.innerText = finalTranscript || interimTranscript;
                     
                     if (finalTranscript !== '') {{
-                        // Stop listening to process input
                         speechRecognition.stop();
                         processVoiceInput(finalTranscript);
                     }}
                 }};
 
                 speechRecognition.onerror = (event) => {{
-                    console.log("Speech error:", event.error);
-                    if(isVoiceMode && event.error !== 'no-speech') {{
-                        setTimeout(() => {{ if(isVoiceMode) try {{ speechRecognition.start(); }} catch(e) {{}} }}, 1000);
+                    console.log("Speech Error Captured:", event.error);
+                    
+                    if(event.error === 'not-allowed') {{
+                        // 🔥 MIC PERMISSION BLOCKED 🔥
+                        setOrbState('error', 'Mic Blocked!', 'Please allow microphone access in your browser settings (Site Settings).');
+                        isVoiceMode = false;
+                    }} else if (event.error === 'network') {{
+                        setOrbState('error', 'Network Error', 'Please check your internet connection.');
+                        isVoiceMode = false;
+                    }} else if (event.error === 'no-speech') {{
+                        // Just silence, restart silently
+                        if(isVoiceMode) setTimeout(() => {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}, 500);
+                    }} else {{
+                        // Other errors
+                        setOrbState('error', 'Error', 'Something went wrong. Try again.');
+                        if(isVoiceMode) setTimeout(() => {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}, 1500);
                     }}
                 }};
                 
                 speechRecognition.onend = () => {{
-                    // Auto-restart if we are still in voice mode, not speaking, and not thinking
-                    if(isVoiceMode && !synth.speaking && vStatus.innerText !== 'Thinking...') {{
+                    if(isVoiceMode && !synth.speaking && vStatus.innerText !== 'Thinking...' && vStatus.innerText !== 'Mic Blocked!' && vStatus.innerText !== 'Network Error') {{
                         try {{ speechRecognition.start(); }} catch(e) {{}}
                     }}
                 }};
             }} else {{
-                console.warn("Speech Recognition not supported.");
+                console.warn("Speech API Not Supported");
+            }}
+
+            function isFacebookBrowser() {{
+                const ua = navigator.userAgent || navigator.vendor || window.opera;
+                return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1);
             }}
 
             function startVoiceCall() {{
-                if(!speechRecognition) return alert("Your browser doesn't support Voice Call. Try Chrome on Android.");
+                if(isFacebookBrowser()) {{
+                    alert("⚠️ You are using the Facebook/Messenger browser which BLOCKS microphones. Please click the 3 dots (...) in the corner and select 'Open in Chrome'.");
+                    return;
+                }}
+                
+                if(!speechRecognition) {{
+                    alert("⚠️ Your browser does not support Voice Call. Please use Google Chrome on Android.");
+                    return;
+                }}
+
                 if(!currentChatId) startNewChat();
                 
-                // 🔥 CRITICAL FIX FOR MOBILE AUDIO: Unlock TTS by playing silent audio on click 🔥
+                // 🔥 CRITICAL MOBILE FIX: Force audio context unlock 🔥
                 synth.cancel();
-                let unlockAudio = new SpeechSynthesisUtterance('');
-                synth.speak(unlockAudio);
+                let unlock = new SpeechSynthesisUtterance('');
+                synth.speak(unlock);
                 
                 isVoiceMode = true;
                 voiceOverlay.style.display = 'flex';
+                setOrbState('listening', 'Connecting...', 'Requesting Mic Access...');
                 
                 try {{ speechRecognition.start(); }} catch(e) {{}}
             }}
@@ -672,13 +594,11 @@ def home():
                 await sendMessage(text, true); 
             }}
 
-            // Text-to-Speech Output
             function speakResponse(text) {{
                 if(!isVoiceMode) return;
                 
-                // Clean markdown so the robot doesn't read out symbols
+                // Clean markdown for reading
                 const cleanText = text.replace(/[*#_`~]/g, '');
-                
                 const utterance = new SpeechSynthesisUtterance(cleanText);
                 
                 utterance.onstart = () => {{
@@ -686,10 +606,7 @@ def home():
                 }};
                 
                 utterance.onend = () => {{
-                    // When finished speaking, start listening again!
-                    if(isVoiceMode) {{
-                        try {{ speechRecognition.start(); }} catch(e) {{}}
-                    }}
+                    if(isVoiceMode) {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}
                 }};
                 
                 utterance.onerror = (e) => {{
@@ -700,9 +617,6 @@ def home():
                 synth.speak(utterance);
             }}
 
-            // ==========================================
-            // 🔥 MAIN CHAT FUNCTION 🔥
-            // ==========================================
             async function sendMessage(overrideText = null, isFromVoice = false) {{
                 const text = overrideText || msgInput.value.trim();
                 if(!text) return;
@@ -718,13 +632,9 @@ def home():
                 if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
                 saveData();
                 
-                if(!isFromVoice) {{
-                    msgInput.value = ''; appendBubble(text, true);
-                }} else {{
-                    appendBubble(text, true); // Keep record in background chat
-                }}
+                if(!isFromVoice) {{ msgInput.value = ''; appendBubble(text, true); }} 
+                else {{ appendBubble(text, true); }}
 
-                // Check for Name
                 if(!userName && !awaitingName) {{
                     awaitingName = true;
                     let askName = "Hello! I am Flux AI. What should I call you?";
@@ -770,13 +680,9 @@ def home():
                     }}
                     
                     chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData();
-                    hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubbleDiv);
+                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubbleDiv);
 
-                    // If speaking on voice, trigger audio
-                    if(isVoiceMode && isFromVoice) {{
-                        speakResponse(botResp);
-                    }}
+                    if(isVoiceMode && isFromVoice) {{ speakResponse(botResp); }}
 
                 }} catch(e) {{
                     if(!isFromVoice) removeTyping();
@@ -791,14 +697,9 @@ def home():
     </html>
     """
 
-# 🛡️ ADMIN API ROUTES
 @app.route("/admin/stats")
 def admin_stats():
-    return jsonify({
-        "uptime": get_uptime(),
-        "total_messages": TOTAL_MESSAGES,
-        "active": SYSTEM_ACTIVE
-    })
+    return jsonify({"uptime": get_uptime(), "total_messages": TOTAL_MESSAGES, "active": SYSTEM_ACTIVE})
 
 @app.route("/admin/toggle_system", methods=["POST"])
 def toggle_system():
@@ -825,14 +726,14 @@ def chat():
     ctx = get_current_context()
     
     sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent, creative AI assistant.
+    You are {APP_NAME}, a highly intelligent AI assistant.
     Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
     Current User: {user_name}.
     Time: {ctx['time_utc']} UTC.
     
     RULES:
     1. CONCISE & SMART. Avoid unnecessary greetings.
-    2. VOICE CONVERSATION AWARE: If the prompt looks like conversational speech, keep your responses conversational and natural to read aloud. Keep it relatively short.
+    2. VOICE AWARE: If the user seems to be talking to you conversationally, keep responses relatively short and easy to read aloud.
     3. CODING: Provide full code in markdown blocks.
     """
 
