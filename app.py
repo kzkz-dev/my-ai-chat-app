@@ -5,16 +5,17 @@ import time
 from datetime import datetime, timedelta
 import pytz
 import json
+import random
+import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 28.2.0) 🧠
-# 🔥 FIXED: MOBILE VOICE, PERMISSIONS & IN-APP BROWSER BUGS 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 27.2.0) 🧠
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "28.2.0"
+VERSION = "27.2.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -55,6 +56,7 @@ def get_current_context():
         "date": now_dhaka.strftime("%d %B, %Y")
     }
 
+# 🧮 MATH ENGINE
 def solve_math_problem(text):
     try:
         clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
@@ -68,11 +70,14 @@ def solve_math_problem(text):
     except: return None
 
 SUGGESTION_POOL = [
-    {"icon": "fas fa-microphone", "text": "Start a voice call with me"},
     {"icon": "fas fa-code", "text": "Create a login page in HTML"},
     {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
+    {"icon": "fas fa-dumbbell", "text": "30-minute home workout"},
+    {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"},
     {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"},
     {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
+    {"icon": "fas fa-laptop-code", "text": "Python calculator code"},
+    {"icon": "fas fa-paint-brush", "text": "Generate a cyberpunk image"},
     {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"}
 ]
 
@@ -95,55 +100,137 @@ def home():
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
 
         <style>
-            :root {{ --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%); --glass-bg: rgba(20, 20, 35, 0.65); --sidebar-bg: rgba(15, 15, 30, 0.95); --glass-border: rgba(255, 255, 255, 0.08); --text: #e0e6ed; --text-secondary: #94a3b8; --accent: #00f3ff; --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5); --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%); --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%); --danger: #ff0f7b; --success: #00ff87; }}
-            body.light {{ --bg-gradient: #f8fafc; --glass-bg: #ffffff; --sidebar-bg: #ffffff; --text: #1e293b; --text-secondary: #64748b; --glass-border: #e2e8f0; --accent: #2563eb; --bot-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); --user-grad: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%); }}
-            * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; transition: background 0.3s ease; }}
-            #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
+            :root {{
+                --bg-gradient: radial-gradient(circle at 10% 20%, rgb(10, 10, 25) 0%, rgb(5, 5, 10) 90%);
+                --glass-bg: rgba(20, 20, 35, 0.65);
+                --sidebar-bg: rgba(15, 15, 30, 0.95);
+                --glass-border: rgba(255, 255, 255, 0.08);
+                --text: #e0e6ed;
+                --text-secondary: #94a3b8;
+                --accent: #00f3ff;
+                --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
+                --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
+                --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
+                --danger: #ff0f7b;
+                --success: #00ff87;
+            }}
 
-            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
+            body.light {{
+                --bg-gradient: #f8fafc;
+                --glass-bg: #ffffff;
+                --sidebar-bg: #ffffff;
+                --text: #1e293b;
+                --text-secondary: #64748b;
+                --glass-border: #e2e8f0;
+                --accent: #2563eb;
+                --bot-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
+                --user-grad: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
+            }}
+
+            * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
+            body {{ 
+                margin: 0; background: var(--bg-gradient); color: var(--text); 
+                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
+                height: 100vh; display: flex; overflow: hidden; 
+                transition: background 0.3s ease;
+            }}
+
+            /* 🌌 NEURAL BRAIN BACKGROUND */
+            #neuro-bg {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                z-index: -1; pointer-events: none; opacity: 0.3;
+            }}
+
+            .glass {{
+                background: var(--glass-bg); backdrop-filter: blur(16px);
+                -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border);
+            }}
+
+            /* SIDEBAR FIXED FOR DARK/LIGHT */
+            #sidebar {{
+                width: 280px; height: 100%; display: flex; flex-direction: column;
+                padding: 20px; border-right: 1px solid var(--glass-border);
+                transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease;
+                position: absolute; z-index: 200; left: 0; top: 0; 
+                box-shadow: 10px 0 30px rgba(0,0,0,0.3);
+                background: var(--sidebar-bg);
+            }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
-            .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); text-shadow: var(--accent-glow); }}
+            
+            .brand {{ 
+                font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; 
+                display: flex; align-items: center; gap: 12px; color: var(--text); 
+                text-shadow: var(--accent-glow);
+            }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.3s ease; }}
+            
+            .new-chat-btn {{
+                width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); 
+                color: var(--text); border: 1px solid var(--glass-border);
+                border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px;
+                margin-bottom: 20px; transition: all 0.3s ease;
+            }}
+            .new-chat-btn:active {{ transform: scale(0.97); }}
+
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
-            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
+            .history-item {{
+                padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); 
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem;
+                transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500;
+            }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
+
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.3s; }}
+            
+            /* ABOUT SECTION */
+            .about-section {{ 
+                display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px;
+                margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border);
+                animation: fadeIn 0.3s;
+            }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
+
+            /* DARK/LIGHT TOGGLE */
             .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
             .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
 
-            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
-            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); }}
-            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
-            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
-            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
-            .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
-            .btn-delete {{ background: var(--danger); color: white; }}
-            .btn-confirm {{ background: var(--success); color: black; }}
-
-            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
+            header {{
+                height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px;
+                background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px);
+                border-bottom: 1px solid var(--glass-border); 
+                position: absolute; top: 0; left: 0; right: 0; z-index: 100;
+            }}
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
-            
-            .call-btn {{ background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); color: var(--accent); border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: 0.3s; animation: pulseCall 2s infinite; }}
-            .call-btn:hover {{ background: var(--accent); color: black; }}
-            @keyframes pulseCall {{ 0% {{ box-shadow: 0 0 0 0 rgba(0, 243, 255, 0.4); }} 70% {{ box-shadow: 0 0 0 10px rgba(0, 243, 255, 0); }} 100% {{ box-shadow: 0 0 0 0 rgba(0, 243, 255, 0); }} }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
-            .icon-wrapper {{ width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
+            /* WELCOME SCREEN - LOGO HEIGHT FIXED */
+            .welcome-container {{
+                display: flex; flex-direction: column; align-items: center; justify-content: center;
+                height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px;
+            }}
+            .icon-wrapper {{ 
+                width: 90px; height: 90px; background: rgba(255,255,255,0.03);
+                border: 1px solid var(--glass-border); border-radius: 25px; 
+                display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; 
+                margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15);
+                animation: levitate 4s ease-in-out infinite;
+            }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1rem; max-width: 80%; line-height: 1.5; }}
+
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
-            .chip {{ padding: 16px 20px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 18px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
+            .chip {{
+                padding: 16px 20px; background: rgba(125, 125, 125, 0.05); 
+                border: 1px solid var(--glass-border); border-radius: 18px;
+                cursor: pointer; text-align: left; color: var(--text-secondary); 
+                transition: all 0.3s; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px;
+            }}
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
             .chip i {{ color: var(--accent); font-size: 1.1rem; opacity: 0.9; }}
 
@@ -152,77 +239,120 @@ def home():
             .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
+            
             .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; }}
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
+
             .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; }}
             .bot .bubble {{ background: transparent; padding: 0; width: 100%; color: var(--text); }}
             .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
+            
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
             body.light .bubble strong {{ color: #2563eb; }}
+            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; border: 1px solid var(--glass-border); }}
 
+            /* CODE & COPY BUTTON */
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
-            .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }}
+            .copy-btn {{
+                position: absolute; top: 8px; right: 8px;
+                background: rgba(255,255,255,0.15); color: white; border: none;
+                padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem;
+            }}
             .copy-btn:hover {{ background: var(--accent); }}
-            .run-code-btn {{ display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent); border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; font-size: 0.9rem; }}
+
+            /* LIVE PREVIEW BUTTON */
+            .run-code-btn {{
+                display: inline-flex; align-items: center; gap: 8px; margin-top: 12px;
+                padding: 8px 14px; background: rgba(125,125,125,0.1); color: var(--accent);
+                border: 1px solid var(--accent); border-radius: 8px; font-weight: 600; cursor: pointer;
+                transition: 0.3s; font-size: 0.9rem;
+            }}
             .run-code-btn:hover {{ background: var(--accent); color: black; }}
 
-            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; }}
-            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
+            #input-area {{
+                position: absolute; bottom: 0; left: 0; right: 0; padding: 20px;
+                background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); 
+                display: flex; justify-content: center; z-index: 50;
+            }}
+            .input-box {{
+                width: 100%; max-width: 850px; display: flex; align-items: flex-end; 
+                background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px;
+                border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+                backdrop-filter: blur(20px); transition: all 0.3s ease;
+            }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
-            textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; }}
-            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; }}
+            textarea {{
+                flex: 1; background: transparent; border: none; outline: none;
+                color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit;
+            }}
+            .send-btn {{
+                background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px;
+                border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px;
+                display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s;
+            }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
-            /* 🔥 VOICE CALL OVERLAY SCREEN 🔥 */
-            #voice-overlay {{ position: fixed; inset: 0; background: rgba(10, 10, 25, 0.98); backdrop-filter: blur(20px); z-index: 10000; display: none; flex-direction: column; align-items: center; justify-content: center; color: white; font-family: 'Outfit', sans-serif; }}
-            .voice-header {{ position: absolute; top: 30px; font-size: 1.5rem; font-weight: 700; display: flex; align-items: center; gap: 10px; }}
-            .voice-header i {{ color: var(--accent); }}
-            .ai-orb-container {{ position: relative; width: 200px; height: 200px; display: flex; justify-content: center; align-items: center; margin-bottom: 50px; }}
-            .ai-orb {{ width: 120px; height: 120px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), #bc13fe); box-shadow: 0 0 50px rgba(0, 243, 255, 0.8), inset 0 0 20px rgba(255,255,255,0.5); transition: all 0.3s ease; }}
-            
-            .orb-listening {{ animation: breathe 1.5s infinite alternate; }}
-            .orb-thinking {{ animation: spinOrb 2s linear infinite, glowPulse 1s infinite alternate; background: linear-gradient(135deg, #facc15, #fb923c); box-shadow: 0 0 50px rgba(250, 204, 21, 0.8); }}
-            .orb-speaking {{ animation: talkBounce 0.3s infinite alternate; box-shadow: 0 0 80px rgba(0, 243, 255, 1); }}
-            .orb-error {{ background: var(--danger); box-shadow: 0 0 50px rgba(255, 15, 123, 0.8); animation: none; }}
+            /* ENERGY TRAIL ANIMATION */
+            .energy-ball {{
+                position: fixed; width: 18px; height: 18px; background: var(--accent);
+                border-radius: 50%; pointer-events: none; z-index: 9999;
+                box-shadow: 0 0 15px var(--accent), 0 0 30px white;
+                animation: shootUp 0.6s ease-in-out forwards;
+            }}
 
-            .voice-status {{ font-size: 1.5rem; font-weight: 300; margin-bottom: 10px; letter-spacing: 2px; text-transform: uppercase; color: var(--text-secondary); text-align:center; }}
-            .voice-transcript {{ font-size: 1.2rem; max-width: 85%; text-align: center; color: white; opacity: 0.9; min-height: 80px; line-height: 1.5; }}
-            
-            .end-call-btn {{ position: absolute; bottom: 50px; background: var(--danger); color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 2rem; cursor: pointer; box-shadow: 0 10px 30px rgba(255, 15, 123, 0.4); transition: 0.3s; display: flex; justify-content: center; align-items: center; }}
-            .end-call-btn:active {{ transform: scale(0.9); }}
+            /* PREVIEW MODAL */
+            #preview-modal {{
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center;
+                backdrop-filter: blur(8px);
+            }}
+            .preview-box {{
+                width: 90%; height: 85%; background: white; border-radius: 16px; overflow: hidden;
+                display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            }}
+            .preview-header {{
+                padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb;
+                display: flex; justify-content: space-between; align-items: center;
+            }}
+            iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
-            @keyframes breathe {{ 0% {{ transform: scale(1); box-shadow: 0 0 30px rgba(0,243,255,0.5); }} 100% {{ transform: scale(1.15); box-shadow: 0 0 60px rgba(0,243,255,1); }} }}
-            @keyframes spinOrb {{ 0% {{ transform: rotate(0deg) scale(1.1); }} 100% {{ transform: rotate(360deg) scale(1.1); }} }}
-            @keyframes glowPulse {{ 0% {{ opacity: 0.8; }} 100% {{ opacity: 1; }} }}
-            @keyframes talkBounce {{ 0% {{ transform: scale(1.1); }} 100% {{ transform: scale(1.25); }} }}
+            /* MODALS */
+            .modal-overlay {{
+                position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; 
+                z-index: 9999; backdrop-filter: blur(8px);
+            }}
+            .modal-box {{
+                background: var(--sidebar-bg); border: 1px solid var(--glass-border); 
+                padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; 
+                text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text);
+            }}
+            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
+            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
+            
+            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
+            .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
+            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-confirm {{ background: var(--success); color: black; }}
+
             @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
             @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.95); }} to {{ opacity: 1; transform: scale(1); }} }}
+            @keyframes shootUp {{ 0% {{ bottom: 80px; left: 50%; opacity: 1; transform: scale(1); }} 100% {{ bottom: 70%; left: 50%; opacity: 0; transform: scale(0.2); }} }}
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
             
-            #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
-            .preview-box {{ width: 90%; height: 85%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }}
-            .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
-            iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
+            /* Sidebar Overlay */
+            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
         </style>
     </head>
     <body class="dark">
         <canvas id="neuro-bg"></canvas>
-
-        <div id="voice-overlay">
-            <div class="voice-header"><i class="fas fa-bolt"></i> {APP_NAME} Voice</div>
-            <div class="ai-orb-container"><div id="ai-orb" class="ai-orb orb-listening"></div></div>
-            <div id="voice-status" class="voice-status">Connecting...</div>
-            <div id="voice-transcript" class="voice-transcript">Please wait...</div>
-            <button class="end-call-btn" onclick="stopVoiceCall()"><i class="fas fa-phone-slash"></i></button>
-        </div>
 
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
@@ -230,7 +360,7 @@ def home():
                 <div class="modal-desc">This will permanently delete all your conversations.</div>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal('delete-modal')">Cancel</button>
-                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete</button>
+                    <button class="btn-modal btn-delete" onclick="confirmDelete()">Delete All</button>
                 </div>
             </div>
         </div>
@@ -274,7 +404,9 @@ def home():
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
-            <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> New Chat</button>
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
             <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px; opacity:0.8;">RECENT</div>
             <div class="history-list" id="history-list"></div>
             
@@ -283,6 +415,7 @@ def home():
                     <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
                     <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
                 </div>
+
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
                 <div id="about-info" class="about-section">
                     <strong style="font-size:1.2rem; display:block; margin-bottom:5px; color:var(--text);">{APP_NAME}</strong>
@@ -292,8 +425,9 @@ def home():
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
+                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026 All Rights Reserved by {OWNER_NAME}</small>
                 </div>
-                <div class="history-item" onclick="openModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
+                <div class="history-item" onclick="openDeleteModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
         </div>
 
@@ -301,17 +435,14 @@ def home():
             <header>
                 <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
                 <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, var(--text), var(--text-secondary)); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
-                <div style="display:flex; gap:10px;">
-                    <button onclick="startVoiceCall()" class="call-btn" title="Voice Call"><i class="fas fa-phone-volume"></i></button>
-                    <button onclick="startNewChat()" style="background:none; border:none; color:var(--text-secondary); font-size:1.4rem; cursor:pointer; padding: 8px;" title="New Chat"><i class="fas fa-pen-to-square"></i></button>
-                </div>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Your intelligent AI companion. Try the new Voice Call feature!</div>
+                    <div class="welcome-subtitle">Your intelligent AI companion ready to explore the future.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
@@ -328,7 +459,8 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v28_1_history')) || [];
+            
+            let chats = JSON.parse(localStorage.getItem('flux_v27_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
@@ -337,34 +469,55 @@ def home():
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
+            const deleteModal = document.getElementById('delete-modal');
             const overlay = document.querySelector('.overlay');
 
             renderHistory();
             renderSuggestions(); 
 
-            // 🧠 NEURAL BACKGROUND
+            // 🧠 1. NEURAL BACKGROUND ANIMATION (BRAIN EFFECT)
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
+            
             function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
-            window.addEventListener('resize', resizeCanvas); resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
 
             class Particle {{
-                constructor() {{ this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5; this.size = Math.random() * 2; }}
-                update() {{ this.x += this.vx; this.y += this.vy; if(this.x < 0 || this.x > canvas.width) this.vx *= -1; if(this.y < 0 || this.y > canvas.height) this.vy *= -1; }}
-                draw() {{ ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent'); ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }}
+                constructor() {{
+                    this.x = Math.random() * canvas.width;
+                    this.y = Math.random() * canvas.height;
+                    this.vx = (Math.random() - 0.5) * 0.5;
+                    this.vy = (Math.random() - 0.5) * 0.5;
+                    this.size = Math.random() * 2;
+                }}
+                update() {{
+                    this.x += this.vx; this.y += this.vy;
+                    if(this.x < 0 || this.x > canvas.width) this.vx *= -1;
+                    if(this.y < 0 || this.y > canvas.height) this.vy *= -1;
+                }}
+                draw() {{
+                    ctx.fillStyle = getComputedStyle(document.body).getPropertyValue('--accent');
+                    ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill();
+                }}
             }}
+
             for(let i=0; i<60; i++) particles.push(new Particle());
+
             function animateBg() {{
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 particles.forEach((p, index) => {{
                     p.update(); p.draw();
                     for(let j=index; j<particles.length; j++) {{
-                        const dx = p.x - particles[j].x; const dy = p.y - particles[j].y; const dist = Math.sqrt(dx*dx + dy*dy);
+                        const dx = p.x - particles[j].x;
+                        const dy = p.y - particles[j].y;
+                        const dist = Math.sqrt(dx*dx + dy*dy);
                         if(dist < 100) {{
                             const accentColor = getComputedStyle(document.body).getPropertyValue('--accent');
                             ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')');
-                            ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
+                            ctx.lineWidth = 0.5;
+                            ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
                         }}
                     }}
                 }});
@@ -372,258 +525,167 @@ def home():
             }}
             animateBg();
 
-            // THEME & UI
-            function setTheme(mode) {{ document.body.className = mode; document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn'; document.getElementById('btn-light').className = mode==='light'?'theme-btn active':'theme-btn'; }}
+            // THEME TOGGLE
+            function setTheme(mode) {{
+                document.body.className = mode;
+                document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn';
+                document.getElementById('btn-light').className = mode==='light'?'theme-btn active':'theme-btn';
+            }}
+
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
-            function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
             
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
-            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v28_1_history'); location.reload(); }}
-
-            async function verifyAdmin() {{
-                const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
-                if(pass === '{ADMIN_PASSWORD}') {{
-                    errorMsg.style.display = 'none'; closeModal('admin-auth-modal'); openModal('admin-panel-modal'); document.getElementById('admin-pass').value = '';
-                    try {{
-                        const res = await fetch('/admin/stats'); const data = await res.json();
-                        document.getElementById('stat-uptime').innerText = data.uptime; document.getElementById('stat-msgs').innerText = data.total_messages;
-                        updateSysBtn(data.active);
-                    }} catch(e) {{ alert('Error fetching stats'); }}
-                }} else {{ errorMsg.style.display = 'block'; }}
-            }}
-
-            async function toggleSystem() {{
-                try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-            function updateSysBtn(isActive) {{
-                const btn = document.getElementById('btn-toggle-sys');
-                if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} 
-                else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }}
+            // SIDEBAR LOGIC (Overlay Close)
+            function toggleSidebar() {{ 
+                sidebar.classList.toggle('closed'); 
+                overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; 
             }}
 
             function renderSuggestions() {{
                 const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 4); let html = '';
-                selected.forEach(s => {{ 
-                    if(s.text.includes("voice call")) html += '<div class="chip" onclick="startVoiceCall()"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
-                    else html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
+                const selected = shuffled.slice(0, 4);
+                let html = '';
+                selected.forEach(s => {{
+                    html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>';
                 }});
                 document.getElementById('suggestion-box').innerHTML = html;
             }}
 
             function startNewChat() {{
-                currentChatId = Date.now(); chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
-                saveData(); renderHistory(); renderSuggestions();
-                chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
-                sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
+                currentChatId = Date.now();
+                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
+                saveData();
+                renderHistory();
+                renderSuggestions();
+                
+                chatBox.innerHTML = '';
+                chatBox.appendChild(welcomeScreen);
+                welcomeScreen.style.display = 'flex';
+                
+                sidebar.classList.add('closed');
+                overlay.style.display = 'none';
+                msgInput.value = '';
+                resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v28_1_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v27_2_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
-                const list = document.getElementById('history-list'); list.innerHTML = '';
+                const list = document.getElementById('history-list');
+                list.innerHTML = '';
                 chats.forEach(chat => {{
-                    const div = document.createElement('div'); div.className = 'history-item';
+                    const div = document.createElement('div');
+                    div.className = 'history-item';
                     div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
-                    div.onclick = () => loadChat(chat.id); list.appendChild(div);
+                    div.onclick = () => loadChat(chat.id);
+                    list.appendChild(div);
                 }});
             }}
 
             function loadChat(id) {{
-                currentChatId = id; const chat = chats.find(c => c.id === id); if(!chat) return;
-                chatBox.innerHTML = ''; welcomeScreen.style.display = 'none'; 
-                if (chat.messages.length === 0) {{ chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex'; }} 
-                else {{ chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false)); }}
-                sidebar.classList.add('closed'); overlay.style.display = 'none';
+                currentChatId = id;
+                const chat = chats.find(c => c.id === id);
+                if(!chat) return;
+                
+                chatBox.innerHTML = '';
+                welcomeScreen.style.display = 'none'; 
+                
+                if (chat.messages.length === 0) {{
+                     chatBox.appendChild(welcomeScreen);
+                     welcomeScreen.style.display = 'flex';
+                }} else {{
+                    chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false));
+                }}
+                
+                sidebar.classList.add('closed');
+                overlay.style.display = 'none';
                 setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
             }}
 
             function addCopyButtons() {{
                 document.querySelectorAll('pre').forEach(pre => {{
                     if (pre.querySelector('.copy-btn')) return;
-                    const btn = document.createElement('button'); btn.className = 'copy-btn'; btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                    btn.onclick = () => {{ navigator.clipboard.writeText(pre.querySelector('code').innerText); btn.innerHTML = '<i class="fas fa-check"></i> Copied'; setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy', 2000); }};
+                    const btn = document.createElement('button');
+                    btn.className = 'copy-btn';
+                    btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
+                    btn.onclick = () => {{
+                        const code = pre.querySelector('code').innerText;
+                        navigator.clipboard.writeText(code);
+                        btn.innerHTML = '<i class="fas fa-check"></i> Copied';
+                        setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy', 2000);
+                    }};
                     pre.appendChild(btn);
                 }});
             }}
 
             function checkForCode(text, bubble) {{
                 if(text.includes('```html')) {{
-                    const btn = document.createElement('button'); btn.className = 'run-code-btn'; btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
-                    btn.onclick = () => {{ document.getElementById('preview-modal').style.display = 'flex'; document.getElementById('code-frame').srcdoc = text.match(/```html([\\s\\S]*?)```/)[1]; }};
+                    const btn = document.createElement('button');
+                    btn.className = 'run-code-btn';
+                    btn.innerHTML = '<i class="fas fa-play"></i> Run Code';
+                    btn.onclick = () => {{
+                        const code = text.match(/```html([\\s\\S]*?)```/)[1];
+                        document.getElementById('preview-modal').style.display = 'flex';
+                        document.getElementById('code-frame').srcdoc = code;
+                    }};
                     bubble.appendChild(btn);
                 }}
             }}
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
+            function playSentAnimation() {{
+                const ball = document.createElement('div');
+                ball.className = 'energy-ball';
+                ball.style.left = '50%';
+                document.body.appendChild(ball);
+                setTimeout(() => ball.remove(), 500);
+            }}
+
             function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                wrapper.innerHTML = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div><div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
+                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
+                const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
+                wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble"></div></div>`;
                 chatBox.appendChild(wrapper);
-                const bubble = wrapper.querySelector('.bubble'); bubble.innerHTML = marked.parse(text);
-                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForCode(text, bubble); }}
+                
+                const bubble = wrapper.querySelector('.bubble');
+                bubble.innerHTML = marked.parse(text);
+                
+                if(!isUser) {{
+                    hljs.highlightAll();
+                    addCopyButtons();
+                    checkForCode(text, bubble);
+                }}
+                
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
             function showTyping() {{
-                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
+                const wrapper = document.createElement('div');
+                wrapper.id = 'typing-indicator';
+                wrapper.className = 'message-wrapper bot';
                 wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding-left:0;"><div class="typing"><span class="dot"></span><span class="dot"></span><span class="dot"></span></div></div></div>`;
-                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+                chatBox.appendChild(wrapper);
+                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
+
             function removeTyping() {{ document.getElementById('typing-indicator')?.remove(); }}
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
-            // ==========================================
-            // 🔥 FIXED: ERROR-DETECTING VOICE SYSTEM 🔥
-            // ==========================================
-            let isVoiceMode = false;
-            let speechRecognition;
-            let synth = window.speechSynthesis;
-            const voiceOverlay = document.getElementById('voice-overlay');
-            const aiOrb = document.getElementById('ai-orb');
-            const vStatus = document.getElementById('voice-status');
-            const vTranscript = document.getElementById('voice-transcript');
+            async function sendMessage() {{
+                const text = msgInput.value.trim();
+                if(!text) return;
 
-            const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
-            if (SpeechRec) {{
-                speechRecognition = new SpeechRec();
-                speechRecognition.continuous = false; 
-                speechRecognition.interimResults = true;
-                speechRecognition.lang = window.navigator.language || 'en-US'; // Adapts to phone language
-                
-                speechRecognition.onstart = () => {{
-                    if(!isVoiceMode) return;
-                    setOrbState('listening', 'Listening...', 'Speak now...');
-                }};
-
-                speechRecognition.onresult = (event) => {{
-                    if(!isVoiceMode) return;
-                    let interimTranscript = '';
-                    let finalTranscript = '';
-                    for (let i = event.resultIndex; i < event.results.length; ++i) {{
-                        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;
-                        else interimTranscript += event.results[i][0].transcript;
-                    }}
-                    vTranscript.innerText = finalTranscript || interimTranscript;
-                    
-                    if (finalTranscript !== '') {{
-                        speechRecognition.stop();
-                        processVoiceInput(finalTranscript);
-                    }}
-                }};
-
-                speechRecognition.onerror = (event) => {{
-                    console.log("Speech Error Captured:", event.error);
-                    
-                    if(event.error === 'not-allowed') {{
-                        // 🔥 MIC PERMISSION BLOCKED 🔥
-                        setOrbState('error', 'Mic Blocked!', 'Please allow microphone access in your browser settings (Site Settings).');
-                        isVoiceMode = false;
-                    }} else if (event.error === 'network') {{
-                        setOrbState('error', 'Network Error', 'Please check your internet connection.');
-                        isVoiceMode = false;
-                    }} else if (event.error === 'no-speech') {{
-                        // Just silence, restart silently
-                        if(isVoiceMode) setTimeout(() => {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}, 500);
-                    }} else {{
-                        // Other errors
-                        setOrbState('error', 'Error', 'Something went wrong. Try again.');
-                        if(isVoiceMode) setTimeout(() => {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}, 1500);
-                    }}
-                }};
-                
-                speechRecognition.onend = () => {{
-                    if(isVoiceMode && !synth.speaking && vStatus.innerText !== 'Thinking...' && vStatus.innerText !== 'Mic Blocked!' && vStatus.innerText !== 'Network Error') {{
-                        try {{ speechRecognition.start(); }} catch(e) {{}}
-                    }}
-                }};
-            }} else {{
-                console.warn("Speech API Not Supported");
-            }}
-
-            function isFacebookBrowser() {{
-                const ua = navigator.userAgent || navigator.vendor || window.opera;
-                return (ua.indexOf("FBAN") > -1) || (ua.indexOf("FBAV") > -1) || (ua.indexOf("Instagram") > -1);
-            }}
-
-            function startVoiceCall() {{
-                if(isFacebookBrowser()) {{
-                    alert("⚠️ You are using the Facebook/Messenger browser which BLOCKS microphones. Please click the 3 dots (...) in the corner and select 'Open in Chrome'.");
-                    return;
-                }}
-                
-                if(!speechRecognition) {{
-                    alert("⚠️ Your browser does not support Voice Call. Please use Google Chrome on Android.");
+                if(text === '!admin') {{
+                    msgInput.value = '';
+                    openModal('admin-auth-modal');
+                    document.getElementById('admin-error-msg').style.display = 'none';
                     return;
                 }}
 
-                if(!currentChatId) startNewChat();
-                
-                // 🔥 CRITICAL MOBILE FIX: Force audio context unlock 🔥
-                synth.cancel();
-                let unlock = new SpeechSynthesisUtterance('');
-                synth.speak(unlock);
-                
-                isVoiceMode = true;
-                voiceOverlay.style.display = 'flex';
-                setOrbState('listening', 'Connecting...', 'Requesting Mic Access...');
-                
-                try {{ speechRecognition.start(); }} catch(e) {{}}
-            }}
-
-            function stopVoiceCall() {{
-                isVoiceMode = false;
-                voiceOverlay.style.display = 'none';
-                if(speechRecognition) speechRecognition.stop();
-                synth.cancel();
-            }}
-
-            function setOrbState(stateClass, statusText, transText) {{
-                aiOrb.className = 'ai-orb orb-' + stateClass;
-                vStatus.innerText = statusText;
-                if(transText) vTranscript.innerText = transText;
-            }}
-
-            async function processVoiceInput(text) {{
-                if(!text) return;
-                setOrbState('thinking', 'Thinking...', text);
-                await sendMessage(text, true); 
-            }}
-
-            function speakResponse(text) {{
-                if(!isVoiceMode) return;
-                
-                // Clean markdown for reading
-                const cleanText = text.replace(/[*#_`~]/g, '');
-                const utterance = new SpeechSynthesisUtterance(cleanText);
-                
-                utterance.onstart = () => {{
-                    if(isVoiceMode) setOrbState('speaking', 'Speaking...', cleanText.length > 60 ? cleanText.substring(0, 60) + "..." : cleanText);
-                }};
-                
-                utterance.onend = () => {{
-                    if(isVoiceMode) {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}
-                }};
-                
-                utterance.onerror = (e) => {{
-                    console.log("TTS Error: ", e);
-                    if(isVoiceMode) {{ try {{ speechRecognition.start(); }} catch(e) {{}} }}
-                }};
-
-                synth.speak(utterance);
-            }}
-
-            async function sendMessage(overrideText = null, isFromVoice = false) {{
-                const text = overrideText || msgInput.value.trim();
-                if(!text) return;
-
-                if(!isFromVoice && text === '!admin') {{
-                    msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return;
-                }}
+                playSentAnimation(); 
 
                 if(!currentChatId) startNewChat();
                 const chat = chats.find(c => c.id === currentChatId);
@@ -631,24 +693,28 @@ def home():
                 chat.messages.push({{ role: 'user', text: text }});
                 if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
                 saveData();
-                
-                if(!isFromVoice) {{ msgInput.value = ''; appendBubble(text, true); }} 
-                else {{ appendBubble(text, true); }}
+                msgInput.value = '';
+                appendBubble(text, true);
 
+                // NAME LOGIC
                 if(!userName && !awaitingName) {{
                     awaitingName = true;
-                    let askName = "Hello! I am Flux AI. What should I call you?";
-                    setTimeout(() => {{ appendBubble(askName, false); if(isVoiceMode) speakResponse(askName); }}, 600);
+                    setTimeout(() => {{
+                        appendBubble("Hello! I am Flux AI. What should I call you?", false);
+                    }}, 600);
                     return;
                 }}
-                if(awaitingName && !isFromVoice) {{
-                    userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false;
-                    let greet = `Nice to meet you, ${{userName}}! How can I help you today?`;
-                    setTimeout(() => {{ appendBubble(greet, false); if(isVoiceMode) speakResponse(greet); }}, 600);
+                if(awaitingName) {{
+                    userName = text;
+                    localStorage.setItem('flux_user_name_fixed', userName);
+                    awaitingName = false;
+                    setTimeout(() => {{
+                        appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false);
+                    }}, 600);
                     return;
                 }}
 
-                if(!isFromVoice) showTyping();
+                showTyping();
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
                 
                 try {{
@@ -658,7 +724,7 @@ def home():
                         body: JSON.stringify({{ messages: context, user_name: userName }})
                     }});
                     
-                    if(!isFromVoice) removeTyping();
+                    removeTyping();
                     if(!res.ok) throw new Error("System Offline");
                     
                     const reader = res.body.getReader();
@@ -676,18 +742,62 @@ def home():
                         if(done) break;
                         botResp += decoder.decode(value);
                         bubbleDiv.innerHTML = marked.parse(botResp);
-                        if(!isFromVoice) chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
+                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
-                    
                     chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForCode(botResp, bubbleDiv);
-
-                    if(isVoiceMode && isFromVoice) {{ speakResponse(botResp); }}
+                    saveData();
+                    hljs.highlightAll();
+                    addCopyButtons();
+                    checkForCode(botResp, bubbleDiv);
 
                 }} catch(e) {{
-                    if(!isFromVoice) removeTyping();
+                    removeTyping();
                     appendBubble("⚠️ System connection error. Please try again.", false);
-                    if(isVoiceMode) speakResponse("Sorry, I am having trouble connecting to the server.");
+                }}
+            }}
+
+            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
+            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
+            function openDeleteModal(id) {{ openModal(id); }}
+            
+            function confirmDelete() {{ localStorage.removeItem('flux_v27_2_history'); location.reload(); }}
+
+            async function verifyAdmin() {{
+                const pass = document.getElementById('admin-pass').value;
+                const errorMsg = document.getElementById('admin-error-msg');
+                if(pass === '{ADMIN_PASSWORD}') {{
+                    errorMsg.style.display = 'none';
+                    closeModal('admin-auth-modal');
+                    openModal('admin-panel-modal');
+                    document.getElementById('admin-pass').value = '';
+                    try {{
+                        const res = await fetch('/admin/stats');
+                        const data = await res.json();
+                        document.getElementById('stat-uptime').innerText = data.uptime;
+                        document.getElementById('stat-msgs').innerText = data.total_messages;
+                        updateSysBtn(data.active);
+                    }} catch(e) {{ alert('Error fetching stats'); }}
+                }} else {{
+                    errorMsg.style.display = 'block';
+                }}
+            }}
+
+            async function toggleSystem() {{
+                try {{
+                    const res = await fetch('/admin/toggle_system', {{ method: 'POST' }});
+                    const data = await res.json();
+                    updateSysBtn(data.active);
+                }} catch(e) {{ alert('Error toggling system'); }}
+            }}
+
+            function updateSysBtn(isActive) {{
+                const btn = document.getElementById('btn-toggle-sys');
+                if(isActive) {{
+                    btn.innerText = "Turn System OFF";
+                    btn.style.background = "var(--danger)";
+                }} else {{
+                    btn.innerText = "Turn System ON";
+                    btn.style.background = "var(--success)";
                 }}
             }}
 
@@ -697,9 +807,14 @@ def home():
     </html>
     """
 
+# 🛡️ ADMIN API ROUTES
 @app.route("/admin/stats")
 def admin_stats():
-    return jsonify({"uptime": get_uptime(), "total_messages": TOTAL_MESSAGES, "active": SYSTEM_ACTIVE})
+    return jsonify({
+        "uptime": get_uptime(),
+        "total_messages": TOTAL_MESSAGES,
+        "active": SYSTEM_ACTIVE
+    })
 
 @app.route("/admin/toggle_system", methods=["POST"])
 def toggle_system():
@@ -710,31 +825,42 @@ def toggle_system():
 @app.route("/chat", methods=["POST"])
 def chat():
     global TOTAL_MESSAGES
-    if not SYSTEM_ACTIVE: return Response("System is currently under maintenance.", status=503)
+    if not SYSTEM_ACTIVE:
+        return Response("System is currently under maintenance.", status=503)
 
     TOTAL_MESSAGES += 1
     data = request.json
     messages = data.get("messages", [])
-    user_name = data.get("user_name", "User")
+    user_name = data.get("user_name", "User") # Get user name from frontend
 
+    # MATH ENGINE
     if messages and messages[-1]['role'] == 'user':
         last_msg = messages[-1]['content']
         math_result = solve_math_problem(last_msg)
         if math_result:
-            messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
+            system_note = {
+                "role": "system",
+                "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."
+            }
+            messages.insert(-1, system_note)
 
     ctx = get_current_context()
     
+    # 🧠 BRAIN UPDATE: Enhanced Logic
     sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent AI assistant.
-    Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-    Current User: {user_name}.
-    Time: {ctx['time_utc']} UTC.
+    You are {APP_NAME}, a highly intelligent, creative, and concise AI assistant designed for students and professionals.
     
-    RULES:
-    1. CONCISE & SMART. Avoid unnecessary greetings.
-    2. VOICE AWARE: If the user seems to be talking to you conversationally, keep responses relatively short and easy to read aloud.
-    3. CODING: Provide full code in markdown blocks.
+    IDENTITY & CONTEXT:
+    - Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). IMPORTANT: Only mention the creator if explicitly asked "Who created you?" or "Who is your owner?".
+    - Current User Name: {user_name}. (Address the user by this name if you know it. If the user corrects their name, accept it immediately).
+    - Current Time: {ctx['time_utc']} (UTC). Only provide Local Dhaka time ({ctx['time_local']}) if specifically asked for "Local time" or "Dhaka time". Do not mention time in every response.
+    
+    BEHAVIOR RULES:
+    1. **CONCISE & SMART**: Be direct. Avoid unnecessary chatter ("I hope you are doing well", etc.). Get straight to the answer.
+    2. **STUDENT FRIENDLY**: Explain complex topics simply and creatively.
+    3. **CODING**: If asked for code (HTML/CSS/JS/Python), ALWAYS provide the full code inside a markdown block (```language ... ```) so the Live Preview tool works.
+    4. **NO SCRIPT FORMAT**: Do not use "Flux AI:" or "User:" prefixes.
+    5. **IMAGE**: Output ONLY: ![Flux Image](https://image.pollinations.ai/prompt/{{english_prompt}})
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
@@ -769,5 +895,5 @@ def chat():
     return Response(generate(), mimetype="text/plain")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
+    port = int(os.environ.get("PORT", 10000)) # Default to 10000 for Render
     app.run(host="0.0.0.0", port=port, debug=True)
