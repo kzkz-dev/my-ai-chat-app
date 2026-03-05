@@ -10,13 +10,14 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 29.1.0) 🧠
-# 🔥 FIXED: ARTIFACTS RUN BUTTON & ADVANCED AI BRAIN 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 32.0.0) 🧠
+# 🔥 FIXED: ARTIFACTS SHOWS BOTH CODE & PREVIEW
+# 🔥 UPGRADED: GOD-TIER AI BRAIN PROMPT
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "29.1.0"
+VERSION = "32.0.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -136,147 +137,119 @@ def home():
                 margin: 0; background: var(--bg-gradient); color: var(--text); 
                 font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
                 height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.4s ease;
+                transition: background 0.3s ease;
             }}
 
-            /* 🌌 NEURAL BRAIN BACKGROUND */
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
 
-            /* SIDEBAR FIXED FOR DARK/LIGHT */
-            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
+            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); text-shadow: var(--accent-glow); }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
-            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.3s ease; }}
             .new-chat-btn:active {{ transform: scale(0.97); }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
-            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; font-weight: 500; }}
+            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            
-            /* ABOUT SECTION */
-            .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+            .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.3s; }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
 
-            /* DARK/LIGHT TOGGLE */
-            .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; transition: all 0.4s ease; }}
-            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; transition: all 0.3s ease; }}
+            .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
+            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
 
-            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; transition: background 0.4s ease; }}
+            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; overflow-x: hidden; }}
 
-            /* WELCOME SCREEN - UPDATED FOR MOBILE FIT */
-            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 100px; padding-bottom: 60px; }}
-            .icon-wrapper {{ width: 80px; height: 80px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin-bottom: 25px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
+            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
+            .icon-wrapper {{ width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .welcome-title {{ font-size: 2rem; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; }}
+            .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
+            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1rem; max-width: 80%; line-height: 1.5; }}
 
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 750px; padding: 0 10px; }}
-            .chip {{ padding: 14px 16px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 16px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
+            .chip {{ padding: 16px 20px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 18px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
             .chip i {{ color: var(--accent); font-size: 1.1rem; opacity: 0.9; }}
 
-            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
+            /* MESSAGE BUBBLES */
+            .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; transition: all 0.3s ease; }}
+            
+            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
             
-            .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; width: 100%; }}
-            .message-wrapper.user .bubble-container {{ align-items: flex-end; width: auto; }}
+            .bubble-container {{ display: flex; flex-direction: column; flex: 1; min-width: 0; }}
+            .message-wrapper.user .bubble-container {{ align-items: flex-end; flex: none; max-width: 85%; }}
+            
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
-            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; width: 100%; transition: background 0.3s ease, color 0.3s ease; }}
-            .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: hidden; }}
-            .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: auto; }}
+            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; position: relative; max-width: 100%; box-sizing: border-box; }}
+            .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: auto; }}
+            .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: inline-block; width: fit-content; }}
             
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
             body.light .bubble strong {{ color: #2563eb; }}
-            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; border: 1px solid var(--glass-border); }}
 
-            /* ==========================================
-               🧠 DEEP-BRAIN PROCESSOR CSS 
-               ========================================== */
-            .brain-container {{
-                width: 100%; background: #000; border: 1px solid var(--glass-border);
-                border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace;
-                position: relative; overflow: hidden; margin-bottom: 15px;
-                box-shadow: inset 0 0 20px rgba(0,255,0,0.05);
-            }}
+            /* DEEP-BRAIN PROCESSOR CSS */
+            .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); box-sizing: border-box; }}
             .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
             .brain-icon {{ color: var(--terminal-green); font-size: 1.2rem; animation: pulse 1.5s infinite; }}
             .brain-title {{ color: var(--terminal-green); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }}
             .brain-logs {{ font-size: 0.8rem; color: #a3a3a3; line-height: 1.8; min-height: 60px; }}
             .log-line {{ animation: typeText 0.1s linear forwards; opacity: 0; }}
             .log-line::before {{ content: "> "; color: var(--terminal-green); }}
-            
-            @keyframes typeText {{ to {{ opacity: 1; }} }}
-            @keyframes pulse {{ 0%, 100% {{ opacity: 1; transform: scale(1); text-shadow: 0 0 10px var(--terminal-green); }} 50% {{ opacity: 0.5; transform: scale(0.95); text-shadow: none; }} }}
 
-            /* ==========================================
-               🛠️ FLUX ARTIFACTS CSS 
-               ========================================== */
-            .artifact-container {{
-                width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
-                border-radius: 16px; overflow: hidden; margin-top: 15px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            }}
-            .artifact-header {{
-                background: rgba(125,125,125,0.1); padding: 12px 16px;
-                display: flex; justify-content: space-between; align-items: center;
-                border-bottom: 1px solid var(--glass-border);
-            }}
+            /* FLUX ARTIFACTS CSS */
+            .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); box-sizing: border-box; }}
+            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; gap: 10px; }}
             .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
             .artifact-title i {{ color: #facc15; }}
-            .artifact-actions button {{
-                background: var(--accent); border: none; color: black; font-weight: 600;
-                padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
-                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px;
-                box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-            }}
+            .artifact-actions button {{ background: var(--accent); border: none; color: black; font-weight: 600; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 0.85rem; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }}
             .artifact-actions button:hover {{ transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }}
             .artifact-content {{ width: 100%; height: 350px; position: relative; background: #fff; }}
             .artifact-content iframe {{ width: 100%; height: 100%; border: none; background: #fff; }}
 
-            /* CODE & COPY BUTTON */
-            pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; }}
+            /* CODE BLOCKS */
+            pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; margin-bottom: 5px; box-sizing: border-box; max-width: 100%; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
             .copy-btn:hover {{ background: var(--accent); color: black; }}
 
-            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; transition: all 0.4s ease; }}
-            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; }}
+            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
             textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; }}
-            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0; }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
             .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
 
             /* FULLSCREEN PREVIEW MODAL */
             #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
-            .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+            .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s; }}
             .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
-            iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
+            iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; box-sizing: border-box; }}
 
             /* MODALS */
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
-            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
+            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.3s; box-sizing: border-box; }}
             .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
-            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: all 0.3s ease; }}
+            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
             .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
             .btn-delete {{ background: var(--danger); color: white; }}
             .btn-confirm {{ background: var(--success); color: black; }}
@@ -289,7 +262,7 @@ def home():
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; transition: all 0.4s ease; }}
+            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
         </style>
     </head>
     <body class="dark">
@@ -310,7 +283,7 @@ def home():
             <div class="modal-box">
                 <div class="modal-title"><i class="fas fa-shield-alt" style="color:var(--accent)"></i> Admin Access</div>
                 <div class="modal-desc">Enter authorization code</div>
-                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
+                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center; box-sizing:border-box;" placeholder="••••••••">
                 <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
@@ -366,7 +339,6 @@ def home():
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026 All Rights Reserved</small>
                 </div>
                 <div class="history-item" onclick="openModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -383,13 +355,14 @@ def home():
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
+                    <div class="welcome-subtitle">Experience the power of Deep-Brain processing and instant Artifacts.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Ask Flux" rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Ask Flux to build an app or answer a question..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -399,7 +372,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v29_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v32_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
@@ -413,7 +386,6 @@ def home():
             renderHistory();
             renderSuggestions(); 
 
-            // 🧠 NEURAL BACKGROUND
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
@@ -464,7 +436,7 @@ def home():
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v29_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v32_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -493,21 +465,22 @@ def home():
                 }});
             }}
 
-            // 🔥 FIXED: ARTIFACTS PARSER & RUN BUTTON 🔥
+            // 🔥 FIXED: SHOW BOTH CODE AND ARTIFACT PREVIEW 🔥
             function checkForArtifacts(text, bubble) {{
                 const codeMatch = text.match(/```html([\\s\\S]*?)```/);
-                if(codeMatch) {{
+                
+                // If code exists and we haven't already added an artifact container to this bubble
+                if(codeMatch && !bubble.querySelector('.artifact-container')) {{
                     const code = codeMatch[1];
                     
-                    // Hide raw code blocks to make the UI look super clean
-                    const preBlocks = bubble.querySelectorAll('pre');
-                    preBlocks.forEach(pre => pre.style.display = 'none');
+                    // WE ARE NOT HIDING THE <pre> BLOCK ANYMORE! 
+                    // The user will see both the raw code and the App Preview below it.
 
                     const artifactDiv = document.createElement('div');
                     artifactDiv.className = 'artifact-container';
                     artifactDiv.innerHTML = `
                         <div class="artifact-header">
-                            <div class="artifact-title"><i class="fas fa-layer-group"></i> Flux App Engine</div>
+                            <div class="artifact-title"><i class="fas fa-layer-group"></i> Flux App Engine (Live Preview)</div>
                             <div class="artifact-actions">
                                 <button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}">
                                     <i class="fas fa-play"></i> Fullscreen App
@@ -554,12 +527,9 @@ def home():
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
-            // 🔥 DEEP-BRAIN PROCESSOR VISUAL 🔥
             function showDeepBrainThinking() {{
                 welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div');
-                wrapper.id = 'typing-indicator';
-                wrapper.className = 'message-wrapper bot';
+                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
                 
                 wrapper.innerHTML = `
                     <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
@@ -575,8 +545,7 @@ def home():
                             </div>
                         </div>
                     </div>`;
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
 
                 const logs = [
                     "Analyzing query context...",
@@ -589,21 +558,12 @@ def home():
                 let i = 0;
                 window.brainInterval = setInterval(() => {{
                     if(i < logs.length) {{
-                        const line = document.createElement('div');
-                        line.className = 'log-line';
-                        line.innerText = logs[i];
-                        logContainer.appendChild(line);
-                        i++;
-                    }} else {{
-                        clearInterval(window.brainInterval);
-                    }}
+                        const line = document.createElement('div'); line.className = 'log-line'; line.innerText = logs[i]; logContainer.appendChild(line); i++;
+                    }} else {{ clearInterval(window.brainInterval); }}
                 }}, 800);
             }}
 
-            function removeTyping() {{ 
-                if(window.brainInterval) clearInterval(window.brainInterval);
-                document.getElementById('typing-indicator')?.remove(); 
-            }}
+            function removeTyping() {{ if(window.brainInterval) clearInterval(window.brainInterval); document.getElementById('typing-indicator')?.remove(); }}
 
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
@@ -611,9 +571,7 @@ def home():
                 const text = msgInput.value.trim();
                 if(!text) return;
 
-                if(text === '!admin') {{
-                    msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return;
-                }}
+                if(text === '!admin') {{ msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return; }}
 
                 playSentAnimation(); 
 
@@ -622,29 +580,17 @@ def home():
                 
                 chat.messages.push({{ role: 'user', text: text }});
                 if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
-                saveData();
-                msgInput.value = '';
-                appendBubble(text, true);
+                saveData(); msgInput.value = ''; appendBubble(text, true);
 
-                if(!userName && !awaitingName) {{
-                    awaitingName = true;
-                    setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return;
-                }}
-                if(awaitingName) {{
-                    userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false;
-                    setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return;
-                }}
+                if(!userName && !awaitingName) {{ awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return; }}
+                if(awaitingName) {{ userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false; setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return; }}
 
-                showDeepBrainThinking(); // Trigger Deep-Brain animation
+                showDeepBrainThinking(); 
+                
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
                 
                 try {{
-                    const res = await fetch('/chat', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context, user_name: userName }})
-                    }});
-                    
+                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ messages: context, user_name: userName }}) }});
                     removeTyping();
                     if(!res.ok) throw new Error("System Offline");
                     
@@ -652,8 +598,7 @@ def home():
                     const decoder = new TextDecoder();
                     let botResp = '';
                     
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper bot';
+                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
                     chatBox.appendChild(wrapper);
                     const bubbleDiv = wrapper.querySelector('.bubble');
@@ -668,27 +613,20 @@ def home():
                     }}
                     
                     chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData();
-                    
-                    // Final render with Syntax Highlighting and Artifacts
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    checkForArtifacts(botResp, bubbleDiv);
+                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForArtifacts(botResp, bubbleDiv);
 
                 }} catch(e) {{
-                    removeTyping();
-                    appendBubble("⚠️ System connection error. Please try again.", false);
+                    removeTyping(); appendBubble("⚠️ System connection error. Please try again.", false);
                 }}
             }}
 
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v29_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v32_history'); location.reload(); }}
 
             async function verifyAdmin() {{
-                const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
+                const pass = document.getElementById('admin-pass').value; const errorMsg = document.getElementById('admin-error-msg');
                 if(pass === '{ADMIN_PASSWORD}') {{
                     errorMsg.style.display = 'none'; closeModal('admin-auth-modal'); openModal('admin-panel-modal'); document.getElementById('admin-pass').value = '';
                     try {{
@@ -699,15 +637,8 @@ def home():
                 }} else {{ errorMsg.style.display = 'block'; }}
             }}
 
-            async function toggleSystem() {{
-                try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-
-            function updateSysBtn(isActive) {{
-                const btn = document.getElementById('btn-toggle-sys');
-                if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} 
-                else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }}
-            }}
+            async function toggleSystem() {{ try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }} }}
+            function updateSysBtn(isActive) {{ const btn = document.getElementById('btn-toggle-sys'); if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }} }}
 
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
@@ -715,7 +646,6 @@ def home():
     </html>
     """
 
-# 🛡️ ADMIN API ROUTES
 @app.route("/admin/stats")
 def admin_stats():
     return jsonify({"uptime": get_uptime(), "total_messages": TOTAL_MESSAGES, "active": SYSTEM_ACTIVE})
@@ -744,20 +674,22 @@ def chat():
 
     ctx = get_current_context()
     
-    # 🔥 AI BRAIN RESTORED & UPGRADED 🔥
+    # 🔥 GOD-TIER AI BRAIN PROMPT 🔥
     sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant designed for students and professionals.
+    You are {APP_NAME}, a god-tier, highly intelligent, and elite AI assistant created by the brilliant developer {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+    You possess a 'Deep-Brain Processor' for complex logic and 'Flux Artifacts' to instantly render code into live apps.
+
+    Current User Name: {user_name}. Address them respectfully but with a cool, futuristic tone.
+    Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}. You know exactly what time it is right now.
     
-    IDENTITY & CONTEXT:
-    - Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). IMPORTANT: Only mention the creator if explicitly asked "Who created you?".
-    - Current User Name: {user_name}. Address the user by this name respectfully.
-    - Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}. You know exactly what time it is right now.
-    
-    BEHAVIOR RULES:
-    1. CONCISE & SMART: Be direct. Avoid unnecessary chatter.
-    2. STUDENT FRIENDLY: Explain complex topics simply and creatively.
-    3. APP/GAME CREATION (ARTIFACTS): If the user asks to build an app, game, or UI component, YOU MUST write the ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. Put CSS in <style> and JS in <script> inside the HTML. Do not split them. Ensure the app has a modern, beautiful UI and is fully playable.
-    4. NO SCRIPT FORMAT: Do not use "Flux AI:" or "User:" prefixes.
+    RULES:
+    1. INTELLECT & TONE: Be concise, brilliant, and slightly edgy. Avoid boring robotic pleasantries. Deliver high-value, accurate information instantly.
+    2. APP/GAME CREATION (ARTIFACTS): If the user asks to build an app, game, UI component, or website, YOU MUST write the ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. 
+       - Put CSS in <style> and JS in <script> inside the HTML. 
+       - Do NOT split them into separate markdown blocks. 
+       - ALWAYS ensure the app has a modern, beautiful, responsive, and futuristic UI (use Neumorphism, Glassmorphism, CSS animations, etc.).
+    3. EXPLANATIONS: If explaining complex concepts (like Quantum Physics, Math, Coding), use simple analogies, bullet points, and clear formatting.
+    4. NO SCRIPT FORMAT: Never use "Flux AI:" or "User:" prefixes in your responses.
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
