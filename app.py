@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 32.0.0) 🧠
-# 🔥 NEW: FLUX VISION (IMAGE) & PDF DOC READER 📎📸
+# 🔹 Flux AI (Ultimate Intelligence - Build 32.1.0) 🧠
+# 🔥 FIXED: F-STRING SYNTAX ERROR IN JAVASCRIPT 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "32.0.0"
+VERSION = "32.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -438,7 +438,7 @@ def home():
             }}
 
             // 📎 FILE UPLOAD LOGIC 📎
-            document.getElementById('file-upload').addEventListener('change', async function(e) {
+            document.getElementById('file-upload').addEventListener('change', async function(e) {{
                 const file = e.target.files[0];
                 if(!file) return;
 
@@ -451,42 +451,42 @@ def home():
                 attachedImageBase64 = null;
                 attachedPdfText = null;
 
-                if(file.type.startsWith('image/')) {
+                if(file.type.startsWith('image/')) {{
                     icon.className = 'fas fa-image';
                     const reader = new FileReader();
-                    reader.onload = function(event) {
+                    reader.onload = function(event) {{
                         attachedImageBase64 = event.target.result.split(',')[1];
                         nameSpan.innerText = file.name;
-                    };
+                    }};
                     reader.readAsDataURL(file);
-                } 
-                else if(file.type === 'application/pdf') {
+                }} 
+                else if(file.type === 'application/pdf') {{
                     icon.className = 'fas fa-file-pdf';
-                    try {
+                    try {{
                         const arrayBuffer = await file.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument({data: arrayBuffer}).promise;
+                        const pdf = await pdfjsLib.getDocument({{data: arrayBuffer}}).promise;
                         let fullText = '';
-                        for (let i = 1; i <= pdf.numPages; i++) {
+                        for (let i = 1; i <= pdf.numPages; i++) {{
                             const page = await pdf.getPage(i);
                             const textContent = await page.getTextContent();
-                            fullText += textContent.items.map(item => item.str).join(' ') + '\n';
-                        }
+                            fullText += textContent.items.map(item => item.str).join(' ') + '\\n';
+                        }}
                         attachedPdfText = fullText;
                         nameSpan.innerText = file.name + " (Ready)";
-                    } catch (err) {
+                    }} catch (err) {{
                         nameSpan.innerText = "Error reading PDF";
-                    }
-                } else {
+                    }}
+                }} else {{
                     nameSpan.innerText = "Unsupported Format";
-                }
+                }}
                 e.target.value = ''; // clear input
-            });
+            }});
 
-            function clearAttachment() {
+            function clearAttachment() {{
                 attachedImageBase64 = null;
                 attachedPdfText = null;
                 document.getElementById('attachment-preview').style.display = 'none';
-            }
+            }}
 
             function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
@@ -546,8 +546,8 @@ def home():
                 if(!text && !attachedImageBase64 && !attachedPdfText) return;
 
                 let displayMessage = text || "Sent an attachment.";
-                if(attachedImageBase64) displayMessage += "\n\n*(Image attached)*";
-                if(attachedPdfText) displayMessage += "\n\n*(PDF Document attached)*";
+                if(attachedImageBase64) displayMessage += "\\n\\n*(Image attached)*";
+                if(attachedPdfText) displayMessage += "\\n\\n*(PDF Document attached)*";
 
                 playSentAnimation(); 
 
