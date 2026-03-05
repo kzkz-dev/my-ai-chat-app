@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 32.2.0) 🧠
-# 🔥 FIXED: AI VISION HALLUCINATION & PROMPT BUG 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 33.0.0) 🧠
+# 🔥 FIXED: DYNAMIC BRAIN SWITCH FOR VISION VS CODING 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "32.2.0"
+VERSION = "33.0.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -208,6 +208,7 @@ def home():
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
             .copy-btn:hover {{ background: var(--accent); color: black; }}
 
+            /* 🔥 INPUT AREA & ATTACHMENT UI 🔥 */
             #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; transition: all 0.4s ease; flex-direction: column; align-items: center; }}
             
             #attachment-preview {{ display: none; width: 100%; max-width: 850px; margin-bottom: 10px; padding: 10px 15px; background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); border-radius: 16px; font-size: 0.9rem; color: var(--text); align-items: center; justify-content: space-between; box-sizing: border-box; animation: fadeIn 0.3s; }}
@@ -302,7 +303,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v32_2_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v33_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
@@ -357,7 +358,7 @@ def home():
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v32_2_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v33_history', JSON.stringify(chats)); }}
             function renderHistory() {{
                 document.getElementById('history-list').innerHTML = chats.map(chat => `<div class="history-item" onclick="loadChat(${{chat.id}})"><i class="far fa-comment-alt"></i> <span>${{(chat.title || 'New Conversation').substring(0, 22)}}</span></div>`).join('');
             }}
@@ -457,13 +458,12 @@ def home():
                 const text = msgInput.value.trim();
                 if(!text && !attachedImageBase64 && !attachedPdfText) return;
 
-                // 🔥 BUG FIX: Smart UI vs API Message Separation 🔥
                 let uiMessage = text;
                 if(!text && attachedImageBase64) uiMessage = "📸 *Uploaded an image*";
                 if(!text && attachedPdfText) uiMessage = "📄 *Uploaded a PDF document*";
 
                 let apiMessage = text;
-                if(!text && attachedImageBase64) apiMessage = "Please analyze and describe this image in detail.";
+                if(!text && attachedImageBase64) apiMessage = "Describe this image in extreme detail.";
                 if(!text && attachedPdfText) apiMessage = "Please carefully read and summarize this document.";
 
                 playSentAnimation(); 
@@ -481,7 +481,6 @@ def home():
                 showDeepBrainThinking(!!attachedImageBase64); 
                 
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                // Override the last UI text with the actual prompt for the AI backend
                 context[context.length - 1].content = apiMessage;
 
                 const payload = {{ messages: context, user_name: userName, image_base64: attachedImageBase64, pdf_text: attachedPdfText }};
@@ -530,42 +529,53 @@ def chat():
 
     ctx = get_current_context()
     
-    sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-    Current User Name: {user_name}.
-    Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}.
-    
-    RULES:
-    1. CONCISE & SMART: Be highly accurate and direct.
-    2. APP CREATION: Write ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. 
-    3. VISION MODE (CRITICAL): If the user asks about an image or document, YOU MUST ANALYZE IT. DO NOT EVER SAY "I am not capable of viewing attachments". You CAN see images.
-    """
+    # 🧠 DYNAMIC SYSTEM PROMPT (THE MASTER FIX) 🧠
+    if image_base64:
+        # VISION MODE (No HTML/App writing allowed here)
+        target_model = "llama-3.2-90b-vision-preview"
+        sys_prompt_content = f"""
+        You are {APP_NAME}, a highly intelligent Visual Expert AI created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        You are now in VISION MODE. The user has provided an image. 
+        RULES:
+        1. Analyze the image and describe exactly what you see.
+        2. Answer any question the user asks about the image accurately.
+        3. CRITICAL: DO NOT WRITE HTML, CSS, OR JAVASCRIPT CODE unless the user specifically asks you to "build an app based on this image".
+        4. Answer in plain text markdown.
+        """
+        
+        user_text = messages[-1]['content']
+        # Isolate the image message so past text history doesn't break the Vision API schema
+        messages = [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": user_text},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
+            ]
+        }]
+    else:
+        # NORMAL / CODING MODE
+        target_model = "llama-3.3-70b-versatile"
+        sys_prompt_content = f"""
+        You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+        Current User Name: {user_name}.
+        Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}.
+        
+        RULES:
+        1. CONCISE & SMART: Be highly accurate and direct.
+        2. APP CREATION: If the user asks for a game, calculator, or tool, write ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. 
+        """
+        
+        # PDF Logic
+        if pdf_text and messages:
+            messages[-1]['content'] = f"Here is the content of an uploaded PDF document:\n\n---\n{pdf_text[:15000]}\n---\n\nUser Command: {messages[-1]['content']}"
+
+        # Math engine (only if no image)
+        if messages and isinstance(messages[-1]['content'], str):
+            math_result = solve_math_problem(messages[-1]['content'])
+            if math_result:
+                messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
 
     sys_message = {"role": "system", "content": sys_prompt_content}
-
-    # PDF Logic
-    if pdf_text and messages:
-        messages[-1]['content'] = f"Here is the content of an uploaded PDF document:\n\n---\n{pdf_text[:15000]}\n---\n\nUser Command: {messages[-1]['content']}"
-
-    target_model = "llama-3.3-70b-versatile"
-    
-    # 🔥 FIXED VISION LOGIC 🔥
-    if image_base64 and messages:
-        target_model = "llama-3.2-90b-vision-preview" # Upgraded to 90B Vision model for max accuracy
-        user_text = messages[-1]['content']
-        
-        messages[-1]['content'] = [
-            {"type": "text", "text": f"{user_text}\n[SYSTEM: Analyze the provided image perfectly. You can clearly see it.]"},
-            {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-        ]
-        # Keep only last 3 messages to prevent vision model context confusion
-        messages = messages[-3:]
-
-    # Math engine (only if content is string, not image array)
-    if not image_base64 and messages and isinstance(messages[-1]['content'], str):
-        math_result = solve_math_problem(messages[-1]['content'])
-        if math_result:
-            messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
 
     def generate():
         global current_key_index
