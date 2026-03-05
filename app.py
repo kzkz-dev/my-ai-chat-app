@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 30.0.0) 🧠
-# 🔥 NEW: EPIC !DEBATE MODE WITH FULLSCREEN WINNER POPUP 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 30.1.0) 🧠
+# 🔥 FIXED: MOBILE CSS LAYOUT & AVATAR OVERFLOW BUG 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "30.0.0"
+VERSION = "30.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -70,7 +70,6 @@ def solve_math_problem(text):
         return f"{result:,.4f}" 
     except: return None
 
-# 🔥 ADDED !DEBATE TO SUGGESTIONS 🔥
 SUGGESTION_POOL = [
     {"icon": "fas fa-gavel", "text": "!debate AI will replace humans"},
     {"icon": "fas fa-gavel", "text": "!debate Time Travel is real"},
@@ -167,7 +166,7 @@ def home():
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
-            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
+            #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; overflow-x: hidden; }}
 
             .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
             .icon-wrapper {{ width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
@@ -180,27 +179,32 @@ def home():
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
             .chip i {{ color: var(--accent); font-size: 1.1rem; opacity: 0.9; }}
 
-            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
+            /* ==========================================
+               🔥 FIXED LAYOUT BUG (FLEXBOX OVERFLOW) 🔥
+               ========================================== */
+            .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
+            
             .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
             
-            .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; width: 100%; }}
-            .message-wrapper.user .bubble-container {{ align-items: flex-end; width: auto; }}
+            .bubble-container {{ display: flex; flex-direction: column; flex: 1; min-width: 0; }}
+            .message-wrapper.user .bubble-container {{ align-items: flex-end; flex: none; max-width: 85%; }}
+            
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
-            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; width: 100%; }}
-            .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: hidden; }}
-            .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: auto; }}
+            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; position: relative; max-width: 100%; box-sizing: border-box; }}
+            .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: auto; }}
+            .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); display: inline-block; width: fit-content; }}
             
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
             body.light .bubble strong {{ color: #2563eb; }}
             .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; border: 1px solid var(--glass-border); }}
 
             /* DEEP-BRAIN PROCESSOR CSS */
-            .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); }}
+            .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); box-sizing: border-box; }}
             .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
             .brain-icon {{ color: var(--terminal-green); font-size: 1.2rem; animation: pulse 1.5s infinite; }}
             .brain-title {{ color: var(--terminal-green); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }}
@@ -209,8 +213,8 @@ def home():
             .log-line::before {{ content: "> "; color: var(--terminal-green); }}
 
             /* FLUX ARTIFACTS CSS */
-            .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }}
-            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }}
+            .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); box-sizing: border-box; }}
+            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; gap: 10px; }}
             .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
             .artifact-title i {{ color: #facc15; }}
             .artifact-actions button {{ background: var(--accent); border: none; color: black; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }}
@@ -218,7 +222,7 @@ def home():
             .artifact-content {{ width: 100%; height: 350px; position: relative; background: #fff; }}
             .artifact-content iframe {{ width: 100%; height: 100%; border: none; background: #fff; }}
 
-            pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; }}
+            pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; box-sizing: border-box; max-width: 100%; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
             .copy-btn:hover {{ background: var(--accent); color: black; }}
@@ -227,14 +231,12 @@ def home():
             .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
             textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; }}
-            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; }}
+            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; flex-shrink: 0; }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
             .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
 
-            /* ==========================================
-               🔥 EPIC DEBATE WINNER MODAL CSS 🔥
-               ========================================== */
+            /* EPIC DEBATE WINNER MODAL CSS */
             #epic-winner-modal {{
                 display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
                 background: rgba(0,0,0,0.92); z-index: 99999; justify-content: center; align-items: center;
@@ -242,7 +244,7 @@ def home():
             }}
             .epic-winner-box {{
                 background: linear-gradient(135deg, #111827 0%, #1e1b4b 100%); border: 2px solid var(--accent);
-                border-radius: 24px; padding: 40px 30px; max-width: 600px; width: 100%;
+                border-radius: 24px; padding: 40px 30px; max-width: 600px; width: 100%; box-sizing: border-box;
                 box-shadow: 0 0 60px rgba(0, 243, 255, 0.4), inset 0 0 20px rgba(0, 243, 255, 0.1);
                 text-align: center; animation: epicZoom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
                 position: relative; overflow: hidden;
@@ -275,11 +277,11 @@ def home():
             #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
             .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s; }}
             .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
-            iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
+            iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; box-sizing: border-box; }}
 
             /* MODALS */
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
-            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.3s; }}
+            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.3s; box-sizing: border-box; }}
             .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
             .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
@@ -325,7 +327,7 @@ def home():
             <div class="modal-box">
                 <div class="modal-title"><i class="fas fa-shield-alt" style="color:var(--accent)"></i> Admin Access</div>
                 <div class="modal-desc">Enter authorization code</div>
-                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center;" placeholder="••••••••">
+                <input type="password" id="admin-pass" style="width:100%; padding:14px; border-radius:12px; border:1px solid var(--glass-border); background:rgba(125,125,125,0.1); color:var(--text); margin-bottom:10px; outline:none; font-size:1rem; text-align:center; box-sizing:border-box;" placeholder="••••••••">
                 <div id="admin-error-msg" style="color:var(--danger); font-size:0.9rem; margin-bottom:20px; display:none; font-weight:600;"><i class="fas fa-exclamation-circle"></i> Invalid Password</div>
                 <div style="display:flex;">
                     <button class="btn-modal btn-cancel" onclick="closeModal('admin-auth-modal')">Cancel</button>
@@ -414,7 +416,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v30_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v30_1_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
@@ -478,7 +480,7 @@ def home():
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v30_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v30_1_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -671,7 +673,6 @@ def home():
                         if(done) break;
                         botResp += decoder.decode(value);
                         
-                        // During streaming, just let the raw text flow (looks hacker-ish)
                         bubbleDiv.innerHTML = marked.parse(botResp);
                         chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
@@ -681,11 +682,9 @@ def home():
                     let match = botResp.match(winnerRegex);
                     if(match) {{
                         const winnerContent = match[1].trim();
-                        // Replace the raw tags with a cool button in the chat history
                         botResp = botResp.replace(winnerRegex, `\n\n---\n<div style="text-align:center; margin-top:15px;"><button onclick="showEpicWinner(\\'${{encodeURIComponent(winnerContent)}}\\')" style="background:var(--accent); color:black; border:none; padding:10px 20px; border-radius:10px; font-weight:bold; cursor:pointer; box-shadow: 0 0 15px rgba(0,243,255,0.4);"><i class="fas fa-trophy"></i> View Final Conclusion</button></div>`);
                         bubbleDiv.innerHTML = marked.parse(botResp);
                         
-                        // 🎉 MAGIC: AUTO POPUP THE FULLSCREEN WINNER AFTER 1.5 SECONDS! 🎉
                         setTimeout(() => {{
                             showEpicWinner(encodeURIComponent(winnerContent));
                         }}, 1500);
@@ -702,7 +701,7 @@ def home():
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v30_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v30_1_history'); location.reload(); }}
 
             async function verifyAdmin() {{
                 const pass = document.getElementById('admin-pass').value; const errorMsg = document.getElementById('admin-error-msg');
@@ -745,11 +744,9 @@ def chat():
     messages = data.get("messages", [])
     user_name = data.get("user_name", "User")
 
-    # 🔥 HIDDEN !DEBATE PROMPT INJECTION 🔥
     if messages and messages[-1]['role'] == 'user':
         last_msg = messages[-1]['content']
         
-        # Check if user invoked !debate
         if "!debate" in last_msg.lower():
             debate_topic = last_msg.lower().replace("!debate", "").strip()
             if not debate_topic:
@@ -762,7 +759,6 @@ def chat():
             messages.insert(-1, system_note)
             
         else:
-            # Regular Math Check
             math_result = solve_math_problem(last_msg)
             if math_result:
                 messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
