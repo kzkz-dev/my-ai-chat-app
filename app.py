@@ -136,7 +136,7 @@ def home():
                 margin: 0; background: var(--bg-gradient); color: var(--text); 
                 font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
                 height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.3s ease;
+                transition: background 0.4s ease;
             }}
 
             /* 🌌 NEURAL BRAIN BACKGROUND */
@@ -144,53 +144,52 @@ def home():
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
 
             /* SIDEBAR FIXED FOR DARK/LIGHT */
-            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
+            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); text-shadow: var(--accent-glow); }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
-            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.3s ease; }}
+            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
             .new-chat-btn:active {{ transform: scale(0.97); }}
 
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
-            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
+            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; font-weight: 500; }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
             /* ABOUT SECTION */
-            .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.3s; }}
+            .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
 
             /* DARK/LIGHT TOGGLE */
-            .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
-            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
+            .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; transition: all 0.4s ease; }}
+            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; transition: all 0.3s ease; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
 
-            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
+            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; transition: background 0.4s ease; }}
             body.light header {{ background: rgba(255, 255, 255, 0.5); }}
 
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* WELCOME SCREEN */
-            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
-            .icon-wrapper {{ width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
+            /* WELCOME SCREEN - UPDATED FOR MOBILE FIT */
+            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 100px; padding-bottom: 60px; }}
+            .icon-wrapper {{ width: 80px; height: 80px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3rem; color: white; margin-bottom: 25px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
-            .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1rem; max-width: 80%; line-height: 1.5; }}
+            .welcome-title {{ font-size: 2rem; font-weight: 800; margin-bottom: 30px; letter-spacing: -0.5px; }}
 
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
-            .chip {{ padding: 16px 20px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 18px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 750px; padding: 0 10px; }}
+            .chip {{ padding: 14px 16px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 16px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
             .chip i {{ color: var(--accent); font-size: 1.1rem; opacity: 0.9; }}
 
-            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
+            .message-wrapper {{ display: flex; gap: 16px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
+            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; transition: all 0.3s ease; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
             
@@ -199,7 +198,7 @@ def home():
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
 
-            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; width: 100%; }}
+            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; width: 100%; transition: background 0.3s ease, color 0.3s ease; }}
             .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: hidden; }}
             .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: auto; }}
             
@@ -227,7 +226,7 @@ def home():
             @keyframes pulse {{ 0%, 100% {{ opacity: 1; transform: scale(1); text-shadow: 0 0 10px var(--terminal-green); }} 50% {{ opacity: 0.5; transform: scale(0.95); text-shadow: none; }} }}
 
             /* ==========================================
-               🛠️ FLUX ARTIFACTS CSS (FIXED RUN BUTTON)
+               🛠️ FLUX ARTIFACTS CSS 
                ========================================== */
             .artifact-container {{
                 width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
@@ -244,7 +243,7 @@ def home():
             .artifact-actions button {{
                 background: var(--accent); border: none; color: black; font-weight: 600;
                 padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
-                transition: 0.3s; display: inline-flex; align-items: center; gap: 6px;
+                transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); display: inline-flex; align-items: center; gap: 6px;
                 box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
             }}
             .artifact-actions button:hover {{ transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }}
@@ -257,27 +256,27 @@ def home():
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
             .copy-btn:hover {{ background: var(--accent); color: black; }}
 
-            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; }}
-            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
+            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; transition: all 0.4s ease; }}
+            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 26px; padding: 8px 8px 8px 20px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
             textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1rem; max-height: 150px; resize: none; padding: 12px 0; font-family: inherit; }}
-            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; }}
+            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
             .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
 
             /* FULLSCREEN PREVIEW MODAL */
             #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
-            .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s; }}
+            .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
             .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
             iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
             /* MODALS */
             .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
-            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.3s; }}
+            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
             .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
             .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
-            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
+            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: all 0.3s ease; }}
             .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
             .btn-delete {{ background: var(--danger); color: white; }}
             .btn-confirm {{ background: var(--success); color: black; }}
@@ -290,7 +289,7 @@ def home():
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
+            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; transition: all 0.4s ease; }}
         </style>
     </head>
     <body class="dark">
@@ -384,14 +383,13 @@ def home():
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Experience the power of Deep-Brain processing and instant Artifacts.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Ask Flux to build an app..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Ask Flux" rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
