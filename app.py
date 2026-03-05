@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 32.1.0) 🧠
-# 🔥 FIXED: F-STRING SYNTAX ERROR IN JAVASCRIPT 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 32.2.0) 🧠
+# 🔥 FIXED: AI VISION HALLUCINATION & PROMPT BUG 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "32.1.0"
+VERSION = "32.2.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -186,7 +186,6 @@ def home():
             body.light .bubble strong {{ color: #2563eb; }}
             .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; border: 1px solid var(--glass-border); }}
 
-            /* DEEP-BRAIN PROCESSOR CSS */
             .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); box-sizing: border-box; }}
             .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
             .brain-icon {{ color: var(--terminal-green); font-size: 1.2rem; animation: pulse 1.5s infinite; }}
@@ -195,7 +194,6 @@ def home():
             .log-line {{ animation: typeText 0.1s linear forwards; opacity: 0; }}
             .log-line::before {{ content: "> "; color: var(--terminal-green); }}
 
-            /* FLUX ARTIFACTS CSS */
             .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); box-sizing: border-box; }}
             .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); flex-wrap: wrap; gap: 10px; }}
             .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
@@ -210,11 +208,11 @@ def home():
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
             .copy-btn:hover {{ background: var(--accent); color: black; }}
 
-            /* 🔥 INPUT AREA & ATTACHMENT UI 🔥 */
             #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; transition: all 0.4s ease; flex-direction: column; align-items: center; }}
             
-            #attachment-preview {{ display: none; width: 100%; max-width: 850px; margin-bottom: 10px; padding: 10px; background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); border-radius: 12px; font-size: 0.85rem; color: var(--text); align-items: center; justify-content: space-between; box-sizing: border-box; animation: fadeIn 0.3s; }}
-            .preview-close {{ cursor: pointer; color: var(--danger); font-size: 1.2rem; }}
+            #attachment-preview {{ display: none; width: 100%; max-width: 850px; margin-bottom: 10px; padding: 10px 15px; background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); border-radius: 16px; font-size: 0.9rem; color: var(--text); align-items: center; justify-content: space-between; box-sizing: border-box; animation: fadeIn 0.3s; }}
+            .preview-close {{ cursor: pointer; color: #ff0f7b; font-size: 1.2rem; transition: 0.3s; }}
+            .preview-close:hover {{ transform: scale(1.2); }}
             
             .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 28px; padding: 10px 10px 10px 15px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); transition: all 0.3s ease; }}
             .input-box:focus-within {{ border-color: var(--accent); box-shadow: 0 0 20px rgba(0, 243, 255, 0.1); }}
@@ -261,9 +259,7 @@ def home():
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
-            <button class="new-chat-btn" onclick="startNewChat()">
-                <i class="fas fa-plus"></i> New Chat
-            </button>
+            <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> New Chat</button>
             <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px; opacity:0.8;">RECENT</div>
             <div class="history-list" id="history-list"></div>
         </div>
@@ -295,7 +291,6 @@ def home():
                 <div class="input-box">
                     <input type="file" id="file-upload" accept="image/*, application/pdf" style="display: none;">
                     <label for="file-upload" class="attach-btn"><i class="fas fa-paperclip"></i></label>
-
                     <textarea id="msg" placeholder="Ask Flux or upload a file..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
@@ -303,30 +298,26 @@ def home():
         </div>
 
         <script>
-            // Ensure PDF.js worker is set up
             pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-
             marked.use({{ breaks: true, gfm: true }});
+            
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v32_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v32_2_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
-            // 📎 Attachment Variables
             let attachedImageBase64 = null;
             let attachedPdfText = null;
-
             let currentChatId = null;
+
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
             const overlay = document.querySelector('.overlay');
 
-            renderHistory();
-            renderSuggestions(); 
+            renderHistory(); renderSuggestions(); 
 
-            // 🌌 Background Canvas
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
@@ -345,11 +336,7 @@ def home():
                     p.update(); p.draw();
                     for(let j=index; j<particles.length; j++) {{
                         const dx = p.x - particles[j].x; const dy = p.y - particles[j].y; const dist = Math.sqrt(dx*dx + dy*dy);
-                        if(dist < 100) {{
-                            const accentColor = getComputedStyle(document.body).getPropertyValue('--accent');
-                            ctx.strokeStyle = accentColor.replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')');
-                            ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke();
-                        }}
+                        if(dist < 100) {{ ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--accent').replace('rgb', 'rgba').replace(')', ', ' + (1 - dist/100) * 0.2 + ')'); ctx.lineWidth = 0.5; ctx.beginPath(); ctx.moveTo(p.x, p.y); ctx.lineTo(particles[j].x, particles[j].y); ctx.stroke(); }}
                     }}
                 }});
                 requestAnimationFrame(animateBg);
@@ -358,32 +345,21 @@ def home():
 
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
-            
             function renderSuggestions() {{
-                const shuffled = allSuggestions.sort(() => 0.5 - Math.random());
-                const selected = shuffled.slice(0, 4);
-                let html = '';
-                selected.forEach(s => {{ html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>'; }});
-                document.getElementById('suggestion-box').innerHTML = html;
+                const shuffled = allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 4);
+                document.getElementById('suggestion-box').innerHTML = shuffled.map(s => `<div class="chip" onclick="sendSuggestion('${{s.text}}')"><i class="${{s.icon}}"></i> ${{s.text}}</div>`).join('');
             }}
 
             function startNewChat() {{
-                currentChatId = Date.now();
-                chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
+                currentChatId = Date.now(); chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
                 saveData(); renderHistory(); renderSuggestions(); clearAttachment();
                 chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v32_history', JSON.stringify(chats)); }}
-
+            function saveData() {{ localStorage.setItem('flux_v32_2_history', JSON.stringify(chats)); }}
             function renderHistory() {{
-                const list = document.getElementById('history-list'); list.innerHTML = '';
-                chats.forEach(chat => {{
-                    const div = document.createElement('div'); div.className = 'history-item';
-                    div.innerHTML = '<i class="far fa-comment-alt"></i> <span>' + (chat.title || 'New Conversation').substring(0, 22) + '</span>';
-                    div.onclick = () => loadChat(chat.id); list.appendChild(div);
-                }});
+                document.getElementById('history-list').innerHTML = chats.map(chat => `<div class="history-item" onclick="loadChat(${{chat.id}})"><i class="far fa-comment-alt"></i> <span>${{(chat.title || 'New Conversation').substring(0, 22)}}</span></div>`).join('');
             }}
 
             function loadChat(id) {{
@@ -409,26 +385,16 @@ def home():
                 if(codeMatch) {{
                     const code = codeMatch[1];
                     if (!bubble.querySelector('.artifact-container')) {{
-                        const artifactDiv = document.createElement('div');
-                        artifactDiv.className = 'artifact-container';
-                        artifactDiv.innerHTML = `
-                            <div class="artifact-header">
-                                <div class="artifact-title"><i class="fas fa-layer-group"></i> Live App Preview</div>
-                                <div class="artifact-actions">
-                                    <button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}"><i class="fas fa-play"></i> Fullscreen</button>
-                                </div>
-                            </div>
-                            <div class="artifact-content"><iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe></div>
-                        `;
+                        const artifactDiv = document.createElement('div'); artifactDiv.className = 'artifact-container';
+                        artifactDiv.innerHTML = `<div class="artifact-header"><div class="artifact-title"><i class="fas fa-layer-group"></i> Live App Preview</div><div class="artifact-actions"><button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}"><i class="fas fa-play"></i> Fullscreen</button></div></div><div class="artifact-content"><iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe></div>`;
                         bubble.appendChild(artifactDiv);
                     }}
                 }}
             }}
 
             window.openFullscreenPreview = function(btn) {{
-                const code = decodeURIComponent(btn.getAttribute('data-code'));
                 document.getElementById('preview-modal').style.display = 'flex';
-                document.getElementById('fullscreen-frame').srcdoc = code;
+                document.getElementById('fullscreen-frame').srcdoc = decodeURIComponent(btn.getAttribute('data-code'));
             }};
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
@@ -437,68 +403,37 @@ def home():
                 document.body.appendChild(ball); setTimeout(() => ball.remove(), 600);
             }}
 
-            // 📎 FILE UPLOAD LOGIC 📎
             document.getElementById('file-upload').addEventListener('change', async function(e) {{
-                const file = e.target.files[0];
-                if(!file) return;
-
-                const preview = document.getElementById('attachment-preview');
-                const nameSpan = document.getElementById('attach-name');
-                const icon = document.getElementById('attach-icon');
+                const file = e.target.files[0]; if(!file) return;
+                const preview = document.getElementById('attachment-preview'); const nameSpan = document.getElementById('attach-name'); const icon = document.getElementById('attach-icon');
                 
-                nameSpan.innerText = "Processing " + file.name + "...";
-                preview.style.display = 'flex';
-                attachedImageBase64 = null;
-                attachedPdfText = null;
+                nameSpan.innerText = "Processing " + file.name + "..."; preview.style.display = 'flex';
+                attachedImageBase64 = null; attachedPdfText = null;
 
                 if(file.type.startsWith('image/')) {{
-                    icon.className = 'fas fa-image';
-                    const reader = new FileReader();
-                    reader.onload = function(event) {{
-                        attachedImageBase64 = event.target.result.split(',')[1];
-                        nameSpan.innerText = file.name;
-                    }};
+                    icon.className = 'fas fa-image'; const reader = new FileReader();
+                    reader.onload = function(event) {{ attachedImageBase64 = event.target.result.split(',')[1]; nameSpan.innerText = file.name; }};
                     reader.readAsDataURL(file);
                 }} 
                 else if(file.type === 'application/pdf') {{
                     icon.className = 'fas fa-file-pdf';
                     try {{
-                        const arrayBuffer = await file.arrayBuffer();
-                        const pdf = await pdfjsLib.getDocument({{data: arrayBuffer}}).promise;
-                        let fullText = '';
-                        for (let i = 1; i <= pdf.numPages; i++) {{
-                            const page = await pdf.getPage(i);
-                            const textContent = await page.getTextContent();
-                            fullText += textContent.items.map(item => item.str).join(' ') + '\\n';
-                        }}
-                        attachedPdfText = fullText;
-                        nameSpan.innerText = file.name + " (Ready)";
-                    }} catch (err) {{
-                        nameSpan.innerText = "Error reading PDF";
-                    }}
-                }} else {{
-                    nameSpan.innerText = "Unsupported Format";
-                }}
-                e.target.value = ''; // clear input
+                        const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({{data: arrayBuffer}}).promise; let fullText = '';
+                        for (let i = 1; i <= pdf.numPages; i++) {{ const page = await pdf.getPage(i); const textContent = await page.getTextContent(); fullText += textContent.items.map(item => item.str).join(' ') + '\\n'; }}
+                        attachedPdfText = fullText; nameSpan.innerText = file.name + " (Ready)";
+                    }} catch (err) {{ nameSpan.innerText = "Error reading PDF"; }}
+                }} else {{ nameSpan.innerText = "Unsupported Format"; }}
+                e.target.value = '';
             }});
 
-            function clearAttachment() {{
-                attachedImageBase64 = null;
-                attachedPdfText = null;
-                document.getElementById('attachment-preview').style.display = 'none';
-            }}
+            function clearAttachment() {{ attachedImageBase64 = null; attachedPdfText = null; document.getElementById('attachment-preview').style.display = 'none'; }}
 
             function appendBubble(text, isUser, animate=true) {{
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
-                const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
-                wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble"></div></div>`;
+                wrapper.innerHTML = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div><div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
                 chatBox.appendChild(wrapper);
-                
-                const bubble = wrapper.querySelector('.bubble');
-                bubble.innerHTML = marked.parse(text);
-                
+                const bubble = wrapper.querySelector('.bubble'); bubble.innerHTML = marked.parse(text);
                 if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForArtifacts(text, bubble); }}
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
@@ -506,60 +441,39 @@ def home():
             function showDeepBrainThinking(isVision=false) {{
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
-                
                 let title = isVision ? "Vision Core Active (Analyzing Image)" : "Deep-Brain Processor Active";
-                
-                wrapper.innerHTML = `
-                    <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
-                    <div class="bubble-container">
-                        <div class="sender-name">{APP_NAME}</div>
-                        <div class="bubble" style="background:transparent; padding:0; width:100%;">
-                            <div class="brain-container">
-                                <div class="brain-header">
-                                    <i class="fas fa-microchip brain-icon"></i>
-                                    <span class="brain-title">${{title}}</span>
-                                </div>
-                                <div class="brain-logs" id="brain-logs"></div>
-                            </div>
-                        </div>
-                    </div>`;
+                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding:0; width:100%;"><div class="brain-container"><div class="brain-header"><i class="fas fa-microchip brain-icon"></i><span class="brain-title">${{title}}</span></div><div class="brain-logs" id="brain-logs"></div></div></div></div>`;
                 chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
 
-                const logs = isVision ? ["Scanning pixels...", "Extracting text...", "Processing visuals..."] : ["Analyzing query context...", "Accessing global neural network...", "Compiling logic matrix..."];
-                const logContainer = document.getElementById('brain-logs');
-                let i = 0;
-                window.brainInterval = setInterval(() => {{
-                    if(i < logs.length) {{
-                        const line = document.createElement('div'); line.className = 'log-line'; line.innerText = logs[i]; logContainer.appendChild(line); i++;
-                    }} else {{ clearInterval(window.brainInterval); }}
-                }}, 800);
+                const logs = isVision ? ["Scanning pixels...", "Extracting text...", "Processing visual data..."] : ["Analyzing query context...", "Accessing global neural network...", "Compiling logic matrix..."];
+                const logContainer = document.getElementById('brain-logs'); let i = 0;
+                window.brainInterval = setInterval(() => {{ if(i < logs.length) {{ const line = document.createElement('div'); line.className = 'log-line'; line.innerText = logs[i]; logContainer.appendChild(line); i++; }} else {{ clearInterval(window.brainInterval); }} }}, 800);
             }}
 
             function removeTyping() {{ if(window.brainInterval) clearInterval(window.brainInterval); document.getElementById('typing-indicator')?.remove(); }}
-
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
                 const text = msgInput.value.trim();
-                
-                // Must have text or an attachment
                 if(!text && !attachedImageBase64 && !attachedPdfText) return;
 
-                let displayMessage = text || "Sent an attachment.";
-                if(attachedImageBase64) displayMessage += "\\n\\n*(Image attached)*";
-                if(attachedPdfText) displayMessage += "\\n\\n*(PDF Document attached)*";
+                // 🔥 BUG FIX: Smart UI vs API Message Separation 🔥
+                let uiMessage = text;
+                if(!text && attachedImageBase64) uiMessage = "📸 *Uploaded an image*";
+                if(!text && attachedPdfText) uiMessage = "📄 *Uploaded a PDF document*";
+
+                let apiMessage = text;
+                if(!text && attachedImageBase64) apiMessage = "Please analyze and describe this image in detail.";
+                if(!text && attachedPdfText) apiMessage = "Please carefully read and summarize this document.";
 
                 playSentAnimation(); 
 
                 if(!currentChatId) startNewChat();
                 const chat = chats.find(c => c.id === currentChatId);
                 
-                // Only save text to history to prevent breaking future loads
-                chat.messages.push({{ role: 'user', text: displayMessage }});
-                if(chat.messages.length === 1) {{ chat.title = (text || "Attachment").substring(0, 20); renderHistory(); }}
-                saveData();
-                msgInput.value = '';
-                appendBubble(displayMessage, true);
+                chat.messages.push({{ role: 'user', text: uiMessage }});
+                if(chat.messages.length === 1) {{ chat.title = (text || "File Upload").substring(0, 20); renderHistory(); }}
+                saveData(); msgInput.value = ''; appendBubble(uiMessage, true);
 
                 if(!userName && !awaitingName) {{ awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return; }}
                 if(awaitingName) {{ userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false; setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return; }}
@@ -567,50 +481,32 @@ def home():
                 showDeepBrainThinking(!!attachedImageBase64); 
                 
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                
-                // Prepare Payload with Attachments
-                const payload = {{
-                    messages: context,
-                    user_name: userName,
-                    image_base64: attachedImageBase64,
-                    pdf_text: attachedPdfText
-                }};
+                // Override the last UI text with the actual prompt for the AI backend
+                context[context.length - 1].content = apiMessage;
 
-                clearAttachment(); // Clear UI after sending
+                const payload = {{ messages: context, user_name: userName, image_base64: attachedImageBase64, pdf_text: attachedPdfText }};
+                clearAttachment();
 
                 try {{
-                    const res = await fetch('/chat', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify(payload)
-                    }});
-                    
+                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payload) }});
                     removeTyping();
                     if(!res.ok) throw new Error("System Offline");
                     
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let botResp = '';
-                    
+                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
                     const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
-                    chatBox.appendChild(wrapper);
-                    const bubbleDiv = wrapper.querySelector('.bubble');
+                    chatBox.appendChild(wrapper); const bubbleDiv = wrapper.querySelector('.bubble');
 
                     while(true) {{
-                        const {{ done, value }} = await reader.read();
-                        if(done) break;
-                        botResp += decoder.decode(value);
-                        bubbleDiv.innerHTML = marked.parse(botResp);
+                        const {{ done, value }} = await reader.read(); if(done) break;
+                        botResp += decoder.decode(value); bubbleDiv.innerHTML = marked.parse(botResp);
                         chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
                     
                     chat.messages.push({{ role: 'assistant', text: botResp }});
                     saveData(); hljs.highlightAll(); addCopyButtons(); checkForArtifacts(botResp, bubbleDiv);
 
-                }} catch(e) {{
-                    removeTyping(); appendBubble("⚠️ System connection error. Please try again.", false);
-                }}
+                }} catch(e) {{ removeTyping(); appendBubble("⚠️ System connection error. Please try again.", false); }}
             }}
 
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
@@ -629,7 +525,6 @@ def chat():
     messages = data.get("messages", [])
     user_name = data.get("user_name", "User")
     
-    # 📎 Catch attachments from Frontend
     image_base64 = data.get("image_base64")
     pdf_text = data.get("pdf_text")
 
@@ -643,27 +538,34 @@ def chat():
     RULES:
     1. CONCISE & SMART: Be highly accurate and direct.
     2. APP CREATION: Write ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. 
+    3. VISION MODE (CRITICAL): If the user asks about an image or document, YOU MUST ANALYZE IT. DO NOT EVER SAY "I am not capable of viewing attachments". You CAN see images.
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
 
-    # 📎 Process PDF Text Injection
+    # PDF Logic
     if pdf_text and messages:
-        messages[-1]['content'] = f"Here is the content of an uploaded PDF document:\n\n---\n{pdf_text[:15000]}\n---\n\nUser Question/Command regarding this PDF: {messages[-1]['content']}"
+        messages[-1]['content'] = f"Here is the content of an uploaded PDF document:\n\n---\n{pdf_text[:15000]}\n---\n\nUser Command: {messages[-1]['content']}"
 
-    # 📎 Process Vision (Image) Logic
-    use_vision_model = False
+    target_model = "llama-3.3-70b-versatile"
+    
+    # 🔥 FIXED VISION LOGIC 🔥
     if image_base64 and messages:
-        use_vision_model = True
+        target_model = "llama-3.2-90b-vision-preview" # Upgraded to 90B Vision model for max accuracy
         user_text = messages[-1]['content']
-        # Groq specific format for images
+        
         messages[-1]['content'] = [
-            {"type": "text", "text": user_text},
+            {"type": "text", "text": f"{user_text}\n[SYSTEM: Analyze the provided image perfectly. You can clearly see it.]"},
             {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
         ]
+        # Keep only last 3 messages to prevent vision model context confusion
+        messages = messages[-3:]
 
-    # Switch Model based on Attachment
-    target_model = "llama-3.2-11b-vision-preview" if use_vision_model else "llama-3.3-70b-versatile"
+    # Math engine (only if content is string, not image array)
+    if not image_base64 and messages and isinstance(messages[-1]['content'], str):
+        math_result = solve_math_problem(messages[-1]['content'])
+        if math_result:
+            messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
 
     def generate():
         global current_key_index
@@ -690,7 +592,7 @@ def chat():
                 current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
                 attempts += 1
                 time.sleep(1)
-        yield "⚠️ API Rate Limit or Error."
+        yield "⚠️ API Rate Limit or Server Error. Try again in a few seconds."
 
     return Response(generate(), mimetype="text/plain")
 
