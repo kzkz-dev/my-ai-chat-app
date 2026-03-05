@@ -5,18 +5,16 @@ import time
 from datetime import datetime, timedelta
 import pytz
 import json
-import random
-import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 29.1.0) 🧠
-# 🔥 FIXED: ARTIFACTS RUN BUTTON & ADVANCED AI BRAIN 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 30.0) 🧠
+# 🔥 FIXED: UI BUGS, TELEGRAM BLOCK & ARTIFACTS 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "29.1.0"
+VERSION = "30.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -57,7 +55,6 @@ def get_current_context():
         "date": now_dhaka.strftime("%d %B, %Y")
     }
 
-# 🧮 MATH ENGINE
 def solve_math_problem(text):
     try:
         clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
@@ -76,10 +73,7 @@ SUGGESTION_POOL = [
     {"icon": "fas fa-code", "text": "Create a login page in HTML"},
     {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
     {"icon": "fas fa-dumbbell", "text": "30-minute home workout"},
-    {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"},
-    {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"},
-    {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
-    {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"}
+    {"icon": "fas fa-lightbulb", "text": "Business ideas for students"}
 ]
 
 @app.route("/")
@@ -118,71 +112,45 @@ def home():
                 --terminal-green: #0f0;
             }}
 
-            body.light {{
-                --bg-gradient: #f8fafc;
-                --glass-bg: #ffffff;
-                --sidebar-bg: #ffffff;
-                --text: #1e293b;
-                --text-secondary: #64748b;
-                --glass-border: #e2e8f0;
-                --accent: #2563eb;
-                --bot-grad: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
-                --user-grad: linear-gradient(135deg, #3b82f6 0%, #06b6d4 100%);
-                --terminal-green: #00a000;
-            }}
-
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ 
-                margin: 0; background: var(--bg-gradient); color: var(--text); 
-                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
-                height: 100vh; display: flex; overflow: hidden; 
-                transition: background 0.3s ease;
-            }}
-
-            /* 🌌 NEURAL BRAIN BACKGROUND */
+            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
-            .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
-
-            /* SIDEBAR FIXED FOR DARK/LIGHT */
-            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
-            #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
+            /* SAFE MODALS & OVERLAYS */
+            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
+            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
+            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.3s; }}
+            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
+            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
+            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
+            .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
+            .btn-delete {{ background: var(--danger); color: white; }}
+            .btn-confirm {{ background: var(--success); color: black; }}
+
+            /* SIDEBAR */
+            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1); position: absolute; z-index: 200; left: 0; top: 0; background: var(--sidebar-bg); }}
+            #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); text-shadow: var(--accent-glow); }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
-            
             .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.3s ease; }}
-            .new-chat-btn:active {{ transform: scale(0.97); }}
-
             .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
             .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.2s; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
-
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            
-            /* ABOUT SECTION */
             .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.3s; }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
 
-            /* DARK/LIGHT TOGGLE */
-            .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
-            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
-            .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
-
             header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
-            body.light header {{ background: rgba(255, 255, 255, 0.5); }}
-
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* WELCOME SCREEN */
             .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
             .icon-wrapper {{ width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 10px; letter-spacing: -0.5px; }}
             .welcome-subtitle {{ color: var(--text-secondary); margin-bottom: 40px; font-size: 1rem; max-width: 80%; line-height: 1.5; }}
-
             .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; width: 100%; max-width: 750px; }}
             .chip {{ padding: 16px 20px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 18px; cursor: pointer; text-align: left; color: var(--text-secondary); transition: all 0.3s; font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; }}
             .chip:hover {{ transform: translateY(-3px); border-color: var(--accent); color: var(--text); box-shadow: 0 5px 15px rgba(0,0,0,0.1); }}
@@ -193,65 +161,34 @@ def home():
             .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
-            
             .bubble-container {{ display: flex; flex-direction: column; max-width: 88%; width: 100%; }}
             .message-wrapper.user .bubble-container {{ align-items: flex-end; width: auto; }}
             .sender-name {{ font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 5px; font-weight: 600; padding-left: 2px; text-transform: uppercase; }}
             .message-wrapper.user .sender-name {{ display: none; }}
-
             .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; position: relative; width: 100%; }}
             .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: hidden; }}
             .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; box-shadow: 0 5px 15px rgba(0,0,0,0.1); width: auto; }}
-            
             .bubble strong {{ color: var(--accent); font-weight: 700; }}
-            body.light .bubble strong {{ color: #2563eb; }}
-            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; border: 1px solid var(--glass-border); }}
 
-            /* ==========================================
-               🧠 DEEP-BRAIN PROCESSOR CSS 
-               ========================================== */
-            .brain-container {{
-                width: 100%; background: #000; border: 1px solid var(--glass-border);
-                border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace;
-                position: relative; overflow: hidden; margin-bottom: 15px;
-                box-shadow: inset 0 0 20px rgba(0,255,0,0.05);
-            }}
+            /* 🧠 DEEP-BRAIN PROCESSOR CSS */
+            .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); }}
             .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
             .brain-icon {{ color: var(--terminal-green); font-size: 1.2rem; animation: pulse 1.5s infinite; }}
             .brain-title {{ color: var(--terminal-green); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }}
             .brain-logs {{ font-size: 0.8rem; color: #a3a3a3; line-height: 1.8; min-height: 60px; }}
             .log-line {{ animation: typeText 0.1s linear forwards; opacity: 0; }}
             .log-line::before {{ content: "> "; color: var(--terminal-green); }}
-            
-            @keyframes typeText {{ to {{ opacity: 1; }} }}
-            @keyframes pulse {{ 0%, 100% {{ opacity: 1; transform: scale(1); text-shadow: 0 0 10px var(--terminal-green); }} 50% {{ opacity: 0.5; transform: scale(0.95); text-shadow: none; }} }}
 
-            /* ==========================================
-               🛠️ FLUX ARTIFACTS CSS (FIXED RUN BUTTON)
-               ========================================== */
-            .artifact-container {{
-                width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
-                border-radius: 16px; overflow: hidden; margin-top: 15px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            }}
-            .artifact-header {{
-                background: rgba(125,125,125,0.1); padding: 12px 16px;
-                display: flex; justify-content: space-between; align-items: center;
-                border-bottom: 1px solid var(--glass-border);
-            }}
+            /* 🛠️ FLUX ARTIFACTS CSS */
+            .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }}
+            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }}
             .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
             .artifact-title i {{ color: #facc15; }}
-            .artifact-actions button {{
-                background: var(--accent); border: none; color: black; font-weight: 600;
-                padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
-                transition: 0.3s; display: inline-flex; align-items: center; gap: 6px;
-                box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-            }}
+            .artifact-actions button {{ background: var(--accent); border: none; color: black; font-weight: 600; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 0.8rem; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }}
             .artifact-actions button:hover {{ transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }}
             .artifact-content {{ width: 100%; height: 350px; position: relative; background: #fff; }}
             .artifact-content iframe {{ width: 100%; height: 100%; border: none; background: #fff; }}
 
-            /* CODE & COPY BUTTON */
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
@@ -266,22 +203,13 @@ def home():
 
             .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
 
-            /* FULLSCREEN PREVIEW MODAL */
             #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
             .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s; }}
             .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
             iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; }}
 
-            /* MODALS */
-            .modal-overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); display: none; justify-content: center; align-items: center; z-index: 9999; backdrop-filter: blur(8px); }}
-            .modal-box {{ background: var(--sidebar-bg); border: 1px solid var(--glass-border); padding: 30px; border-radius: 20px; width: 90%; max-width: 350px; text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.3); color: var(--text); animation: popIn 0.3s; }}
-            .modal-title {{ font-size: 1.4rem; margin-bottom: 10px; font-weight: 700; }}
-            .modal-desc {{ color: var(--text-secondary); margin-bottom: 25px; line-height: 1.5; }}
-            .btn-modal {{ padding: 12px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; margin: 0 6px; font-size: 0.9rem; transition: 0.2s; }}
-            .btn-cancel {{ background: rgba(125,125,125,0.15); color: var(--text); }}
-            .btn-delete {{ background: var(--danger); color: white; }}
-            .btn-confirm {{ background: var(--success); color: black; }}
-
+            @keyframes typeText {{ to {{ opacity: 1; }} }}
+            @keyframes pulse {{ 0%, 100% {{ opacity: 1; transform: scale(1); text-shadow: 0 0 10px var(--terminal-green); }} 50% {{ opacity: 0.5; transform: scale(0.95); text-shadow: none; }} }}
             @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
             @keyframes typingBounce {{ 0%, 80%, 100% {{ transform: scale(0); }} 40% {{ transform: scale(1); }} }}
             @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
@@ -290,10 +218,9 @@ def home():
             
             .typing {{ display: flex; gap: 6px; padding: 12px 0; }}
             .dot {{ width: 8px; height: 8px; background: var(--accent); border-radius: 50%; animation: typingBounce 1.4s infinite ease-in-out both; }}
-            .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
         </style>
     </head>
-    <body class="dark">
+    <body>
         <canvas id="neuro-bg"></canvas>
 
         <div id="delete-modal" class="modal-overlay">
@@ -335,8 +262,8 @@ def home():
         <div id="preview-modal">
             <div class="preview-box">
                 <div class="preview-header">
-                    <span style="font-weight:700; color:#111;">Live App Preview</span>
-                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Close</button>
+                    <span style="font-weight:700; color:#111; font-size: 1.1rem;"><i class="fas fa-gamepad" style="color:#2563eb;"></i> Flux Artifact Running...</span>
+                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:8px 16px; border-radius:8px; cursor:pointer; font-weight:bold;"><i class="fas fa-times"></i> Close</button>
                 </div>
                 <iframe id="fullscreen-frame" class="fullscreen-iframe"></iframe>
             </div>
@@ -346,18 +273,11 @@ def home():
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
-            <button class="new-chat-btn" onclick="startNewChat()">
-                <i class="fas fa-plus"></i> New Chat
-            </button>
+            <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> New Chat</button>
             <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px; opacity:0.8;">RECENT</div>
             <div class="history-list" id="history-list"></div>
             
             <div class="menu-section">
-                <div class="theme-toggles">
-                    <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
-                    <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
-                </div>
-
                 <div class="history-item" onclick="toggleAbout()"><i class="fas fa-info-circle"></i> App Info</div>
                 <div id="about-info" class="about-section">
                     <strong style="font-size:1.2rem; display:block; margin-bottom:5px; color:var(--text);">{APP_NAME}</strong>
@@ -367,7 +287,6 @@ def home():
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026 All Rights Reserved</small>
                 </div>
                 <div class="history-item" onclick="openModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -384,7 +303,7 @@ def home():
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Experience the power of Deep-Brain processing and instant Artifacts.</div>
+                    <div class="welcome-subtitle">Experience Deep-Brain processing and instant App making.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
@@ -398,14 +317,18 @@ def home():
         </div>
 
         <script>
+            // TELEGRAM BROWSER CHECK
+            if (navigator.userAgent.includes("Telegram") || navigator.userAgent.includes("FBAV") || navigator.userAgent.includes("FBAN")) {{
+                alert("⚠️ Please open this link in Google Chrome or Safari. In-app browsers may not support all features.");
+            }}
+
             marked.use({{ breaks: true, gfm: true }});
-            
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v29_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v30_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
-
             let currentChatId = null;
+            
             const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
             const welcomeScreen = document.getElementById('welcome');
@@ -415,7 +338,7 @@ def home():
             renderHistory();
             renderSuggestions(); 
 
-            // 🧠 NEURAL BACKGROUND
+            // NEURAL BACKGROUND
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
@@ -445,7 +368,6 @@ def home():
             }}
             animateBg();
 
-            function setTheme(mode) {{ document.body.className = mode; document.getElementById('btn-dark').className = mode==='dark'?'theme-btn active':'theme-btn'; document.getElementById('btn-light').className = mode==='light'?'theme-btn active':'theme-btn'; }}
             function toggleAbout() {{ document.getElementById('about-info').classList.toggle('show'); }}
             function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
             function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
@@ -466,7 +388,7 @@ def home():
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v29_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v30_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -497,302 +419,5 @@ def home():
 
             // 🔥 FIXED: ARTIFACTS PARSER & RUN BUTTON 🔥
             function checkForArtifacts(text, bubble) {{
-                const codeMatch = text.match(/```html([\\s\\S]*?)```/);
-                if(codeMatch) {{
-                    const code = codeMatch[1];
-                    
-                    // Hide raw code blocks to make the UI look super clean
-                    const preBlocks = bubble.querySelectorAll('pre');
-                    preBlocks.forEach(pre => pre.style.display = 'none');
-
-                    const artifactDiv = document.createElement('div');
-                    artifactDiv.className = 'artifact-container';
-                    artifactDiv.innerHTML = `
-                        <div class="artifact-header">
-                            <div class="artifact-title"><i class="fas fa-layer-group"></i> Flux App Engine</div>
-                            <div class="artifact-actions">
-                                <button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}">
-                                    <i class="fas fa-play"></i> Fullscreen App
-                                </button>
-                            </div>
-                        </div>
-                        <div class="artifact-content">
-                            <iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe>
-                        </div>
-                    `;
-                    bubble.appendChild(artifactDiv);
-                }}
-            }}
-
-            window.openFullscreenPreview = function(btn) {{
-                const code = decodeURIComponent(btn.getAttribute('data-code'));
-                document.getElementById('preview-modal').style.display = 'flex';
-                document.getElementById('fullscreen-frame').srcdoc = code;
-            }};
-            function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
-
-            function playSentAnimation() {{
-                const ball = document.createElement('div'); ball.className = 'energy-ball'; ball.style.left = '50%';
-                document.body.appendChild(ball); setTimeout(() => ball.remove(), 600);
-            }}
-
-            function appendBubble(text, isUser, animate=true) {{
-                welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                const avatar = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div>`;
-                const name = `<div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div>`;
-                wrapper.innerHTML = `${{avatar}}<div class="bubble-container">${{name}}<div class="bubble"></div></div>`;
-                chatBox.appendChild(wrapper);
-                
-                const bubble = wrapper.querySelector('.bubble');
-                bubble.innerHTML = marked.parse(text);
-                
-                if(!isUser) {{
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    checkForArtifacts(text, bubble);
-                }}
-                
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-            }}
-
-            // 🔥 DEEP-BRAIN PROCESSOR VISUAL 🔥
-            function showDeepBrainThinking() {{
-                welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div');
-                wrapper.id = 'typing-indicator';
-                wrapper.className = 'message-wrapper bot';
-                
-                wrapper.innerHTML = `
-                    <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
-                    <div class="bubble-container">
-                        <div class="sender-name">{APP_NAME}</div>
-                        <div class="bubble" style="background:transparent; padding:0; width:100%;">
-                            <div class="brain-container">
-                                <div class="brain-header">
-                                    <i class="fas fa-microchip brain-icon"></i>
-                                    <span class="brain-title">Deep-Brain Processor Active</span>
-                                </div>
-                                <div class="brain-logs" id="brain-logs"></div>
-                            </div>
-                        </div>
-                    </div>`;
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-
-                const logs = [
-                    "Analyzing query context...",
-                    "Accessing global neural network...",
-                    "Compiling logic matrix...",
-                    "Generating optimized response..."
-                ];
-                
-                const logContainer = document.getElementById('brain-logs');
-                let i = 0;
-                window.brainInterval = setInterval(() => {{
-                    if(i < logs.length) {{
-                        const line = document.createElement('div');
-                        line.className = 'log-line';
-                        line.innerText = logs[i];
-                        logContainer.appendChild(line);
-                        i++;
-                    }} else {{
-                        clearInterval(window.brainInterval);
-                    }}
-                }}, 800);
-            }}
-
-            function removeTyping() {{ 
-                if(window.brainInterval) clearInterval(window.brainInterval);
-                document.getElementById('typing-indicator')?.remove(); 
-            }}
-
-            function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
-
-            async function sendMessage() {{
-                const text = msgInput.value.trim();
-                if(!text) return;
-
-                if(text === '!admin') {{
-                    msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return;
-                }}
-
-                playSentAnimation(); 
-
-                if(!currentChatId) startNewChat();
-                const chat = chats.find(c => c.id === currentChatId);
-                
-                chat.messages.push({{ role: 'user', text: text }});
-                if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
-                saveData();
-                msgInput.value = '';
-                appendBubble(text, true);
-
-                if(!userName && !awaitingName) {{
-                    awaitingName = true;
-                    setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return;
-                }}
-                if(awaitingName) {{
-                    userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false;
-                    setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return;
-                }}
-
-                showDeepBrainThinking(); // Trigger Deep-Brain animation
-                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                
-                try {{
-                    const res = await fetch('/chat', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context, user_name: userName }})
-                    }});
-                    
-                    removeTyping();
-                    if(!res.ok) throw new Error("System Offline");
-                    
-                    const reader = res.body.getReader();
-                    const decoder = new TextDecoder();
-                    let botResp = '';
-                    
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper bot';
-                    wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
-                    chatBox.appendChild(wrapper);
-                    const bubbleDiv = wrapper.querySelector('.bubble');
-
-                    while(true) {{
-                        const {{ done, value }} = await reader.read();
-                        if(done) break;
-                        botResp += decoder.decode(value);
-                        
-                        bubbleDiv.innerHTML = marked.parse(botResp);
-                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
-                    }}
-                    
-                    chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData();
-                    
-                    // Final render with Syntax Highlighting and Artifacts
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    checkForArtifacts(botResp, bubbleDiv);
-
-                }} catch(e) {{
-                    removeTyping();
-                    appendBubble("⚠️ System connection error. Please try again.", false);
-                }}
-            }}
-
-            function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
-            function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
-            function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v29_history'); location.reload(); }}
-
-            async function verifyAdmin() {{
-                const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
-                if(pass === '{ADMIN_PASSWORD}') {{
-                    errorMsg.style.display = 'none'; closeModal('admin-auth-modal'); openModal('admin-panel-modal'); document.getElementById('admin-pass').value = '';
-                    try {{
-                        const res = await fetch('/admin/stats'); const data = await res.json();
-                        document.getElementById('stat-uptime').innerText = data.uptime; document.getElementById('stat-msgs').innerText = data.total_messages;
-                        updateSysBtn(data.active);
-                    }} catch(e) {{ alert('Error fetching stats'); }}
-                }} else {{ errorMsg.style.display = 'block'; }}
-            }}
-
-            async function toggleSystem() {{
-                try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-
-            function updateSysBtn(isActive) {{
-                const btn = document.getElementById('btn-toggle-sys');
-                if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} 
-                else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }}
-            }}
-
-            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
-        </script>
-    </body>
-    </html>
-    """
-
-# 🛡️ ADMIN API ROUTES
-@app.route("/admin/stats")
-def admin_stats():
-    return jsonify({"uptime": get_uptime(), "total_messages": TOTAL_MESSAGES, "active": SYSTEM_ACTIVE})
-
-@app.route("/admin/toggle_system", methods=["POST"])
-def toggle_system():
-    global SYSTEM_ACTIVE
-    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
-    return jsonify({"active": SYSTEM_ACTIVE})
-
-@app.route("/chat", methods=["POST"])
-def chat():
-    global TOTAL_MESSAGES
-    if not SYSTEM_ACTIVE: return Response("System is currently under maintenance.", status=503)
-
-    TOTAL_MESSAGES += 1
-    data = request.json
-    messages = data.get("messages", [])
-    user_name = data.get("user_name", "User")
-
-    if messages and messages[-1]['role'] == 'user':
-        last_msg = messages[-1]['content']
-        math_result = solve_math_problem(last_msg)
-        if math_result:
-            messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
-
-    ctx = get_current_context()
-    
-    # 🔥 AI BRAIN RESTORED & UPGRADED 🔥
-    sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant designed for students and professionals.
-    
-    IDENTITY & CONTEXT:
-    - Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). IMPORTANT: Only mention the creator if explicitly asked "Who created you?".
-    - Current User Name: {user_name}. Address the user by this name respectfully.
-    - Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}. You know exactly what time it is right now.
-    
-    BEHAVIOR RULES:
-    1. CONCISE & SMART: Be direct. Avoid unnecessary chatter.
-    2. STUDENT FRIENDLY: Explain complex topics simply and creatively.
-    3. APP/GAME CREATION (ARTIFACTS): If the user asks to build an app, game, or UI component, YOU MUST write the ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. Put CSS in <style> and JS in <script> inside the HTML. Do not split them. Ensure the app has a modern, beautiful UI and is fully playable.
-    4. NO SCRIPT FORMAT: Do not use "Flux AI:" or "User:" prefixes.
-    """
-
-    sys_message = {"role": "system", "content": sys_prompt_content}
-
-    def generate():
-        global current_key_index
-        attempts = 0
-        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
-        
-        while attempts < max_retries:
-            try:
-                client = get_groq_client()
-                if not client: yield "⚠️ Config Error."; return
-                
-                stream = client.chat.completions.create(
-                    model="llama-3.3-70b-versatile",
-                    messages=[sys_message] + messages,
-                    stream=True,
-                    temperature=0.7, 
-                    max_tokens=2048
-                )
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
-                return
-            except Exception as e:
-                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
-                attempts += 1
-                time.sleep(1)
-        yield "⚠️ System Busy."
-
-    return Response(generate(), mimetype="text/plain")
-
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+                const codeMatch = text.match(/
+http://googleusercontent.com/immersive_entry_chip/0
