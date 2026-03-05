@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 29.1.0) 🧠
-# 🔥 FIXED: ARTIFACTS RUN BUTTON & ADVANCED AI BRAIN 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 30.0.0) 🧠
+# 🔥 NEW: EPIC !DEBATE MODE WITH FULLSCREEN WINNER POPUP 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "29.1.0"
+VERSION = "30.0.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -70,16 +70,14 @@ def solve_math_problem(text):
         return f"{result:,.4f}" 
     except: return None
 
+# 🔥 ADDED !DEBATE TO SUGGESTIONS 🔥
 SUGGESTION_POOL = [
+    {"icon": "fas fa-gavel", "text": "!debate AI will replace humans"},
+    {"icon": "fas fa-gavel", "text": "!debate Time Travel is real"},
     {"icon": "fas fa-gamepad", "text": "Make a Tic-Tac-Toe game"},
     {"icon": "fas fa-calculator", "text": "Create a Neon Calculator"},
-    {"icon": "fas fa-code", "text": "Create a login page in HTML"},
     {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
-    {"icon": "fas fa-dumbbell", "text": "30-minute home workout"},
-    {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"},
-    {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"},
-    {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
-    {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"}
+    {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"}
 ]
 
 @app.route("/")
@@ -139,11 +137,9 @@ def home():
                 transition: background 0.3s ease;
             }}
 
-            /* 🌌 NEURAL BRAIN BACKGROUND */
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
             .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
 
-            /* SIDEBAR FIXED FOR DARK/LIGHT */
             #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.25, 0.8, 0.25, 1), background 0.3s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
             #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
@@ -158,14 +154,11 @@ def home():
             .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
 
             .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
-            
-            /* ABOUT SECTION */
             .about-section {{ display: none; background: rgba(0, 0, 0, 0.2); padding: 20px; border-radius: 16px; margin-top: 5px; font-size: 0.85rem; text-align: center; border: 1px solid var(--glass-border); animation: fadeIn 0.3s; }}
             .about-section.show {{ display: block; }}
             .about-link {{ color: var(--text); font-size: 1.4rem; margin: 0 10px; transition: 0.3s; display: inline-block; }}
             .about-link:hover {{ color: var(--accent); }}
 
-            /* DARK/LIGHT TOGGLE */
             .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; }}
             .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; }}
             .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
@@ -176,7 +169,6 @@ def home():
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; }}
 
-            /* WELCOME SCREEN */
             .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 60px; padding-bottom: 100px; }}
             .icon-wrapper {{ width: 90px; height: 90px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: white; margin-bottom: 20px; box-shadow: 0 0 30px rgba(0, 243, 255, 0.15); animation: levitate 4s ease-in-out infinite; }}
             .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
@@ -207,51 +199,25 @@ def home():
             body.light .bubble strong {{ color: #2563eb; }}
             .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; cursor: pointer; border: 1px solid var(--glass-border); }}
 
-            /* ==========================================
-               🧠 DEEP-BRAIN PROCESSOR CSS 
-               ========================================== */
-            .brain-container {{
-                width: 100%; background: #000; border: 1px solid var(--glass-border);
-                border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace;
-                position: relative; overflow: hidden; margin-bottom: 15px;
-                box-shadow: inset 0 0 20px rgba(0,255,0,0.05);
-            }}
+            /* DEEP-BRAIN PROCESSOR CSS */
+            .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; position: relative; overflow: hidden; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); }}
             .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
             .brain-icon {{ color: var(--terminal-green); font-size: 1.2rem; animation: pulse 1.5s infinite; }}
             .brain-title {{ color: var(--terminal-green); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }}
             .brain-logs {{ font-size: 0.8rem; color: #a3a3a3; line-height: 1.8; min-height: 60px; }}
             .log-line {{ animation: typeText 0.1s linear forwards; opacity: 0; }}
             .log-line::before {{ content: "> "; color: var(--terminal-green); }}
-            
-            @keyframes typeText {{ to {{ opacity: 1; }} }}
-            @keyframes pulse {{ 0%, 100% {{ opacity: 1; transform: scale(1); text-shadow: 0 0 10px var(--terminal-green); }} 50% {{ opacity: 0.5; transform: scale(0.95); text-shadow: none; }} }}
 
-            /* ==========================================
-               🛠️ FLUX ARTIFACTS CSS (FIXED RUN BUTTON)
-               ========================================== */
-            .artifact-container {{
-                width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
-                border-radius: 16px; overflow: hidden; margin-top: 15px;
-                box-shadow: 0 10px 30px rgba(0,0,0,0.2);
-            }}
-            .artifact-header {{
-                background: rgba(125,125,125,0.1); padding: 12px 16px;
-                display: flex; justify-content: space-between; align-items: center;
-                border-bottom: 1px solid var(--glass-border);
-            }}
+            /* FLUX ARTIFACTS CSS */
+            .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 15px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }}
+            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }}
             .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
             .artifact-title i {{ color: #facc15; }}
-            .artifact-actions button {{
-                background: var(--accent); border: none; color: black; font-weight: 600;
-                padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
-                transition: 0.3s; display: inline-flex; align-items: center; gap: 6px;
-                box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
-            }}
+            .artifact-actions button {{ background: var(--accent); border: none; color: black; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; transition: 0.3s; display: inline-flex; align-items: center; gap: 6px; box-shadow: 0 0 10px rgba(0, 243, 255, 0.3); }}
             .artifact-actions button:hover {{ transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }}
             .artifact-content {{ width: 100%; height: 350px; position: relative; background: #fff; }}
             .artifact-content iframe {{ width: 100%; height: 100%; border: none; background: #fff; }}
 
-            /* CODE & COPY BUTTON */
             pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; }}
             code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
             .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; transition: 0.3s; }}
@@ -266,7 +232,46 @@ def home():
 
             .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
 
-            /* FULLSCREEN PREVIEW MODAL */
+            /* ==========================================
+               🔥 EPIC DEBATE WINNER MODAL CSS 🔥
+               ========================================== */
+            #epic-winner-modal {{
+                display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+                background: rgba(0,0,0,0.92); z-index: 99999; justify-content: center; align-items: center;
+                backdrop-filter: blur(15px); padding: 20px;
+            }}
+            .epic-winner-box {{
+                background: linear-gradient(135deg, #111827 0%, #1e1b4b 100%); border: 2px solid var(--accent);
+                border-radius: 24px; padding: 40px 30px; max-width: 600px; width: 100%;
+                box-shadow: 0 0 60px rgba(0, 243, 255, 0.4), inset 0 0 20px rgba(0, 243, 255, 0.1);
+                text-align: center; animation: epicZoom 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+                position: relative; overflow: hidden;
+            }}
+            .winner-badge {{
+                width: 80px; height: 80px; background: rgba(0, 243, 255, 0.1); border: 2px solid var(--accent);
+                border-radius: 50%; display: flex; align-items: center; justify-content: center;
+                font-size: 2.5rem; color: #facc15; margin: 0 auto 20px; box-shadow: 0 0 30px rgba(250, 204, 21, 0.5);
+                animation: pulse 2s infinite;
+            }}
+            .winner-title {{
+                font-size: 2.2rem; font-weight: 800; color: #fff; margin-bottom: 15px;
+                text-shadow: 0 0 15px rgba(255, 255, 255, 0.5); letter-spacing: 1px;
+            }}
+            .winner-content-box {{
+                background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 16px; padding: 25px; font-size: 1.15rem; color: #e0e6ed; line-height: 1.7;
+                text-align: left; margin-bottom: 30px; max-height: 400px; overflow-y: auto;
+            }}
+            .btn-close-epic {{
+                background: var(--bot-grad); color: white; border: none; padding: 14px 40px;
+                font-size: 1.2rem; font-weight: 700; border-radius: 12px; cursor: pointer; transition: 0.3s;
+                box-shadow: 0 10px 20px rgba(0, 243, 255, 0.3);
+            }}
+            .btn-close-epic:hover {{ transform: scale(1.05); box-shadow: 0 10px 30px rgba(0, 243, 255, 0.6); }}
+
+            @keyframes epicZoom {{ from {{ opacity: 0; transform: scale(0.5) rotate(-5deg); }} to {{ opacity: 1; transform: scale(1) rotate(0); }} }}
+
+            /* PREVIEW MODAL */
             #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); }}
             .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; box-shadow: 0 20px 50px rgba(0,0,0,0.5); animation: popIn 0.3s; }}
             .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
@@ -295,6 +300,15 @@ def home():
     </head>
     <body class="dark">
         <canvas id="neuro-bg"></canvas>
+
+        <div id="epic-winner-modal">
+            <div class="epic-winner-box">
+                <div class="winner-badge"><i class="fas fa-trophy"></i></div>
+                <div class="winner-title">Final Conclusion</div>
+                <div class="winner-content-box" id="epic-winner-content"></div>
+                <button class="btn-close-epic" onclick="closeEpicWinner()">Acknowledge Truth</button>
+            </div>
+        </div>
 
         <div id="delete-modal" class="modal-overlay">
             <div class="modal-box">
@@ -367,7 +381,6 @@ def home():
                         <a href="{FACEBOOK_URL}" target="_blank" class="about-link"><i class="fab fa-facebook"></i></a>
                         <a href="{WEBSITE_URL}" target="_blank" class="about-link"><i class="fas fa-globe"></i></a>
                     </div>
-                    <small style="display:block; margin-top:5px; font-weight:500; opacity:0.5; color:var(--text);">&copy; 2026 All Rights Reserved</small>
                 </div>
                 <div class="history-item" onclick="openModal('delete-modal')" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Delete History</div>
             </div>
@@ -384,14 +397,14 @@ def home():
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
                     <div class="welcome-title">Welcome to {APP_NAME}</div>
-                    <div class="welcome-subtitle">Experience the power of Deep-Brain processing and instant Artifacts.</div>
+                    <div class="welcome-subtitle">Experience the power of Deep-Brain, Artifacts, and the new !debate mode.</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
                 <div class="input-box">
-                    <textarea id="msg" placeholder="Ask Flux to build an app..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <textarea id="msg" placeholder="Ask Flux to build an app or use !debate..." rows="1" oninput="resizeInput(this)"></textarea>
                     <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
@@ -401,7 +414,7 @@ def home():
             marked.use({{ breaks: true, gfm: true }});
             
             const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v29_history')) || [];
+            let chats = JSON.parse(localStorage.getItem('flux_v30_history')) || [];
             let userName = localStorage.getItem('flux_user_name_fixed'); 
             let awaitingName = false; 
 
@@ -415,7 +428,6 @@ def home():
             renderHistory();
             renderSuggestions(); 
 
-            // 🧠 NEURAL BACKGROUND
             const canvas = document.getElementById('neuro-bg');
             const ctx = canvas.getContext('2d');
             let particles = [];
@@ -466,7 +478,7 @@ def home():
                 sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
             }}
 
-            function saveData() {{ localStorage.setItem('flux_v29_history', JSON.stringify(chats)); }}
+            function saveData() {{ localStorage.setItem('flux_v30_history', JSON.stringify(chats)); }}
 
             function renderHistory() {{
                 const list = document.getElementById('history-list'); list.innerHTML = '';
@@ -495,13 +507,10 @@ def home():
                 }});
             }}
 
-            // 🔥 FIXED: ARTIFACTS PARSER & RUN BUTTON 🔥
             function checkForArtifacts(text, bubble) {{
                 const codeMatch = text.match(/```html([\\s\\S]*?)```/);
                 if(codeMatch) {{
                     const code = codeMatch[1];
-                    
-                    // Hide raw code blocks to make the UI look super clean
                     const preBlocks = bubble.querySelectorAll('pre');
                     preBlocks.forEach(pre => pre.style.display = 'none');
 
@@ -531,6 +540,14 @@ def home():
             }};
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
+            // 🔥 EPIC WINNER MODAL LOGIC 🔥
+            window.showEpicWinner = function(encodedText) {{
+                const text = decodeURIComponent(encodedText);
+                document.getElementById('epic-winner-content').innerHTML = marked.parse(text);
+                document.getElementById('epic-winner-modal').style.display = 'flex';
+            }};
+            function closeEpicWinner() {{ document.getElementById('epic-winner-modal').style.display = 'none'; }}
+
             function playSentAnimation() {{
                 const ball = document.createElement('div'); ball.className = 'energy-ball'; ball.style.left = '50%';
                 document.body.appendChild(ball); setTimeout(() => ball.remove(), 600);
@@ -545,7 +562,16 @@ def home():
                 chatBox.appendChild(wrapper);
                 
                 const bubble = wrapper.querySelector('.bubble');
-                bubble.innerHTML = marked.parse(text);
+                
+                // Hide WINNER tags if they exist in historical loaded messages
+                let cleanText = text;
+                const winnerRegex = /\\[WINNER\\]([\\s\\S]*?)\\[\\/WINNER\\]/i;
+                if (!isUser && winnerRegex.test(cleanText)) {{
+                    const winnerContent = cleanText.match(winnerRegex)[1].trim();
+                    cleanText = cleanText.replace(winnerRegex, `\n\n---\n<div style="text-align:center; margin-top:15px;"><button onclick="showEpicWinner(\\'${{encodeURIComponent(winnerContent)}}\\')" style="background:var(--accent); color:black; border:none; padding:10px 20px; border-radius:10px; font-weight:bold; cursor:pointer; box-shadow: 0 0 15px rgba(0,243,255,0.4);"><i class="fas fa-trophy"></i> View Final Conclusion</button></div>`);
+                }}
+
+                bubble.innerHTML = marked.parse(cleanText);
                 
                 if(!isUser) {{
                     hljs.highlightAll();
@@ -556,12 +582,11 @@ def home():
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
-            // 🔥 DEEP-BRAIN PROCESSOR VISUAL 🔥
-            function showDeepBrainThinking() {{
+            function showDeepBrainThinking(isDebate) {{
                 welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div');
-                wrapper.id = 'typing-indicator';
-                wrapper.className = 'message-wrapper bot';
+                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
+                
+                let title = isDebate ? "Debate Logic Processor Active" : "Deep-Brain Processor Active";
                 
                 wrapper.innerHTML = `
                     <div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div>
@@ -571,16 +596,20 @@ def home():
                             <div class="brain-container">
                                 <div class="brain-header">
                                     <i class="fas fa-microchip brain-icon"></i>
-                                    <span class="brain-title">Deep-Brain Processor Active</span>
+                                    <span class="brain-title">${{title}}</span>
                                 </div>
                                 <div class="brain-logs" id="brain-logs"></div>
                             </div>
                         </div>
                     </div>`;
-                chatBox.appendChild(wrapper);
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
+                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
 
-                const logs = [
+                const logs = isDebate ? [
+                    "Loading Flux Scientist Persona...",
+                    "Loading Flux Rebel Persona...",
+                    "Analyzing cross-arguments...",
+                    "Generating absolute truth..."
+                ] : [
                     "Analyzing query context...",
                     "Accessing global neural network...",
                     "Compiling logic matrix...",
@@ -591,21 +620,12 @@ def home():
                 let i = 0;
                 window.brainInterval = setInterval(() => {{
                     if(i < logs.length) {{
-                        const line = document.createElement('div');
-                        line.className = 'log-line';
-                        line.innerText = logs[i];
-                        logContainer.appendChild(line);
-                        i++;
-                    }} else {{
-                        clearInterval(window.brainInterval);
-                    }}
+                        const line = document.createElement('div'); line.className = 'log-line'; line.innerText = logs[i]; logContainer.appendChild(line); i++;
+                    }} else {{ clearInterval(window.brainInterval); }}
                 }}, 800);
             }}
 
-            function removeTyping() {{ 
-                if(window.brainInterval) clearInterval(window.brainInterval);
-                document.getElementById('typing-indicator')?.remove(); 
-            }}
+            function removeTyping() {{ if(window.brainInterval) clearInterval(window.brainInterval); document.getElementById('typing-indicator')?.remove(); }}
 
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
@@ -613,9 +633,7 @@ def home():
                 const text = msgInput.value.trim();
                 if(!text) return;
 
-                if(text === '!admin') {{
-                    msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return;
-                }}
+                if(text === '!admin') {{ msgInput.value = ''; openModal('admin-auth-modal'); document.getElementById('admin-error-msg').style.display = 'none'; return; }}
 
                 playSentAnimation(); 
 
@@ -624,29 +642,18 @@ def home():
                 
                 chat.messages.push({{ role: 'user', text: text }});
                 if(chat.messages.length === 1) {{ chat.title = text.substring(0, 20); renderHistory(); }}
-                saveData();
-                msgInput.value = '';
-                appendBubble(text, true);
+                saveData(); msgInput.value = ''; appendBubble(text, true);
 
-                if(!userName && !awaitingName) {{
-                    awaitingName = true;
-                    setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return;
-                }}
-                if(awaitingName) {{
-                    userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false;
-                    setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return;
-                }}
+                if(!userName && !awaitingName) {{ awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return; }}
+                if(awaitingName) {{ userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false; setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return; }}
 
-                showDeepBrainThinking(); // Trigger Deep-Brain animation
+                const isDebateMode = text.toLowerCase().includes('!debate');
+                showDeepBrainThinking(isDebateMode); 
+                
                 const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
                 
                 try {{
-                    const res = await fetch('/chat', {{
-                        method: 'POST',
-                        headers: {{ 'Content-Type': 'application/json' }},
-                        body: JSON.stringify({{ messages: context, user_name: userName }})
-                    }});
-                    
+                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify({{ messages: context, user_name: userName }}) }});
                     removeTyping();
                     if(!res.ok) throw new Error("System Offline");
                     
@@ -654,8 +661,7 @@ def home():
                     const decoder = new TextDecoder();
                     let botResp = '';
                     
-                    const wrapper = document.createElement('div');
-                    wrapper.className = 'message-wrapper bot';
+                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
                     wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
                     chatBox.appendChild(wrapper);
                     const bubbleDiv = wrapper.querySelector('.bubble');
@@ -665,32 +671,41 @@ def home():
                         if(done) break;
                         botResp += decoder.decode(value);
                         
+                        // During streaming, just let the raw text flow (looks hacker-ish)
                         bubbleDiv.innerHTML = marked.parse(botResp);
                         chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
                     
+                    // 🔥 DEBATE WINNER PARSER 🔥
+                    const winnerRegex = /\\[WINNER\\]([\\s\\S]*?)\\[\\/WINNER\\]/i;
+                    let match = botResp.match(winnerRegex);
+                    if(match) {{
+                        const winnerContent = match[1].trim();
+                        // Replace the raw tags with a cool button in the chat history
+                        botResp = botResp.replace(winnerRegex, `\n\n---\n<div style="text-align:center; margin-top:15px;"><button onclick="showEpicWinner(\\'${{encodeURIComponent(winnerContent)}}\\')" style="background:var(--accent); color:black; border:none; padding:10px 20px; border-radius:10px; font-weight:bold; cursor:pointer; box-shadow: 0 0 15px rgba(0,243,255,0.4);"><i class="fas fa-trophy"></i> View Final Conclusion</button></div>`);
+                        bubbleDiv.innerHTML = marked.parse(botResp);
+                        
+                        // 🎉 MAGIC: AUTO POPUP THE FULLSCREEN WINNER AFTER 1.5 SECONDS! 🎉
+                        setTimeout(() => {{
+                            showEpicWinner(encodeURIComponent(winnerContent));
+                        }}, 1500);
+                    }}
+
                     chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData();
-                    
-                    // Final render with Syntax Highlighting and Artifacts
-                    hljs.highlightAll();
-                    addCopyButtons();
-                    checkForArtifacts(botResp, bubbleDiv);
+                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForArtifacts(botResp, bubbleDiv);
 
                 }} catch(e) {{
-                    removeTyping();
-                    appendBubble("⚠️ System connection error. Please try again.", false);
+                    removeTyping(); appendBubble("⚠️ System connection error. Please try again.", false);
                 }}
             }}
 
             function openModal(id) {{ document.getElementById(id).style.display = 'flex'; sidebar.classList.add('closed'); overlay.style.display = 'none'; }}
             function closeModal(id) {{ document.getElementById(id).style.display = 'none'; }}
             function openDeleteModal(id) {{ openModal(id); }}
-            function confirmDelete() {{ localStorage.removeItem('flux_v29_history'); location.reload(); }}
+            function confirmDelete() {{ localStorage.removeItem('flux_v30_history'); location.reload(); }}
 
             async function verifyAdmin() {{
-                const pass = document.getElementById('admin-pass').value;
-                const errorMsg = document.getElementById('admin-error-msg');
+                const pass = document.getElementById('admin-pass').value; const errorMsg = document.getElementById('admin-error-msg');
                 if(pass === '{ADMIN_PASSWORD}') {{
                     errorMsg.style.display = 'none'; closeModal('admin-auth-modal'); openModal('admin-panel-modal'); document.getElementById('admin-pass').value = '';
                     try {{
@@ -701,15 +716,8 @@ def home():
                 }} else {{ errorMsg.style.display = 'block'; }}
             }}
 
-            async function toggleSystem() {{
-                try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }}
-            }}
-
-            function updateSysBtn(isActive) {{
-                const btn = document.getElementById('btn-toggle-sys');
-                if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} 
-                else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }}
-            }}
+            async function toggleSystem() {{ try {{ const res = await fetch('/admin/toggle_system', {{ method: 'POST' }}); const data = await res.json(); updateSysBtn(data.active); }} catch(e) {{ alert('Error toggling system'); }} }}
+            function updateSysBtn(isActive) {{ const btn = document.getElementById('btn-toggle-sys'); if(isActive) {{ btn.innerText = "Turn System OFF"; btn.style.background = "var(--danger)"; }} else {{ btn.innerText = "Turn System ON"; btn.style.background = "var(--success)"; }} }}
 
             msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
         </script>
@@ -717,7 +725,6 @@ def home():
     </html>
     """
 
-# 🛡️ ADMIN API ROUTES
 @app.route("/admin/stats")
 def admin_stats():
     return jsonify({"uptime": get_uptime(), "total_messages": TOTAL_MESSAGES, "active": SYSTEM_ACTIVE})
@@ -738,28 +745,38 @@ def chat():
     messages = data.get("messages", [])
     user_name = data.get("user_name", "User")
 
+    # 🔥 HIDDEN !DEBATE PROMPT INJECTION 🔥
     if messages and messages[-1]['role'] == 'user':
         last_msg = messages[-1]['content']
-        math_result = solve_math_problem(last_msg)
-        if math_result:
-            messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
+        
+        # Check if user invoked !debate
+        if "!debate" in last_msg.lower():
+            debate_topic = last_msg.lower().replace("!debate", "").strip()
+            if not debate_topic:
+                debate_topic = "a random complex philosophical topic"
+            
+            system_note = {
+                "role": "system",
+                "content": f"The user initiated a !debate on '{debate_topic}'. You MUST structure your response EXACTLY like this:\n\n🧑‍🔬 **Flux Scientist:** [Provide a highly logical, data-driven argument]\n\n😎 **Flux Rebel:** [Provide a savage, creative, out-of-the-box counter-argument]\n\n[WINNER]\n[Provide the final, absolute truth and perfect conclusion here. Make it profound and undeniably correct.]\n[/WINNER]"
+            }
+            messages.insert(-1, system_note)
+            
+        else:
+            # Regular Math Check
+            math_result = solve_math_problem(last_msg)
+            if math_result:
+                messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}. Give this answer directly."})
 
     ctx = get_current_context()
     
-    # 🔥 AI BRAIN RESTORED & UPGRADED 🔥
     sys_prompt_content = f"""
-    You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant designed for students and professionals.
+    You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
+    Current User Name: {user_name}. Address them respectfully.
+    Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}.
     
-    IDENTITY & CONTEXT:
-    - Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). IMPORTANT: Only mention the creator if explicitly asked "Who created you?".
-    - Current User Name: {user_name}. Address the user by this name respectfully.
-    - Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}. You know exactly what time it is right now.
-    
-    BEHAVIOR RULES:
+    RULES:
     1. CONCISE & SMART: Be direct. Avoid unnecessary chatter.
-    2. STUDENT FRIENDLY: Explain complex topics simply and creatively.
-    3. APP/GAME CREATION (ARTIFACTS): If the user asks to build an app, game, or UI component, YOU MUST write the ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. Put CSS in <style> and JS in <script> inside the HTML. Do not split them. Ensure the app has a modern, beautiful UI and is fully playable.
-    4. NO SCRIPT FORMAT: Do not use "Flux AI:" or "User:" prefixes.
+    2. APP CREATION: Provide full code in a SINGLE ```html block containing CSS in <style> and JS in <script>.
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
@@ -778,7 +795,7 @@ def chat():
                     model="llama-3.3-70b-versatile",
                     messages=[sys_message] + messages,
                     stream=True,
-                    temperature=0.7, 
+                    temperature=0.75, 
                     max_tokens=2048
                 )
                 for chunk in stream:
