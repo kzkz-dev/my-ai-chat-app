@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 29.0.0) 🧠
-# 🔥 NEW: Flux Artifacts & Deep-Brain Processor 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 29.1.0) 🧠
+# 🔥 FIXED: ARTIFACTS RUN BUTTON & ADVANCED AI BRAIN 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "29.0.0"
+VERSION = "29.1.0"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -216,10 +216,7 @@ def home():
                 position: relative; overflow: hidden; margin-bottom: 15px;
                 box-shadow: inset 0 0 20px rgba(0,255,0,0.05);
             }}
-            .brain-header {{
-                display: flex; align-items: center; gap: 10px; margin-bottom: 15px;
-                border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px;
-            }}
+            .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
             .brain-icon {{ color: var(--terminal-green); font-size: 1.2rem; animation: pulse 1.5s infinite; }}
             .brain-title {{ color: var(--terminal-green); font-size: 0.85rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; }}
             .brain-logs {{ font-size: 0.8rem; color: #a3a3a3; line-height: 1.8; min-height: 60px; }}
@@ -230,7 +227,7 @@ def home():
             @keyframes pulse {{ 0%, 100% {{ opacity: 1; transform: scale(1); text-shadow: 0 0 10px var(--terminal-green); }} 50% {{ opacity: 0.5; transform: scale(0.95); text-shadow: none; }} }}
 
             /* ==========================================
-               🛠️ FLUX ARTIFACTS CSS (IN-CHAT PREVIEW)
+               🛠️ FLUX ARTIFACTS CSS (FIXED RUN BUTTON)
                ========================================== */
             .artifact-container {{
                 width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border);
@@ -245,12 +242,13 @@ def home():
             .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
             .artifact-title i {{ color: #facc15; }}
             .artifact-actions button {{
-                background: rgba(255,255,255,0.1); border: none; color: var(--text);
-                padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
+                background: var(--accent); border: none; color: black; font-weight: 600;
+                padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem;
                 transition: 0.3s; display: inline-flex; align-items: center; gap: 6px;
+                box-shadow: 0 0 10px rgba(0, 243, 255, 0.3);
             }}
-            .artifact-actions button:hover {{ background: var(--accent); color: black; }}
-            .artifact-content {{ width: 100%; height: 400px; position: relative; background: #fff; }}
+            .artifact-actions button:hover {{ transform: scale(1.05); box-shadow: 0 0 15px rgba(0, 243, 255, 0.6); }}
+            .artifact-content {{ width: 100%; height: 350px; position: relative; background: #fff; }}
             .artifact-content iframe {{ width: 100%; height: 100%; border: none; background: #fff; }}
 
             /* CODE & COPY BUTTON */
@@ -266,7 +264,6 @@ def home():
             .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 10px; margin-bottom: 2px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; transition: 0.3s; }}
             .send-btn:hover {{ transform: scale(1.1); background: var(--accent); color: black; }}
 
-            /* ENERGY TRAIL ANIMATION */
             .energy-ball {{ position: fixed; width: 18px; height: 18px; background: var(--accent); border-radius: 50%; pointer-events: none; z-index: 9999; box-shadow: 0 0 15px var(--accent), 0 0 30px white; animation: shootUp 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards; }}
 
             /* FULLSCREEN PREVIEW MODAL */
@@ -338,7 +335,7 @@ def home():
         <div id="preview-modal">
             <div class="preview-box">
                 <div class="preview-header">
-                    <span style="font-weight:700; color:#111;">Fullscreen App Preview</span>
+                    <span style="font-weight:700; color:#111;">Live App Preview</span>
                     <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Close</button>
                 </div>
                 <iframe id="fullscreen-frame" class="fullscreen-iframe"></iframe>
@@ -498,28 +495,32 @@ def home():
                 }});
             }}
 
-            // 🔥 NEW: ARTIFACTS PARSER 🔥
+            // 🔥 FIXED: ARTIFACTS PARSER & RUN BUTTON 🔥
             function checkForArtifacts(text, bubble) {{
-                if(text.includes('```html')) {{
-                    const codeMatch = text.match(/```html([\\s\\S]*?)```/);
-                    if(codeMatch) {{
-                        const code = codeMatch[1];
-                        const artifactHTML = `
-                            <div class="artifact-container">
-                                <div class="artifact-header">
-                                    <div class="artifact-title"><i class="fas fa-layer-group"></i> Flux Artifact</div>
-                                    <div class="artifact-actions">
-                                        <button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}"><i class="fas fa-expand"></i> Fullscreen</button>
-                                    </div>
-                                </div>
-                                <div class="artifact-content">
-                                    <iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe>
-                                </div>
+                const codeMatch = text.match(/```html([\\s\\S]*?)```/);
+                if(codeMatch) {{
+                    const code = codeMatch[1];
+                    
+                    // Hide raw code blocks to make the UI look super clean
+                    const preBlocks = bubble.querySelectorAll('pre');
+                    preBlocks.forEach(pre => pre.style.display = 'none');
+
+                    const artifactDiv = document.createElement('div');
+                    artifactDiv.className = 'artifact-container';
+                    artifactDiv.innerHTML = `
+                        <div class="artifact-header">
+                            <div class="artifact-title"><i class="fas fa-layer-group"></i> Flux App Engine</div>
+                            <div class="artifact-actions">
+                                <button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}">
+                                    <i class="fas fa-play"></i> Fullscreen App
+                                </button>
                             </div>
-                        `;
-                        // Remove the raw code block and replace with beautiful artifact
-                        bubble.innerHTML = bubble.innerHTML.replace(/<pre><code class="language-html">[\s\S]*?<\/code><\/pre>/, artifactHTML);
-                    }}
+                        </div>
+                        <div class="artifact-content">
+                            <iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe>
+                        </div>
+                    `;
+                    bubble.appendChild(artifactDiv);
                 }}
             }}
 
@@ -555,7 +556,7 @@ def home():
                 chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
             }}
 
-            // 🔥 NEW: DEEP-BRAIN PROCESSOR VISUAL 🔥
+            // 🔥 DEEP-BRAIN PROCESSOR VISUAL 🔥
             function showDeepBrainThinking() {{
                 welcomeScreen.style.display = 'none';
                 const wrapper = document.createElement('div');
@@ -664,7 +665,6 @@ def home():
                         if(done) break;
                         botResp += decoder.decode(value);
                         
-                        // Temporarily render markdown, but DON'T parse artifacts yet to avoid glitching
                         bubbleDiv.innerHTML = marked.parse(botResp);
                         chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
                     }}
@@ -746,14 +746,20 @@ def chat():
 
     ctx = get_current_context()
     
+    # 🔥 AI BRAIN RESTORED & UPGRADED 🔥
     sys_prompt_content = f"""
-    You are {APP_NAME}, an elite AI created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-    Current User: {user_name}.
+    You are {APP_NAME}, a highly intelligent, creative, and elite AI assistant designed for students and professionals.
     
-    RULES:
-    1. Be concise, brilliant, and creative.
-    2. APP/GAME CREATION (ARTIFACTS): If the user asks to build an app, game, or UI component, YOU MUST write the ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. Put CSS in <style> and JS in <script> inside the HTML. Do not split them. Ensure the app has a modern, beautiful UI and is fully playable/usable.
-    3. NO SCRIPT FORMAT: Do not use "Flux AI:" prefixes.
+    IDENTITY & CONTEXT:
+    - Creator: {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). IMPORTANT: Only mention the creator if explicitly asked "Who created you?".
+    - Current User Name: {user_name}. Address the user by this name respectfully.
+    - Current Time: {ctx['time_utc']} (UTC). Local Dhaka time is {ctx['time_local']}, Date: {ctx['date']}. You know exactly what time it is right now.
+    
+    BEHAVIOR RULES:
+    1. CONCISE & SMART: Be direct. Avoid unnecessary chatter.
+    2. STUDENT FRIENDLY: Explain complex topics simply and creatively.
+    3. APP/GAME CREATION (ARTIFACTS): If the user asks to build an app, game, or UI component, YOU MUST write the ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. Put CSS in <style> and JS in <script> inside the HTML. Do not split them. Ensure the app has a modern, beautiful UI and is fully playable.
+    4. NO SCRIPT FORMAT: Do not use "Flux AI:" or "User:" prefixes.
     """
 
     sys_message = {"role": "system", "content": sys_prompt_content}
