@@ -10,13 +10,13 @@ import re
 import math
 
 # ==========================================
-# 🔹 Flux AI (Ultimate Intelligence - Build 34.0.0) 🧠
-# 🔥 FIXED: PRO UI/UX, ANIMATIONS & MOBILE RESPONSIVE PREVIEW 🔥
+# 🔹 Flux AI (Ultimate Intelligence - Build 29.2.1) 🧠
+# 🔥 FIXED: MOBILE PREVIEW, AUTO-ANIMATION, RESPONSIVE UI 🔥
 # ==========================================
 APP_NAME = "Flux AI"
 OWNER_NAME = "KAWCHUR"  
 OWNER_NAME_BN = "কাওছুর" 
-VERSION = "34.0.0"
+VERSION = "29.2.1"
 ADMIN_PASSWORD = "7rx9x2c0" 
 
 # Links
@@ -71,10 +71,15 @@ def solve_math_problem(text):
     except: return None
 
 SUGGESTION_POOL = [
-    {"icon": "fas fa-image", "text": "Upload an image to analyze"},
-    {"icon": "fas fa-gamepad", "text": "Make a responsive Snake Game"},
+    {"icon": "fas fa-gamepad", "text": "Make a Tic-Tac-Toe game"},
     {"icon": "fas fa-calculator", "text": "Create a Neon Calculator"},
-    {"icon": "fas fa-paint-brush", "text": "Design an animated Login Page"}
+    {"icon": "fas fa-code", "text": "Create a login page in HTML"},
+    {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
+    {"icon": "fas fa-dumbbell", "text": "30-minute home workout"},
+    {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"},
+    {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"},
+    {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
+    {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"}
 ]
 
 @app.route("/")
@@ -95,7 +100,6 @@ def home():
         <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-dark-reasonable.min.css">
         <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
 
         <style>
             :root {{
@@ -109,6 +113,8 @@ def home():
                 --accent-glow: 0 0 10px rgba(0, 243, 255, 0.5);
                 --bot-grad: linear-gradient(135deg, #00f3ff 0%, #bc13fe 100%);
                 --user-grad: linear-gradient(135deg, #2b32b2 0%, #1488cc 100%);
+                --danger: #ff0f7b;
+                --success: #00ff87;
                 --terminal-green: #0f0;
             }}
 
@@ -126,86 +132,99 @@ def home():
             }}
 
             * {{ box-sizing: border-box; outline: none; -webkit-tap-highlight-color: transparent; }}
-            body {{ margin: 0; background: var(--bg-gradient); color: var(--text); font-family: 'Outfit', sans-serif; height: 100vh; display: flex; overflow: hidden; }}
+            body {{ 
+                margin: 0; background: var(--bg-gradient); color: var(--text); 
+                font-family: 'Outfit', 'Noto Sans Bengali', sans-serif; 
+                height: 100vh; display: flex; overflow: hidden; 
+                transition: background 0.4s ease;
+            }}
 
             #neuro-bg {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; pointer-events: none; opacity: 0.3; }}
-            
-            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s; position: absolute; z-index: 200; left: 0; top: 0; background: var(--sidebar-bg); }}
-            #sidebar.closed {{ transform: translateX(-105%); }}
+            .glass {{ background: var(--glass-bg); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border: 1px solid var(--glass-border); }}
+
+            #sidebar {{ width: 280px; height: 100%; display: flex; flex-direction: column; padding: 20px; border-right: 1px solid var(--glass-border); transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), background 0.4s ease; position: absolute; z-index: 200; left: 0; top: 0; box-shadow: 10px 0 30px rgba(0,0,0,0.3); background: var(--sidebar-bg); }}
+            #sidebar.closed {{ transform: translateX(-105%); box-shadow: none; }}
             
             .brand {{ font-size: 1.6rem; font-weight: 800; margin-bottom: 25px; display: flex; align-items: center; gap: 12px; color: var(--text); text-shadow: var(--accent-glow); }}
             .brand i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
             
-            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }}
-            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }}
-            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; display: flex; align-items: center; gap: 10px; font-weight: 500; }}
-            .history-item:hover {{ background: rgba(125, 125, 125, 0.1); color: var(--text); }}
+            .new-chat-btn {{ width: 100%; padding: 14px; background: rgba(125, 125, 125, 0.1); color: var(--text); border: 1px solid var(--glass-border); border-radius: 16px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 12px; margin-bottom: 20px; transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); }}
 
-            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: transparent; backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
+            .history-list {{ flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; padding-right: 5px; }}
+            .history-item {{ padding: 12px 14px; border-radius: 12px; cursor: pointer; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 0.9rem; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); display: flex; align-items: center; gap: 10px; font-weight: 500; }}
+
+            .menu-section {{ margin-top: auto; border-top: 1px solid var(--glass-border); padding-top: 15px; display: flex; flex-direction: column; gap: 8px; }}
             
+            .theme-toggles {{ display: flex; background: rgba(125,125,125,0.1); padding: 4px; border-radius: 10px; margin-bottom: 10px; transition: all 0.4s ease; }}
+            .theme-btn {{ flex: 1; padding: 8px; border: none; background: transparent; color: var(--text-secondary); cursor: pointer; border-radius: 8px; transition: all 0.3s ease; }}
+            .theme-btn.active {{ background: rgba(125,125,125,0.2); color: var(--text); }}
+
+            header {{ height: 65px; display: flex; align-items: center; justify-content: space-between; padding: 0 20px; background: rgba(15, 15, 30, 0.0); backdrop-filter: blur(10px); border-bottom: 1px solid var(--glass-border); position: absolute; top: 0; left: 0; right: 0; z-index: 100; }}
+
             #main {{ flex: 1; display: flex; flex-direction: column; position: relative; width: 100%; height: 100vh; }}
             #chat-box {{ flex: 1; overflow-y: auto; padding: 90px 20px 150px 20px; display: flex; flex-direction: column; gap: 28px; scroll-behavior: smooth; overflow-x: hidden; }}
 
-            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; padding-top: 100px; padding-bottom: 60px; }}
-            .icon-wrapper {{ width: 80px; height: 80px; border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 25px; animation: levitate 4s infinite; }}
-            .icon-wrapper i {{ background: var(--bot-grad); -webkit-background-clip: text; color: transparent; }}
+            /* WELCOME SCREEN */
+            .welcome-container {{ display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; text-align: center; }}
+            .icon-wrapper {{ width: 80px; height: 80px; background: rgba(255,255,255,0.03); border: 1px solid var(--glass-border); border-radius: 25px; display: flex; align-items: center; justify-content: center; font-size: 3rem; margin-bottom: 25px; animation: levitate 4s ease-in-out infinite; }}
             .welcome-title {{ font-size: 2.2rem; font-weight: 800; margin-bottom: 30px; }}
 
-            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 750px; padding: 0 10px; }}
-            .chip {{ padding: 14px 16px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 16px; cursor: pointer; color: var(--text-secondary); font-weight: 500; font-size: 0.9rem; display: flex; align-items: center; gap: 14px; transition: 0.3s; }}
-            .chip:hover {{ border-color: var(--accent); color: var(--text); }}
-            .chip i {{ color: var(--accent); }}
+            .suggestions {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; width: 100%; max-width: 750px; }}
+            .chip {{ padding: 14px 16px; background: rgba(125, 125, 125, 0.05); border: 1px solid var(--glass-border); border-radius: 16px; cursor: pointer; color: var(--text-secondary); transition: 0.4s; display: flex; align-items: center; gap: 14px; font-size: 0.9rem; }}
 
-            .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: popIn 0.4s; }}
+            /* MESSAGE BUBBLES */
+            .message-wrapper {{ display: flex; gap: 14px; width: 100%; max-width: 850px; margin: 0 auto; animation: fadeIn 0.4s ease; }}
             .message-wrapper.user {{ flex-direction: row-reverse; }}
-            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 1rem; }}
+            
+            .avatar {{ width: 38px; height: 38px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }}
             .bot-avatar {{ background: var(--bot-grad); color: white; }}
             .user-avatar {{ background: rgba(125,125,125,0.1); color: var(--text); border: 1px solid var(--glass-border); }}
             
             .bubble-container {{ display: flex; flex-direction: column; flex: 1; min-width: 0; }}
-            .message-wrapper.user .bubble-container {{ align-items: flex-end; flex: none; max-width: 85%; }}
+            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; }}
+            .user .bubble {{ background: var(--user-grad); color: white; border-radius: 20px 4px 20px 20px; width: fit-content; align-self: flex-end; }}
+
+            /* 🔥 FIXED: MOBILE-FRIENDLY ARTIFACTS 🔥 */
+            .artifact-container {{ 
+                width: 100%; 
+                background: var(--glass-bg); 
+                border: 1px solid var(--glass-border); 
+                border-radius: 16px; 
+                overflow: hidden; 
+                margin-top: 15px; 
+                box-sizing: border-box; /* Crucial for mobile */
+            }}
+            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px; display: flex; justify-content: space-between; align-items: center; }}
+            .artifact-content {{ 
+                width: 100%; 
+                height: 350px; 
+                background: #fff; 
+                position: relative;
+                overflow: hidden;
+            }}
+            .artifact-content iframe {{ 
+                width: 100%; 
+                height: 100%; 
+                border: none; 
+                display: block;
+            }}
+
+            pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; }}
+            code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; }}
+
+            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 10%, transparent); display: flex; justify-content: center; z-index: 50; }}
+            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 28px; padding: 10px; border: 1px solid var(--glass-border); }}
+            textarea {{ flex: 1; background: transparent; border: none; color: var(--text); font-size: 1.05rem; max-height: 150px; resize: none; padding: 10px; font-family: inherit; }}
+            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }}
+
+            @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-10px); }} }}
+            @keyframes fadeIn {{ from {{ opacity: 0; transform: translateY(10px); }} to {{ opacity: 1; transform: translateY(0); }} }}
+
+            /* PREVIEW MODAL */
+            #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; }}
+            .preview-box {{ width: 95%; height: 90%; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; }}
+            .preview-header {{ padding: 12px; background: #f3f4f6; display: flex; justify-content: space-between; }}
             
-            .bubble {{ padding: 12px 18px; border-radius: 20px; font-size: 1rem; line-height: 1.6; word-wrap: break-word; overflow-wrap: break-word; max-width: 100%; }}
-            .bot .bubble {{ background: transparent; padding: 0; color: var(--text); overflow-x: auto; }}
-            .user .bubble {{ background: var(--user-grad); border-radius: 20px 4px 20px 20px; color: white; }}
-            .bubble img {{ max-width: 100%; border-radius: 16px; margin-top: 12px; border: 1px solid var(--glass-border); }}
-
-            .brain-container {{ width: 100%; background: #000; border: 1px solid var(--glass-border); border-radius: 16px; padding: 20px; font-family: 'Fira Code', monospace; margin-bottom: 15px; box-shadow: inset 0 0 20px rgba(0,255,0,0.05); }}
-            .brain-header {{ display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid rgba(0,255,0,0.2); padding-bottom: 10px; }}
-            .brain-title {{ color: var(--terminal-green); font-size: 0.85rem; font-weight: 600; letter-spacing: 2px; }}
-            .brain-logs {{ font-size: 0.8rem; color: #a3a3a3; line-height: 1.8; min-height: 60px; }}
-            .log-line {{ animation: typeText 0.1s linear forwards; opacity: 0; }}
-            .log-line::before {{ content: "> "; color: var(--terminal-green); }}
-
-            /* 🔥 IMPROVED ARTIFACT CONTAINER FOR MOBILE 🔥 */
-            .artifact-container {{ width: 100%; background: var(--glass-bg); border: 1px solid var(--glass-border); border-radius: 16px; overflow: hidden; margin-top: 15px; display: flex; flex-direction: column; }}
-            .artifact-header {{ background: rgba(125,125,125,0.1); padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--glass-border); }}
-            .artifact-title {{ display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 0.9rem; color: var(--text); }}
-            .artifact-title i {{ color: #facc15; }}
-            .artifact-actions button {{ background: var(--accent); border: none; color: black; font-weight: 600; padding: 6px 16px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; display: inline-flex; align-items: center; gap: 6px; }}
-            .artifact-content {{ width: 100%; height: 400px; position: relative; background: #fff; overflow: hidden; }}
-            .artifact-content iframe {{ width: 100%; height: 100%; border: none; background: #fff; display: block; }}
-
-            /* 🔥 FIXED MOBILE PREVIEW MODAL 🔥 */
-            #preview-modal {{ display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; justify-content: center; align-items: center; backdrop-filter: blur(8px); padding: 10px; box-sizing: border-box; }}
-            .preview-box {{ width: 100%; max-width: 500px; height: 100%; max-height: 90vh; background: white; border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; animation: popIn 0.3s; }}
-            .preview-header {{ padding: 12px 20px; background: #f3f4f6; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }}
-            iframe.fullscreen-iframe {{ flex: 1; border: none; width: 100%; height: 100%; display: block; }}
-
-            pre {{ background: #0d1117 !important; padding: 18px; border-radius: 14px; overflow-x: auto; border: 1px solid var(--glass-border); position: relative; margin-top: 15px; box-sizing: border-box; max-width: 100%; }}
-            code {{ font-family: 'Fira Code', monospace; font-size: 0.85rem; color: #e6edf3; }}
-            .copy-btn {{ position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.15); color: white; border: none; padding: 4px 10px; border-radius: 6px; cursor: pointer; font-size: 0.75rem; }}
-
-            #input-area {{ position: absolute; bottom: 0; left: 0; right: 0; padding: 20px; background: linear-gradient(to top, var(--sidebar-bg) 0%, transparent 100%); display: flex; justify-content: center; z-index: 50; flex-direction: column; align-items: center; }}
-            #attachment-preview {{ display: none; width: 100%; max-width: 850px; margin-bottom: 10px; padding: 10px 15px; background: rgba(0, 243, 255, 0.1); border: 1px solid var(--accent); border-radius: 16px; font-size: 0.9rem; align-items: center; justify-content: space-between; }}
-            .preview-close {{ cursor: pointer; color: #ff0f7b; font-size: 1.2rem; }}
-            .input-box {{ width: 100%; max-width: 850px; display: flex; align-items: flex-end; background: var(--sidebar-bg); border-radius: 28px; padding: 10px 10px 10px 15px; border: 1px solid var(--glass-border); box-shadow: 0 10px 40px rgba(0,0,0,0.1); backdrop-filter: blur(20px); }}
-            .attach-btn {{ background: transparent; border: none; color: var(--text-secondary); font-size: 1.3rem; padding: 10px; cursor: pointer; }}
-            textarea {{ flex: 1; background: transparent; border: none; outline: none; color: var(--text); font-size: 1.05rem; max-height: 150px; resize: none; padding: 10px 10px; line-height: 1.4; }}
-            .send-btn {{ background: var(--text); color: var(--sidebar-bg); border: none; width: 44px; height: 44px; border-radius: 50%; cursor: pointer; margin-left: 8px; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; }}
-
-            @keyframes levitate {{ 0%, 100% {{ transform: translateY(0); }} 50% {{ transform: translateY(-15px); }} }}
-            @keyframes popIn {{ from {{ opacity: 0; transform: scale(0.9); }} to {{ opacity: 1; transform: scale(1); }} }}
             .overlay {{ position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 150; display: none; }}
         </style>
     </head>
@@ -216,9 +235,9 @@ def home():
             <div class="preview-box">
                 <div class="preview-header">
                     <span style="font-weight:700; color:#111;">Live App Preview</span>
-                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer; font-weight:600;">Close</button>
+                    <button onclick="closePreview()" style="background:#ef4444; color:white; border:none; padding:6px 14px; border-radius:6px; cursor:pointer;">Close</button>
                 </div>
-                <iframe id="fullscreen-frame" class="fullscreen-iframe"></iframe>
+                <iframe id="fullscreen-frame" style="flex:1; border:none;"></iframe>
             </div>
         </div>
 
@@ -226,249 +245,152 @@ def home():
         
         <div id="sidebar" class="closed">
             <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
-            <button class="new-chat-btn" onclick="startNewChat()"><i class="fas fa-plus"></i> New Chat</button>
-            <div style="font-size:0.75rem; font-weight: 700; color:var(--text-secondary); margin-bottom:12px; letter-spacing: 1px;">RECENT</div>
+            <button class="new-chat-btn" onclick="startNewChat()">
+                <i class="fas fa-plus"></i> New Chat
+            </button>
             <div class="history-list" id="history-list"></div>
+            
+            <div class="menu-section">
+                <div class="theme-toggles">
+                    <button class="theme-btn active" id="btn-dark" onclick="setTheme('dark')"><i class="fas fa-moon"></i></button>
+                    <button class="theme-btn" id="btn-light" onclick="setTheme('light')"><i class="fas fa-sun"></i></button>
+                </div>
+                <div class="history-item" onclick="location.reload()" style="color:#ff0f7b;"><i class="fas fa-trash-alt"></i> Clear All</div>
+            </div>
         </div>
 
         <div id="main">
             <header>
-                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-bars"></i></button>
-                <span style="font-weight:800; font-size:1.4rem; letter-spacing: -0.5px; background: linear-gradient(to right, var(--text), var(--text-secondary)); -webkit-background-clip: text; color: transparent;">{APP_NAME}</span>
-                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem; cursor:pointer; padding: 8px;"><i class="fas fa-pen-to-square"></i></button>
+                <button onclick="toggleSidebar()" style="background:none; border:none; color:var(--text); font-size:1.4rem;"><i class="fas fa-bars"></i></button>
+                <span style="font-weight:800; font-size:1.3rem;">{APP_NAME}</span>
+                <button onclick="startNewChat()" style="background:none; border:none; color:var(--accent); font-size:1.4rem;"><i class="fas fa-pen-to-square"></i></button>
             </header>
 
             <div id="chat-box">
                 <div id="welcome" class="welcome-container">
                     <div class="icon-wrapper"><i class="fas fa-bolt"></i></div>
-                    <div class="welcome-title">Welcome to {APP_NAME}</div>
+                    <div class="welcome-title">Flux AI Elite</div>
                     <div class="suggestions" id="suggestion-box"></div>
                 </div>
             </div>
 
             <div id="input-area">
-                <div id="attachment-preview">
-                    <div style="display:flex; align-items:center; gap:10px;">
-                        <i id="attach-icon" class="fas fa-file"></i>
-                        <span id="attach-name" style="font-weight:600;">file.pdf</span>
-                    </div>
-                    <i class="fas fa-times-circle preview-close" onclick="clearAttachment()"></i>
-                </div>
-
                 <div class="input-box">
-                    <input type="file" id="file-upload" accept="image/*, application/pdf" style="display: none;">
-                    <label for="file-upload" class="attach-btn"><i class="fas fa-paperclip"></i></label>
-                    <textarea id="msg" placeholder="Ask Flux or upload a file..." rows="1" oninput="resizeInput(this)"></textarea>
-                    <button id="send-btn-icon" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+                    <textarea id="msg" placeholder="Ask Flux Anything..." rows="1" oninput="resizeInput(this)"></textarea>
+                    <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                 </div>
             </div>
         </div>
 
         <script>
-            pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
             marked.use({{ breaks: true, gfm: true }});
-            
-            const allSuggestions = {suggestions_json};
-            let chats = JSON.parse(localStorage.getItem('flux_v34_history')) || [];
-            let userName = localStorage.getItem('flux_user_name_fixed'); 
-            let awaitingName = false; 
-
-            let attachedImageBase64 = null;
-            let attachedPdfText = null;
+            let chats = JSON.parse(localStorage.getItem('flux_v29_history')) || [];
             let currentChatId = null;
-
-            const sidebar = document.getElementById('sidebar');
             const chatBox = document.getElementById('chat-box');
-            const welcomeScreen = document.getElementById('welcome');
             const msgInput = document.getElementById('msg');
-            const overlay = document.querySelector('.overlay');
 
-            renderHistory(); renderSuggestions(); 
+            function setTheme(mode) {{ document.body.className = mode; }}
+            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 150) + 'px'; }}
+            function toggleSidebar() {{ document.getElementById('sidebar').classList.toggle('closed'); document.querySelector('.overlay').style.display = document.getElementById('sidebar').classList.contains('closed') ? 'none' : 'block'; }}
 
-            // Dynamic Background
-            const canvas = document.getElementById('neuro-bg');
-            const ctx = canvas.getContext('2d');
-            let particles = [];
-            function resizeCanvas() {{ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }}
-            window.addEventListener('resize', resizeCanvas); resizeCanvas();
-
-            class Particle {{
-                constructor() {{ this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5; this.size = Math.random() * 2; }}
-                update() {{ this.x += this.vx; this.y += this.vy; if(this.x < 0 || this.x > canvas.width) this.vx *= -1; if(this.y < 0 || this.y > canvas.height) this.vy *= -1; }}
-                draw() {{ ctx.fillStyle = '#00f3ff'; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }}
-            }}
-            for(let i=0; i<60; i++) particles.push(new Particle());
-            function animateBg() {{
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                particles.forEach((p, index) => {{ p.update(); p.draw(); }});
-                requestAnimationFrame(animateBg);
-            }}
-            animateBg();
-
-            function resizeInput(el) {{ el.style.height = 'auto'; el.style.height = Math.min(el.scrollHeight, 200) + 'px'; }}
-            function toggleSidebar() {{ sidebar.classList.toggle('closed'); overlay.style.display = sidebar.classList.contains('closed') ? 'none' : 'block'; }}
             function renderSuggestions() {{
-                const shuffled = allSuggestions.sort(() => 0.5 - Math.random()).slice(0, 4);
-                document.getElementById('suggestion-box').innerHTML = shuffled.map(s => `<div class="chip" onclick="sendSuggestion('${{s.text}}')"><i class="${{s.icon}}"></i> ${{s.text}}</div>`).join('');
+                const selected = {suggestions_json}.slice(0, 4);
+                let html = '';
+                selected.forEach(s => {{ html += '<div class="chip" onclick="sendSuggestion(\\'' + s.text + '\\')"><i class="' + s.icon + '"></i> ' + s.text + '</div>'; }});
+                document.getElementById('suggestion-box').innerHTML = html;
+            }}
+            renderSuggestions();
+
+            function appendBubble(text, isUser) {{
+                document.getElementById('welcome').style.display = 'none';
+                const wrapper = document.createElement('div');
+                wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
+                wrapper.innerHTML = `
+                    <div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">
+                        <i class="fas ${{isUser ? 'fa-user' : 'fa-bolt'}}"></i>
+                    </div>
+                    <div class="bubble-container">
+                        <div class="bubble">${{marked.parse(text)}}</div>
+                    </div>`;
+                chatBox.appendChild(wrapper);
+                
+                if(!isUser) {{
+                    hljs.highlightAll();
+                    checkForArtifacts(text, wrapper.querySelector('.bubble'));
+                }}
+                chatBox.scrollTop = chatBox.scrollHeight;
             }}
 
-            function startNewChat() {{
-                currentChatId = Date.now(); chats.unshift({{ id: currentChatId, title: "New Conversation", messages: [] }});
-                saveData(); renderHistory(); renderSuggestions(); clearAttachment();
-                chatBox.innerHTML = ''; chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex';
-                sidebar.classList.add('closed'); overlay.style.display = 'none'; msgInput.value = ''; resizeInput(msgInput);
-            }}
-
-            function saveData() {{ localStorage.setItem('flux_v34_history', JSON.stringify(chats)); }}
-            function renderHistory() {{
-                document.getElementById('history-list').innerHTML = chats.map(chat => `<div class="history-item" onclick="loadChat(${{chat.id}})"><i class="far fa-comment-alt"></i> <span>${{(chat.title || 'New Conversation').substring(0, 22)}}</span></div>`).join('');
-            }}
-
-            function loadChat(id) {{
-                currentChatId = id; const chat = chats.find(c => c.id === id); if(!chat) return;
-                chatBox.innerHTML = ''; welcomeScreen.style.display = 'none'; clearAttachment();
-                if (chat.messages.length === 0) {{ chatBox.appendChild(welcomeScreen); welcomeScreen.style.display = 'flex'; }} 
-                else {{ chat.messages.forEach(msg => appendBubble(msg.text, msg.role === 'user', false)); }}
-                sidebar.classList.add('closed'); overlay.style.display = 'none';
-                setTimeout(() => chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }}), 100);
-            }}
-
-            function addCopyButtons() {{
-                document.querySelectorAll('pre').forEach(pre => {{
-                    if (pre.querySelector('.copy-btn')) return;
-                    const btn = document.createElement('button'); btn.className = 'copy-btn'; btn.innerHTML = '<i class="fas fa-copy"></i> Copy';
-                    btn.onclick = () => {{ navigator.clipboard.writeText(pre.querySelector('code').innerText); btn.innerHTML = '<i class="fas fa-check"></i> Copied'; setTimeout(() => btn.innerHTML = '<i class="fas fa-copy"></i> Copy', 2000); }};
-                    pre.appendChild(btn);
-                }});
-            }}
-
-            // 🔥 FIX: FORCE INJECT VIEWPORT META TAG FOR MOBILE RESPONSIVENESS 🔥
             function checkForArtifacts(text, bubble) {{
                 const codeMatch = text.match(/```html([\\s\\S]*?)```/);
                 if(codeMatch) {{
-                    let code = codeMatch[1];
-                    // If AI forgot the viewport tag, we force it!
-                    if (!code.includes('viewport')) {{
-                        code = code.replace('<head>', '<head>\\n<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">\\n');
-                    }}
-                    
-                    if (!bubble.querySelector('.artifact-container')) {{
-                        const artifactDiv = document.createElement('div'); artifactDiv.className = 'artifact-container';
-                        artifactDiv.innerHTML = `<div class="artifact-header"><div class="artifact-title"><i class="fas fa-layer-group"></i> Live App Preview</div><div class="artifact-actions"><button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}"><i class="fas fa-play"></i> Fullscreen</button></div></div><div class="artifact-content"><iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe></div>`;
-                        bubble.appendChild(artifactDiv);
-                    }}
+                    const code = codeMatch[1];
+                    const artifactDiv = document.createElement('div');
+                    artifactDiv.className = 'artifact-container';
+                    artifactDiv.innerHTML = `
+                        <div class="artifact-header">
+                            <span style="font-size:0.8rem; font-weight:600;"><i class="fas fa-code"></i> Live Preview</span>
+                            <button onclick="openFullscreenPreview(this)" data-code="${{encodeURIComponent(code)}}" style="background:var(--accent); border:none; padding:4px 10px; border-radius:4px; font-size:0.7rem; cursor:pointer;">Fullscreen</button>
+                        </div>
+                        <div class="artifact-content">
+                            <iframe srcdoc="${{code.replace(/"/g, '&quot;')}}"></iframe>
+                        </div>`;
+                    bubble.appendChild(artifactDiv);
                 }}
             }}
 
             window.openFullscreenPreview = function(btn) {{
+                const code = decodeURIComponent(btn.getAttribute('data-code'));
                 document.getElementById('preview-modal').style.display = 'flex';
-                document.getElementById('fullscreen-frame').srcdoc = decodeURIComponent(btn.getAttribute('data-code'));
+                document.getElementById('fullscreen-frame').srcdoc = code;
             }};
             function closePreview() {{ document.getElementById('preview-modal').style.display = 'none'; }}
 
-            document.getElementById('file-upload').addEventListener('change', async function(e) {{
-                const file = e.target.files[0]; if(!file) return;
-                const preview = document.getElementById('attachment-preview'); const nameSpan = document.getElementById('attach-name'); const icon = document.getElementById('attach-icon');
-                
-                nameSpan.innerText = "Processing " + file.name + "..."; preview.style.display = 'flex';
-                attachedImageBase64 = null; attachedPdfText = null;
-
-                if(file.type.startsWith('image/')) {{
-                    icon.className = 'fas fa-image'; const reader = new FileReader();
-                    reader.onload = function(event) {{ attachedImageBase64 = event.target.result.split(',')[1]; nameSpan.innerText = file.name; }};
-                    reader.readAsDataURL(file);
-                }} 
-                else if(file.type === 'application/pdf') {{
-                    icon.className = 'fas fa-file-pdf';
-                    try {{
-                        const arrayBuffer = await file.arrayBuffer(); const pdf = await pdfjsLib.getDocument({{data: arrayBuffer}}).promise; let fullText = '';
-                        for (let i = 1; i <= pdf.numPages; i++) {{ const page = await pdf.getPage(i); const textContent = await page.getTextContent(); fullText += textContent.items.map(item => item.str).join(' ') + '\\n'; }}
-                        attachedPdfText = fullText; nameSpan.innerText = file.name + " (Ready)";
-                    }} catch (err) {{ nameSpan.innerText = "Error reading PDF"; }}
-                }} else {{ nameSpan.innerText = "Unsupported Format"; }}
-                e.target.value = '';
-            }});
-
-            function clearAttachment() {{ attachedImageBase64 = null; attachedPdfText = null; document.getElementById('attachment-preview').style.display = 'none'; }}
-
-            function appendBubble(text, isUser, animate=true) {{
-                welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div'); wrapper.className = `message-wrapper ${{isUser ? 'user' : 'bot'}}`;
-                wrapper.innerHTML = `<div class="avatar ${{isUser ? 'user-avatar' : 'bot-avatar'}}">${{isUser ? '<i class="fas fa-user"></i>' : '<i class="fas fa-bolt"></i>'}}</div><div class="bubble-container"><div class="sender-name">${{isUser ? 'You' : '{APP_NAME}'}}</div><div class="bubble"></div></div>`;
-                chatBox.appendChild(wrapper);
-                const bubble = wrapper.querySelector('.bubble'); bubble.innerHTML = marked.parse(text);
-                if(!isUser) {{ hljs.highlightAll(); addCopyButtons(); checkForArtifacts(text, bubble); }}
-                chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-            }}
-
-            function showDeepBrainThinking(isVision=false) {{
-                welcomeScreen.style.display = 'none';
-                const wrapper = document.createElement('div'); wrapper.id = 'typing-indicator'; wrapper.className = 'message-wrapper bot';
-                let title = isVision ? "Vision Core Active (Analyzing Image)" : "Deep-Brain Processor Active";
-                wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble" style="background:transparent; padding:0; width:100%;"><div class="brain-container"><div class="brain-header"><i class="fas fa-microchip brain-icon" style="color:#0f0;"></i><span class="brain-title">${{title}}</span></div><div class="brain-logs" id="brain-logs"></div></div></div></div>`;
-                chatBox.appendChild(wrapper); chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'smooth' }});
-
-                const logs = isVision ? ["Scanning pixels...", "Extracting text...", "Processing visual data..."] : ["Analyzing query context...", "Injecting UI/UX elements...", "Compiling logic matrix..."];
-                const logContainer = document.getElementById('brain-logs'); let i = 0;
-                window.brainInterval = setInterval(() => {{ if(i < logs.length) {{ const line = document.createElement('div'); line.className = 'log-line'; line.innerText = logs[i]; logContainer.appendChild(line); i++; }} else {{ clearInterval(window.brainInterval); }} }}, 800);
-            }}
-
-            function removeTyping() {{ if(window.brainInterval) clearInterval(window.brainInterval); document.getElementById('typing-indicator')?.remove(); }}
             function sendSuggestion(text) {{ msgInput.value = text; sendMessage(); }}
 
             async function sendMessage() {{
                 const text = msgInput.value.trim();
-                if(!text && !attachedImageBase64 && !attachedPdfText) return;
-
-                let uiMessage = text;
-                if(!text && attachedImageBase64) uiMessage = "📸 *Uploaded an image*";
-                if(!text && attachedPdfText) uiMessage = "📄 *Uploaded a PDF document*";
-
-                let apiMessage = text;
-                if(!text && attachedImageBase64) apiMessage = "Describe this image in detail.";
-                if(!text && attachedPdfText) apiMessage = "Summarize this document.";
-
-                if(!currentChatId) startNewChat();
-                const chat = chats.find(c => c.id === currentChatId);
-                
-                chat.messages.push({{ role: 'user', text: uiMessage }});
-                if(chat.messages.length === 1) {{ chat.title = (text || "File Upload").substring(0, 20); renderHistory(); }}
-                saveData(); msgInput.value = ''; appendBubble(uiMessage, true);
-
-                if(!userName && !awaitingName) {{ awaitingName = true; setTimeout(() => {{ appendBubble("Hello! I am Flux AI. What should I call you?", false); }}, 600); return; }}
-                if(awaitingName) {{ userName = text; localStorage.setItem('flux_user_name_fixed', userName); awaitingName = false; setTimeout(() => {{ appendBubble(`Nice to meet you, ${{userName}}! How can I help you today?`, false); }}, 600); return; }}
-
-                showDeepBrainThinking(!!attachedImageBase64); 
-                
-                const context = chat.messages.slice(-10).map(m => ({{ role: m.role, content: m.text }}));
-                context[context.length - 1].content = apiMessage;
-
-                const payload = {{ messages: context, user_name: userName, image_base64: attachedImageBase64, pdf_text: attachedPdfText }};
-                clearAttachment();
+                if(!text) return;
+                msgInput.value = '';
+                appendBubble(text, true);
 
                 try {{
-                    const res = await fetch('/chat', {{ method: 'POST', headers: {{ 'Content-Type': 'application/json' }}, body: JSON.stringify(payload) }});
-                    removeTyping();
-                    if(!res.ok) throw new Error("System Offline");
+                    const res = await fetch('/chat', {{
+                        method: 'POST',
+                        headers: {{ 'Content-Type': 'application/json' }},
+                        body: JSON.stringify({{ messages: [{{role:'user', content:text}}], user_name: 'User' }})
+                    }});
+                    const reader = res.body.getReader();
+                    const decoder = new TextDecoder();
+                    let botResp = '';
                     
-                    const reader = res.body.getReader(); const decoder = new TextDecoder(); let botResp = '';
-                    const wrapper = document.createElement('div'); wrapper.className = 'message-wrapper bot';
-                    wrapper.innerHTML = `<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="sender-name">{APP_NAME}</div><div class="bubble"></div></div>`;
-                    chatBox.appendChild(wrapper); const bubbleDiv = wrapper.querySelector('.bubble');
+                    const wrapper = document.createElement('div');
+                    wrapper.className = 'message-wrapper bot';
+                    wrapper.innerHTML = '<div class="avatar bot-avatar"><i class="fas fa-bolt"></i></div><div class="bubble-container"><div class="bubble"></div></div>';
+                    chatBox.appendChild(wrapper);
+                    const bubbleDiv = wrapper.querySelector('.bubble');
 
                     while(true) {{
-                        const {{ done, value }} = await reader.read(); if(done) break;
-                        botResp += decoder.decode(value); bubbleDiv.innerHTML = marked.parse(botResp);
-                        chatBox.scrollTo({{ top: chatBox.scrollHeight, behavior: 'auto' }});
+                        const {{ done, value }} = await reader.read();
+                        if(done) break;
+                        botResp += decoder.decode(value);
+                        bubbleDiv.innerHTML = marked.parse(botResp);
+                        chatBox.scrollTop = chatBox.scrollHeight;
                     }}
-                    
-                    chat.messages.push({{ role: 'assistant', text: botResp }});
-                    saveData(); hljs.highlightAll(); addCopyButtons(); checkForArtifacts(botResp, bubbleDiv);
-
-                }} catch(e) {{ removeTyping(); appendBubble("⚠️ System connection error. Please try again.", false); }}
+                    hljs.highlightAll();
+                    checkForArtifacts(botResp, bubbleDiv);
+                }} catch(e) {{ appendBubble("Error connecting to server.", false); }}
             }}
 
-            msgInput.addEventListener('keypress', e => {{ if(e.key === 'Enter' && !e.shiftKey) {{ e.preventDefault(); sendMessage(); }} }});
+            // Background Animation
+            const canvas = document.getElementById('neuro-bg');
+            const ctx = canvas.getContext('2d');
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            function animate() {{
+                ctx.clearRect(0,0,canvas.width, canvas.height);
+                requestAnimationFrame(animate);
+            }}
+            animate();
         </script>
     </body>
     </html>
@@ -476,92 +398,39 @@ def home():
 
 @app.route("/chat", methods=["POST"])
 def chat():
-    global TOTAL_MESSAGES
-    if not SYSTEM_ACTIVE: return Response("System is currently under maintenance.", status=503)
-
-    TOTAL_MESSAGES += 1
     data = request.json
     messages = data.get("messages", [])
     user_name = data.get("user_name", "User")
-    
-    image_base64 = data.get("image_base64")
-    pdf_text = data.get("pdf_text")
-
     ctx = get_current_context()
+
+    # 🔥 SYSTEM PROMPT ENHANCED FOR ANIMATIONS & MOBILE FIX 🔥
+    sys_prompt = f"""
+    You are {APP_NAME}, an Elite AI Developer created by {OWNER_NAME}.
+    Current User: {user_name}. Time: {ctx['time_local']}.
     
-    if image_base64:
-        # VISION MODE
-        target_model = "llama-3.2-90b-vision-preview"
-        sys_prompt_content = f"""
-        You are {APP_NAME}, a Visual Expert AI created by {OWNER_NAME}.
-        RULES: Analyze the image accurately. DO NOT WRITE CODE unless specifically asked to build an app from the image.
-        """
-        user_text = messages[-1]['content']
-        messages = [{
-            "role": "user",
-            "content": [
-                {"type": "text", "text": user_text},
-                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{image_base64}"}}
-            ]
-        }]
-    else:
-        # 🧠 THE MASTER FIX FOR ELITE CODING AND RESPONSIVENESS 🧠
-        target_model = "llama-3.3-70b-versatile"
-        sys_prompt_content = f"""
-        You are {APP_NAME}, an Elite AI Developer and Creative Assistant created by {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-        Current User Name: {user_name}.
-        
-        CRITICAL RULES FOR CODING & APP CREATION:
-        1. SINGLE FILE: Write ENTIRE HTML, CSS, and JS inside a SINGLE ```html block. Do not split them.
-        2. NEXT-LEVEL DESIGN (UI/UX): Always include stunning CSS animations, modern UI (Glassmorphism, Neon, Gradients), hover effects, and polished styling. NEVER provide boring/plain designs.
-        3. 100% MOBILE RESPONSIVE (CRITICAL): 
-           - The app will run inside a mobile iframe. 
-           - NEVER use fixed sizes like `width: 800px;` or `<canvas width="800">`. 
-           - Use percentages (`100%`), `vw`, `vh`, and flexbox/grid. 
-           - For Canvas games (like Snake), write JS to dynamically resize the canvas to fit the screen (`window.innerWidth`, `window.innerHeight`).
-           - Always add `<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">` to the `<head>`.
-        4. BE SMART: Do not write explanations if you provide an app, let the app speak for itself.
-        """
-        
-        if pdf_text and messages:
-            messages[-1]['content'] = f"Here is the content of an uploaded PDF document:\n\n---\n{pdf_text[:15000]}\n---\n\nUser Command: {messages[-1]['content']}"
-
-        if messages and isinstance(messages[-1]['content'], str):
-            math_result = solve_math_problem(messages[-1]['content'])
-            if math_result:
-                messages.insert(-1, {"role": "system", "content": f"⚡ MATH TOOL: The calculated answer is {math_result}."})
-
-    sys_message = {"role": "system", "content": sys_prompt_content}
+    CRITICAL INSTRUCTIONS:
+    1. If asked to build an app/UI/Game, ALWAYS include:
+       - <meta name="viewport" content="width=device-width, initial-scale=1.0"> inside the HTML.
+       - A link to Animate.css: <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css">
+       - Beautiful Google Fonts (Outfit or Poppins).
+       - Glassmorphism effects and smooth transitions.
+    2. Ensure all UI elements are inside a container with `max-width: 100%` and `box-sizing: border-box` so they never overflow on mobile.
+    3. Make everything look "Premium" and "Dynamic" with hover effects and entrance animations.
+    4. Write the ENTIRE code in ONE ```html block.
+    """
 
     def generate():
-        global current_key_index
-        attempts = 0
-        max_retries = len(GROQ_KEYS) + 1 if GROQ_KEYS else 1
-        
-        while attempts < max_retries:
-            try:
-                client = get_groq_client()
-                if not client: yield "⚠️ Config Error."; return
-                
-                stream = client.chat.completions.create(
-                    model=target_model,
-                    messages=[sys_message] + messages,
-                    stream=True,
-                    temperature=0.7, 
-                    max_tokens=3000
-                )
-                for chunk in stream:
-                    if chunk.choices and chunk.choices[0].delta.content:
-                        yield chunk.choices[0].delta.content
-                return
-            except Exception as e:
-                current_key_index = (current_key_index + 1) % len(GROQ_KEYS)
-                attempts += 1
-                time.sleep(1)
-        yield "⚠️ API Rate Limit or Server Error. Try again in a few seconds."
+        client = get_groq_client()
+        stream = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[{"role": "system", "content": sys_prompt}] + messages,
+            stream=True
+        )
+        for chunk in stream:
+            if chunk.choices[0].delta.content:
+                yield chunk.choices[0].delta.content
 
     return Response(generate(), mimetype="text/plain")
 
 if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 10000))
-    app.run(host="0.0.0.0", port=port, debug=True)
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 10000)))
