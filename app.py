@@ -35,11 +35,11 @@ SERVER_START_TIME = time.time() TOTAL_MESSAGES = 0 SYSTEM_ACTIVE = True TOTAL_ME
 
 app = Flask(name) app.secret_key = FLASK_SECRET_KEY app.config["SESSION_COOKIE_HTTPONLY"] = True app.config["SESSION_COOKIE_SAMESITE"] = "Lax" app.config["SESSION_COOKIE_SECURE"] = SESSION_COOKIE_SECURE
 
-------------------------------------------
+#------------------------------------------
 
 Database
 
-------------------------------------------
+#------------------------------------------
 
 def init_db() -> None: conn = sqlite3.connect(DB_PATH) cur = conn.cursor() cur.execute( """ CREATE TABLE IF NOT EXISTS analytics ( id INTEGER PRIMARY KEY AUTOINCREMENT, event_type TEXT NOT NULL, payload TEXT, created_at TEXT NOT NULL ) """ ) conn.commit() conn.close()
 
@@ -47,11 +47,11 @@ def log_event(event_type: str, payload: Optional[Dict[str, Any]] = None) -> None
 
 init_db()
 
-------------------------------------------
+#------------------------------------------
 
 Groq key manager
 
-------------------------------------------
+#------------------------------------------
 
 KEY_STATES = [ {"key": key, "failures": 0, "cooldown_until": 0.0} for key in GROQ_KEYS ]
 
@@ -63,11 +63,11 @@ def get_available_key() -> Optional[str]: if not KEY_STATES: return None now = t
 
 def get_groq_client() -> Optional[Groq]: api_key = get_available_key() if not api_key: return None return Groq(api_key=api_key)
 
-------------------------------------------
+#------------------------------------------
 
 Helpers
 
-------------------------------------------
+#------------------------------------------
 
 def admin_required(func): @wraps(func) def wrapper(*args, **kwargs): if not session.get("is_admin"): return jsonify({"ok": False, "error": "Unauthorized"}), 401 return func(*args, **kwargs) return wrapper
 
@@ -194,19 +194,19 @@ while attempts < max_retries:
 
 yield "⚠️ System Busy. Please try again in a moment."
 
-------------------------------------------
+#------------------------------------------
 
 Suggestion pool for frontend rendering
 
-------------------------------------------
+#------------------------------------------
 
 SUGGESTION_POOL = [ {"icon": "fas fa-gamepad", "text": "Make a Tic-Tac-Toe game"}, {"icon": "fas fa-calculator", "text": "Create a Neon Calculator"}, {"icon": "fas fa-code", "text": "Create a login page in HTML"}, {"icon": "fas fa-brain", "text": "Explain Quantum Physics"}, {"icon": "fas fa-dumbbell", "text": "30-minute home workout"}, {"icon": "fas fa-utensils", "text": "Healthy dinner recipe"}, {"icon": "fas fa-plane", "text": "Trip plan for Cox's Bazar"}, {"icon": "fas fa-lightbulb", "text": "Business ideas for students"}, {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"} ]
 
-------------------------------------------
+#------------------------------------------
 
 Main page
 
-------------------------------------------
+#-----------------------------------------
 
 @app.route("/") def home(): suggestions_json = json.dumps(SUGGESTION_POOL, ensure_ascii=False) admin_enabled = "true" if bool(ADMIN_PASSWORD) else "false"
 
@@ -859,11 +859,11 @@ return f"""
 </html>
 """
 
-------------------------------------------
+#------------------------------------------
 
 Admin routes
 
-------------------------------------------
+#------------------------------------------
 
 @app.route("/admin/login", methods=["POST"]) def admin_login(): if not ADMIN_PASSWORD: return jsonify({"ok": False, "error": "Admin password not configured"}), 503
 
@@ -883,11 +883,11 @@ return jsonify({"ok": False, "error": "Invalid password"}), 401
 
 @app.route("/admin/toggle_system", methods=["POST"]) @admin_required def toggle_system(): global SYSTEM_ACTIVE SYSTEM_ACTIVE = not SYSTEM_ACTIVE log_event("toggle_system", {"active": SYSTEM_ACTIVE}) return jsonify({"active": SYSTEM_ACTIVE})
 
-------------------------------------------
+#------------------------------------------
 
 Health + Chat routes
 
-------------------------------------------
+#------------------------------------------
 
 @app.route("/health") def health(): return jsonify({ "ok": True, "app": APP_NAME, "version": VERSION, "groq_keys_loaded": len(GROQ_KEYS), "system_active": SYSTEM_ACTIVE, "uptime": get_uptime() })
 
