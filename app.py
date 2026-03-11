@@ -14,13 +14,10 @@ from typing import List, Dict, Any, Optional
 
 import pytz
 
-==========================================
-
- Flux AI (Ultimate Intelligence - Build 30.0.0) 
-
- Secure + Cleaner + Smarter Backend Rewrite 
-
-==========================================
+# ==========================================
+# Flux AI (Ultimate Intelligence - Build 30.1.0)
+# Secure + Cleaner + Smarter Backend Rewrite
+# ==========================================
 
 APP_NAME = "Flux" OWNER_NAME = "KAWCHUR" OWNER_NAME_BN = "কাওছুর" VERSION = "30.1.0"
 
