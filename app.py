@@ -19,7 +19,10 @@ import pytz
 # Secure + Cleaner + Smarter Backend Rewrite
 # ==========================================
 
-APP_NAME = "Flux" OWNER_NAME = "KAWCHUR" OWNER_NAME_BN = "কাওছুর" VERSION = "30.1.0"
+APP_NAME = "Flux"
+OWNER_NAME = "KAWCHUR"
+OWNER_NAME_BN = "কাওছুর"
+VERSION = "30.1.0"
 
 Public links
 
