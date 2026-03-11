@@ -13,7 +13,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "32.0.0"
+VERSION = "33.0.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -178,7 +178,6 @@ def log_feedback(feedback_type, payload=None):
 
 
 init_db()
-
 save_memory("app_name", APP_NAME)
 save_memory("owner_name", OWNER_NAME)
 
@@ -331,6 +330,8 @@ Core rules:
 10. For study tasks, explain simply step by step.
 11. Do not claim live web search or citations unless they truly exist.
 12. Avoid clutter and avoid repeating yourself.
+13. Keep your owner identity locked as KAWCHUR.
+14. Never claim someone else created you.
 """.strip()
 
     mode_text = "Response mode: balanced smart."
@@ -476,7 +477,12 @@ def generate_groq_stream(messages, user_name, response_mode):
 SUGGESTIONS = [
     {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
     {"icon": "fas fa-book", "text": "Explain photosynthesis simply"},
-    {"icon": "fas fa-code", "text": "Create a login page in HTML"}
+    {"icon": "fas fa-code", "text": "Create a login page in HTML"},
+    {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
+    {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"},
+    {"icon": "fas fa-language", "text": "Translate this into English"},
+    {"icon": "fas fa-pen", "text": "Rewrite this text better"},
+    {"icon": "fas fa-mobile-alt", "text": "Create a mobile calculator UI"}
 ]
 
 
@@ -498,7 +504,8 @@ def home():
         :root {
             --bg: #040714;
             --bg2: #09112d;
-            --panel: rgba(14, 20, 40, 0.92);
+            --panel: rgba(14, 20, 40, 0.88);
+            --panel2: rgba(18, 27, 52, 0.95);
             --text: #eef2ff;
             --muted: #94a3b8;
             --accent: #8b5cf6;
@@ -528,12 +535,34 @@ def home():
             height: 100%;
             overflow: hidden;
             position: relative;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(139,92,246,0.14), transparent 22%),
+                radial-gradient(circle at 80% 30%, rgba(96,165,250,0.12), transparent 22%),
+                radial-gradient(circle at 30% 80%, rgba(139,92,246,0.10), transparent 18%);
+        }
+
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.65;
+            pointer-events: none;
+        }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
         }
 
         .sidebar-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.5);
+            background: rgba(0,0,0,0.52);
             display: none;
             z-index: 90;
         }
@@ -546,9 +575,10 @@ def home():
             position: fixed;
             top: 0;
             left: 0;
-            width: min(82vw, 290px);
+            width: min(84vw, 310px);
             height: 100dvh;
-            background: rgba(8, 12, 28, 0.98);
+            background:
+                linear-gradient(180deg, rgba(18,27,52,0.98), rgba(8,12,28,0.98));
             border-right: 1px solid var(--border);
             transform: translateX(-100%);
             transition: transform 0.25s ease;
@@ -556,6 +586,7 @@ def home():
             overflow-y: auto;
             overflow-x: hidden;
             padding: 18px 16px 18px;
+            box-shadow: 20px 0 50px rgba(0,0,0,0.35);
         }
 
         .sidebar.open {
@@ -571,22 +602,42 @@ def home():
             margin-bottom: 18px;
         }
 
-        .brand i {
+        .brand-mark {
+            width: 54px;
+            height: 54px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(20,20,50,0.95), rgba(5,5,25,0.95));
+            box-shadow: 0 0 30px rgba(139,92,246,0.22);
             color: var(--accent);
-            text-shadow: 0 0 24px rgba(139,92,246,0.45);
+            font-size: 24px;
+            flex-shrink: 0;
+        }
+
+        .side-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 14px;
         }
 
         .side-btn {
             width: 100%;
             border: 1px solid var(--border);
-            background: var(--panel);
+            background: rgba(255,255,255,0.03);
             color: var(--text);
-            border-radius: 14px;
-            padding: 14px;
+            border-radius: 16px;
+            padding: 15px 16px;
             cursor: pointer;
             text-align: left;
-            margin-bottom: 10px;
             font-size: 15px;
+            transition: 0.2s ease;
+        }
+
+        .side-btn:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
         }
 
         .side-label {
@@ -599,12 +650,12 @@ def home():
 
         .history-item {
             width: 100%;
-            padding: 12px 14px;
-            border-radius: 12px;
+            padding: 12px 12px;
+            border-radius: 14px;
             margin-bottom: 8px;
             color: var(--muted);
             border: 1px solid transparent;
-            background: transparent;
+            background: rgba(255,255,255,0.02);
             display: flex;
             gap: 8px;
             align-items: center;
@@ -625,21 +676,30 @@ def home():
             color: var(--muted);
             cursor: pointer;
             font-size: 14px;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
         }
 
-        .history-item:hover {
-            background: rgba(255,255,255,0.04);
-            border-color: var(--border);
+        .history-mini:hover {
+            background: rgba(255,255,255,0.06);
             color: var(--text);
         }
 
         .about-box {
             padding: 16px;
-            border-radius: 16px;
+            border-radius: 18px;
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
-            line-height: 1.6;
+            line-height: 1.7;
             word-break: break-word;
+        }
+
+        .copyright-box {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--muted);
+            opacity: 0.9;
         }
 
         .main {
@@ -651,30 +711,31 @@ def home():
         }
 
         .topbar {
-            height: 66px;
-            min-height: 66px;
+            height: 70px;
+            min-height: 70px;
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 0 14px;
             border-bottom: 1px solid var(--border);
-            background: rgba(5, 8, 22, 0.74);
-            backdrop-filter: blur(12px);
+            background: rgba(5, 8, 22, 0.68);
+            backdrop-filter: blur(14px);
         }
 
         .menu-btn {
-            width: 42px;
-            height: 42px;
+            width: 44px;
+            height: 44px;
             border: none;
-            border-radius: 12px;
+            border-radius: 14px;
             background: rgba(255,255,255,0.06);
             color: var(--text);
             cursor: pointer;
             flex-shrink: 0;
+            font-size: 18px;
         }
 
         .top-title {
-            font-size: 21px;
+            font-size: 22px;
             font-weight: 800;
             background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 55%, #93c5fd 100%);
             -webkit-background-clip: text;
@@ -694,35 +755,36 @@ def home():
 
         .welcome {
             width: 100%;
-            max-width: 760px;
-            margin: 26px auto 0;
+            max-width: 800px;
+            margin: 28px auto 0;
             text-align: center;
             padding: 0 4px;
         }
 
-        .logo-box {
-            width: 82px;
-            height: 82px;
-            margin: 0 auto 18px;
-            border-radius: 24px;
+        .hero-mark {
+            width: 92px;
+            height: 92px;
+            margin: 0 auto 20px;
+            border-radius: 26px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(180deg, rgba(20,20,50,0.95), rgba(5,5,25,0.95));
-            box-shadow: 0 0 40px rgba(139,92,246,0.15);
+            box-shadow: 0 0 45px rgba(139,92,246,0.20);
             color: var(--accent);
-            font-size: 34px;
+            font-size: 38px;
         }
 
         .welcome h1 {
             margin: 0 0 8px;
-            font-size: clamp(30px, 8vw, 44px);
+            font-size: clamp(34px, 9vw, 52px);
         }
 
         .welcome p {
             margin: 0 0 18px;
             color: var(--muted);
-            line-height: 1.6;
+            line-height: 1.7;
+            font-size: 18px;
         }
 
         .mode-row {
@@ -741,11 +803,13 @@ def home():
             padding: 10px 14px;
             cursor: pointer;
             font-size: 14px;
+            transition: 0.2s ease;
         }
 
         .mode-btn.active {
             background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
             border-color: transparent;
+            box-shadow: 0 8px 24px rgba(124,58,237,0.22);
         }
 
         .suggestions {
@@ -759,7 +823,7 @@ def home():
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.03);
             color: var(--text);
-            border-radius: 18px;
+            border-radius: 20px;
             padding: 18px 16px;
             text-align: left;
             cursor: pointer;
@@ -767,7 +831,13 @@ def home():
             display: flex;
             align-items: center;
             gap: 12px;
-            min-height: 72px;
+            min-height: 76px;
+            transition: 0.2s ease;
+        }
+
+        .chip:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-1px);
         }
 
         .chip i {
@@ -779,7 +849,7 @@ def home():
 
         .message {
             width: 100%;
-            max-width: 820px;
+            max-width: 860px;
             margin: 0 auto 18px;
             display: flex;
             gap: 10px;
@@ -791,8 +861,8 @@ def home():
         }
 
         .avatar {
-            width: 38px;
-            height: 38px;
+            width: 40px;
+            height: 40px;
             border-radius: 12px;
             display: flex;
             align-items: center;
@@ -813,7 +883,7 @@ def home():
         .bubble-wrap {
             min-width: 0;
             flex: 1;
-            max-width: calc(100% - 48px);
+            max-width: calc(100% - 50px);
         }
 
         .message.user .bubble-wrap {
@@ -838,17 +908,18 @@ def home():
             max-width: 100%;
             word-wrap: break-word;
             overflow-wrap: anywhere;
-            line-height: 1.68;
+            line-height: 1.7;
             font-size: 16px;
         }
 
         .message.user .bubble {
             width: auto;
-            max-width: min(82vw, 540px);
+            max-width: min(82vw, 560px);
             padding: 14px 16px;
             border-radius: 18px;
             background: linear-gradient(135deg, #312e81 0%, #2563eb 100%);
             color: white;
+            box-shadow: 0 10px 26px rgba(37,99,235,0.18);
         }
 
         .message.bot .bubble {
@@ -908,7 +979,7 @@ def home():
         }
 
         .artifact-frame {
-            height: 240px;
+            height: 260px;
             background: white;
         }
 
@@ -920,7 +991,7 @@ def home():
 
         .typing {
             width: 100%;
-            max-width: 820px;
+            max-width: 860px;
             margin: 0 auto 18px;
             color: var(--muted);
             padding-left: 2px;
@@ -937,7 +1008,7 @@ def home():
 
         .input-wrap {
             width: 100%;
-            max-width: 820px;
+            max-width: 860px;
             margin: 0 auto;
         }
 
@@ -950,6 +1021,7 @@ def home():
             border: 1px solid var(--border);
             border-radius: 24px;
             padding: 12px 12px 12px 14px;
+            box-shadow: 0 12px 34px rgba(0,0,0,0.24);
         }
 
         textarea {
@@ -990,15 +1062,16 @@ def home():
 
         .modal-card {
             width: 100%;
-            max-width: 360px;
-            background: #0d1326;
+            max-width: 390px;
+            background: linear-gradient(180deg, rgba(18,27,52,0.98), rgba(8,12,28,0.98));
             border: 1px solid var(--border);
-            border-radius: 18px;
-            padding: 20px;
+            border-radius: 22px;
+            padding: 22px;
             position: relative;
+            box-shadow: 0 20px 55px rgba(0,0,0,0.36);
         }
 
-        .modal-card input {
+        .modal-card input, .modal-card textarea {
             width: 100%;
             margin: 12px 0;
             padding: 12px;
@@ -1012,14 +1085,16 @@ def home():
         .modal-row {
             display: flex;
             gap: 10px;
+            margin-top: 12px;
         }
 
         .modal-row button {
             flex: 1;
             border: none;
-            border-radius: 12px;
-            padding: 12px;
+            border-radius: 14px;
+            padding: 13px;
             cursor: pointer;
+            font-size: 15px;
         }
 
         .btn-cancel {
@@ -1039,19 +1114,44 @@ def home():
 
         .close-small {
             position: absolute;
-            top: 10px;
-            right: 10px;
+            top: 12px;
+            right: 12px;
             background: transparent;
             border: none;
             color: var(--muted);
-            font-size: 18px;
+            font-size: 20px;
             cursor: pointer;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
+        .stat-card {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px;
+        }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 12px;
         }
 
         @media (min-width: 900px) {
             .sidebar {
                 transform: translateX(0);
-                width: 290px;
+                width: 310px;
             }
 
             .sidebar-overlay {
@@ -1059,7 +1159,7 @@ def home():
             }
 
             .main {
-                padding-left: 290px;
+                padding-left: 310px;
             }
 
             .menu-btn {
@@ -1067,11 +1167,11 @@ def home():
             }
 
             .input-area {
-                left: 290px;
+                left: 310px;
             }
 
             .suggestions {
-                grid-template-columns: 1fr 1fr 1fr;
+                grid-template-columns: 1fr 1fr;
             }
         }
 
@@ -1104,23 +1204,34 @@ def home():
             .input-area {
                 padding: 10px;
             }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="app">
+    <canvas id="bg-canvas"></canvas>
+
+    <div class="app shell">
         <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
         <aside id="sidebar" class="sidebar">
-            <div class="brand"><i class="fas fa-bolt"></i> __APP_NAME__</div>
+            <div class="brand">
+                <div class="brand-mark"><i class="fas fa-bolt"></i></div>
+                <div>__APP_NAME__</div>
+            </div>
 
-            <button class="side-btn" onclick="startNewChat(); closeSidebar();">
-                <i class="fas fa-plus"></i> New Chat
-            </button>
+            <div class="side-grid">
+                <button class="side-btn" onclick="startNewChat(); closeSidebar();">
+                    <i class="fas fa-plus"></i> New Chat
+                </button>
 
-            <button class="side-btn" onclick="exportCurrentChat(); closeSidebar();">
-                <i class="fas fa-file-export"></i> Export Chat
-            </button>
+                <button class="side-btn" onclick="exportCurrentChat(); closeSidebar();">
+                    <i class="fas fa-file-export"></i> Export Chat
+                </button>
+            </div>
 
             <div class="side-label">RECENT</div>
             <div id="history-list"></div>
@@ -1130,10 +1241,11 @@ def home():
                 <div style="font-size:20px;font-weight:800;margin-bottom:6px;">__APP_NAME__</div>
                 <div style="color:var(--muted);margin-bottom:8px;">Version __VERSION__</div>
                 <div style="margin-bottom:10px;">Created by <span style="color:var(--accent);">__OWNER_NAME__</span></div>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
                     <a href="__FACEBOOK_URL__" target="_blank" style="color:white;">Facebook</a>
                     <a href="__WEBSITE_URL__" target="_blank" style="color:white;">Website</a>
                 </div>
+                <div class="copyright-box">© 2026 __APP_NAME__ — Copyright by __OWNER_NAME__</div>
             </div>
 
             <button class="side-btn" onclick="clearChats()">
@@ -1149,9 +1261,9 @@ def home():
 
             <div id="chat-box" class="chat-box">
                 <div id="welcome" class="welcome">
-                    <div class="logo-box"><i class="fas fa-bolt"></i></div>
+                    <div class="hero-mark"><i class="fas fa-bolt"></i></div>
                     <h1>Welcome to __APP_NAME__</h1>
-                    <p>Minimal, clean, and mobile-first.</p>
+                    <p>Smarter, cleaner, and more alive.</p>
 
                     <div class="mode-row">
                         <button id="mode-smart" class="mode-btn active" onclick="setMode('smart')">Smart</button>
@@ -1179,7 +1291,7 @@ def home():
     <div id="admin-modal" class="modal-overlay">
         <div class="modal-card">
             <button class="close-small" onclick="closeAdminModal()"><i class="fas fa-times"></i></button>
-            <div style="font-size:22px;font-weight:800;margin-bottom:6px;">Admin Access</div>
+            <div style="font-size:28px;font-weight:800;margin-bottom:6px;">Admin Access</div>
             <div style="color:var(--muted);margin-bottom:10px;">Enter authorization code</div>
             <input type="password" id="admin-pass" placeholder="Password">
             <div id="admin-error" style="display:none;color:#fca5a5;margin-bottom:10px;">Invalid password</div>
@@ -1190,13 +1302,69 @@ def home():
         </div>
     </div>
 
+    <div id="admin-panel-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="close-small" onclick="closeAdminPanel()"><i class="fas fa-times"></i></button>
+            <div style="font-size:30px;font-weight:800;margin-bottom:6px;">Admin Panel</div>
+            <div style="color:var(--muted);margin-bottom:8px;">System overview</div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div id="stat-messages" class="stat-value">0</div>
+                    <div class="stat-label">Total Messages</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-uptime" class="stat-value">0</div>
+                    <div class="stat-label">Uptime</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-system" class="stat-value">ON</div>
+                    <div class="stat-label">System</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-keys" class="stat-value">0</div>
+                    <div class="stat-label">Loaded Keys</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-analytics" class="stat-value">0</div>
+                    <div class="stat-label">Analytics</div>
+                </div>
+                <div class="stat-card">
+                    <div id="stat-feedback" class="stat-value">0</div>
+                    <div class="stat-label">Feedback</div>
+                </div>
+            </div>
+
+            <div class="modal-row">
+                <button class="btn-danger" onclick="toggleSystemAdmin()">Toggle System</button>
+                <button class="btn-cancel" onclick="resetMemoryAdmin()">Reset Memory</button>
+            </div>
+
+            <div class="modal-row">
+                <button class="btn-cancel" onclick="closeAdminPanel()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="rename-modal" class="modal-overlay">
+        <div class="modal-card">
+            <button class="close-small" onclick="closeRenameModal()"><i class="fas fa-times"></i></button>
+            <div style="font-size:24px;font-weight:800;margin-bottom:6px;">Rename Chat</div>
+            <div style="color:var(--muted);margin-bottom:10px;">Enter a new chat title</div>
+            <input type="text" id="rename-input" placeholder="New title">
+            <div class="modal-row">
+                <button class="btn-cancel" onclick="closeRenameModal()">Cancel</button>
+                <button class="btn-confirm" onclick="confirmRenameChat()">Save</button>
+            </div>
+        </div>
+    </div>
+
     <div id="status-modal" class="modal-overlay">
         <div class="modal-card">
             <button class="close-small" onclick="closeStatusModal()"><i class="fas fa-times"></i></button>
-            <div id="status-title" style="font-size:22px;font-weight:800;margin-bottom:8px;">Status</div>
+            <div id="status-title" style="font-size:24px;font-weight:800;margin-bottom:8px;">Status</div>
             <div id="status-text" style="color:var(--muted);line-height:1.7;white-space:pre-wrap;"></div>
-            <div id="status-actions" class="modal-row" style="margin-top:14px; display:none;">
-                <button class="btn-danger" onclick="toggleSystemAdmin()">Toggle System</button>
+            <div class="modal-row">
                 <button class="btn-cancel" onclick="closeStatusModal()">Close</button>
             </div>
         </div>
@@ -1205,15 +1373,16 @@ def home():
     <script>
         marked.setOptions({ breaks: true, gfm: true });
 
-        const SUGGESTIONS = __SUGGESTIONS__;
+        const ALL_SUGGESTIONS = __SUGGESTIONS__;
 
-        let chats = JSON.parse(localStorage.getItem("flux_v32_history") || "[]");
+        let chats = JSON.parse(localStorage.getItem("flux_v33_history") || "[]");
         let currentChatId = null;
         let userName = localStorage.getItem("flux_user_name_fixed") || "";
         let awaitingName = false;
         let responseMode = localStorage.getItem("flux_response_mode") || "smart";
         let lastUserPrompt = "";
-        let isAdminLoggedIn = false;
+        let renameChatId = null;
+        let suggestionOffset = 0;
 
         const chatBox = document.getElementById("chat-box");
         const welcome = document.getElementById("welcome");
@@ -1221,6 +1390,73 @@ def home():
         const historyList = document.getElementById("history-list");
         const sidebar = document.getElementById("sidebar");
         const sidebarOverlay = document.getElementById("sidebar-overlay");
+
+        function initBackground() {
+            const canvas = document.getElementById("bg-canvas");
+            const ctx = canvas.getContext("2d");
+            let particles = [];
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function makeParticles() {
+                particles = [];
+                const count = Math.max(28, Math.floor(window.innerWidth / 35));
+                for (let i = 0; i < count; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.25,
+                        vy: (Math.random() - 0.5) * 0.25,
+                        r: Math.random() * 2 + 0.8
+                    });
+                }
+            }
+
+            function draw() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                for (let i = 0; i < particles.length; i++) {
+                    const p = particles[i];
+                    p.x += p.vx;
+                    p.y += p.vy;
+
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = "rgba(139,92,246,0.75)";
+                    ctx.fill();
+
+                    for (let j = i + 1; j < particles.length; j++) {
+                        const q = particles[j];
+                        const dx = p.x - q.x;
+                        const dy = p.y - q.y;
+                        const d = Math.sqrt(dx * dx + dy * dy);
+                        if (d < 120) {
+                            ctx.beginPath();
+                            ctx.moveTo(p.x, p.y);
+                            ctx.lineTo(q.x, q.y);
+                            ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / 120) * 0.18) + ")";
+                            ctx.lineWidth = 1;
+                            ctx.stroke();
+                        }
+                    }
+                }
+                requestAnimationFrame(draw);
+            }
+
+            window.addEventListener("resize", function() {
+                resize();
+                makeParticles();
+            });
+
+            resize();
+            makeParticles();
+            draw();
+        }
 
         function resizeInput(el) {
             el.style.height = "auto";
@@ -1237,11 +1473,10 @@ def home():
             sidebarOverlay.classList.remove("show");
         }
 
-        function openStatusModal(title, text, showAdminActions=false) {
+        function openStatusModal(title, text) {
             document.getElementById("status-title").textContent = title;
             document.getElementById("status-text").textContent = text;
             document.getElementById("status-modal").style.display = "flex";
-            document.getElementById("status-actions").style.display = showAdminActions ? "flex" : "none";
         }
 
         function closeStatusModal() {
@@ -1258,6 +1493,25 @@ def home():
             document.getElementById("admin-modal").style.display = "none";
         }
 
+        function openAdminPanel() {
+            document.getElementById("admin-panel-modal").style.display = "flex";
+        }
+
+        function closeAdminPanel() {
+            document.getElementById("admin-panel-modal").style.display = "none";
+        }
+
+        function openRenameModal(chatId, currentTitle) {
+            renameChatId = chatId;
+            document.getElementById("rename-input").value = currentTitle || "";
+            document.getElementById("rename-modal").style.display = "flex";
+        }
+
+        function closeRenameModal() {
+            renameChatId = null;
+            document.getElementById("rename-modal").style.display = "none";
+        }
+
         function setMode(mode) {
             responseMode = mode;
             localStorage.setItem("flux_response_mode", mode);
@@ -1271,10 +1525,21 @@ def home():
             if (active) active.classList.add("active");
         }
 
+        function getVisibleSuggestions() {
+            const count = window.innerWidth >= 900 ? 4 : 3;
+            const result = [];
+            for (let i = 0; i < count; i++) {
+                result.push(ALL_SUGGESTIONS[(suggestionOffset + i) % ALL_SUGGESTIONS.length]);
+            }
+            return result;
+        }
+
         function renderSuggestions() {
             const box = document.getElementById("suggestions");
             box.innerHTML = "";
-            SUGGESTIONS.forEach(function(item) {
+            const current = getVisibleSuggestions();
+
+            current.forEach(function(item) {
                 const btn = document.createElement("button");
                 btn.className = "chip";
                 btn.innerHTML = '<i class="' + item.icon + '"></i><span>' + item.text + '</span>';
@@ -1287,8 +1552,13 @@ def home():
             });
         }
 
+        function rotateSuggestions() {
+            suggestionOffset = (suggestionOffset + 1) % ALL_SUGGESTIONS.length;
+            renderSuggestions();
+        }
+
         function saveChats() {
-            localStorage.setItem("flux_v32_history", JSON.stringify(chats));
+            localStorage.setItem("flux_v33_history", JSON.stringify(chats));
         }
 
         function renderHistory() {
@@ -1310,7 +1580,7 @@ def home():
                 renameBtn.innerHTML = '<i class="fas fa-pen"></i>';
                 renameBtn.onclick = function(e) {
                     e.stopPropagation();
-                    renameChat(chat.id);
+                    openRenameModal(chat.id, chat.title || "New Conversation");
                 };
 
                 const delBtn = document.createElement("button");
@@ -1352,18 +1622,25 @@ def home():
             renderHistory();
         }
 
-        function renameChat(id) {
-            const chat = chats.find(function(c) { return c.id === id; });
+        function confirmRenameChat() {
+            if (!renameChatId) return;
+            const chat = chats.find(function(c) { return c.id === renameChatId; });
             if (!chat) return;
-            const newName = prompt("Rename chat", chat.title || "New Conversation");
-            if (!newName) return;
-            chat.title = newName.trim().slice(0, 40) || chat.title;
+
+            const newName = document.getElementById("rename-input").value.trim();
+            if (!newName) {
+                closeRenameModal();
+                return;
+            }
+
+            chat.title = newName.slice(0, 40);
             saveChats();
             renderHistory();
+            closeRenameModal();
         }
 
         function clearChats() {
-            localStorage.removeItem("flux_v32_history");
+            localStorage.removeItem("flux_v33_history");
             location.reload();
         }
 
@@ -1473,6 +1750,27 @@ def home():
                     resizeInput(msgInput);
                 }));
 
+                actions.appendChild(makeActionButton("Continue", function() {
+                    msgInput.value = "Continue.";
+                    resizeInput(msgInput);
+                }));
+
+                actions.appendChild(makeActionButton("👍", async function() {
+                    await fetch("/feedback", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ feedback_type: "like", text: text })
+                    });
+                }));
+
+                actions.appendChild(makeActionButton("👎", async function() {
+                    await fetch("/feedback", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ feedback_type: "dislike", text: text })
+                    });
+                }));
+
                 bubbleWrap.appendChild(actions);
             }
 
@@ -1510,29 +1808,25 @@ def home():
 
                 if (!res.ok) throw new Error("Invalid");
 
-                isAdminLoggedIn = true;
                 closeAdminModal();
-                await showAdminPanel();
+                await refreshAdminPanel();
+                openAdminPanel();
             } catch (e) {
                 document.getElementById("admin-error").style.display = "block";
             }
         }
 
-        async function showAdminPanel() {
+        async function refreshAdminPanel() {
             try {
                 const statsRes = await fetch("/admin/stats");
                 const stats = await statsRes.json();
 
-                openStatusModal(
-                    "Admin Panel",
-                    "Login success\\n\\nUptime: " + stats.uptime +
-                    "\\nTotal messages: " + stats.total_messages +
-                    "\\nSystem active: " + stats.active +
-                    "\\nAnalytics: " + stats.analytics_count +
-                    "\\nFeedback: " + stats.feedback_count +
-                    "\\nLoaded keys: " + stats.loaded_keys,
-                    true
-                );
+                document.getElementById("stat-messages").textContent = stats.total_messages;
+                document.getElementById("stat-uptime").textContent = stats.uptime;
+                document.getElementById("stat-system").textContent = stats.active ? "ON" : "OFF";
+                document.getElementById("stat-keys").textContent = stats.loaded_keys;
+                document.getElementById("stat-analytics").textContent = stats.analytics_count;
+                document.getElementById("stat-feedback").textContent = stats.feedback_count;
             } catch (e) {
                 openStatusModal("Admin Panel", "Failed to load admin stats.");
             }
@@ -1540,13 +1834,21 @@ def home():
 
         async function toggleSystemAdmin() {
             try {
-                const res = await fetch("/admin/toggle_system", {
-                    method: "POST"
-                });
+                const res = await fetch("/admin/toggle_system", { method: "POST" });
                 if (!res.ok) throw new Error("Failed");
-                await showAdminPanel();
+                await refreshAdminPanel();
             } catch (e) {
                 openStatusModal("Admin Panel", "Failed to toggle system.");
+            }
+        }
+
+        async function resetMemoryAdmin() {
+            try {
+                const res = await fetch("/admin/reset_memory", { method: "POST" });
+                if (!res.ok) throw new Error("Failed");
+                openStatusModal("Admin Panel", "Memory reset completed.");
+            } catch (e) {
+                openStatusModal("Admin Panel", "Failed to reset memory.");
             }
         }
 
@@ -1668,21 +1970,47 @@ def home():
 
                 const actions = document.createElement("div");
                 actions.className = "msg-actions";
+
                 actions.appendChild(makeActionButton("Copy", function() {
                     navigator.clipboard.writeText(botResp || "");
                 }));
+
                 actions.appendChild(makeActionButton("Regenerate", function() {
                     msgInput.value = lastUserPrompt || "";
                     resizeInput(msgInput);
                 }));
+
                 actions.appendChild(makeActionButton("Shorter", function() {
                     msgInput.value = "Make your last answer shorter.";
                     resizeInput(msgInput);
                 }));
+
                 actions.appendChild(makeActionButton("Bangla", function() {
                     msgInput.value = "Rewrite your last answer in Bangla.";
                     resizeInput(msgInput);
                 }));
+
+                actions.appendChild(makeActionButton("Continue", function() {
+                    msgInput.value = "Continue.";
+                    resizeInput(msgInput);
+                }));
+
+                actions.appendChild(makeActionButton("👍", async function() {
+                    await fetch("/feedback", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ feedback_type: "like", text: botResp })
+                    });
+                }));
+
+                actions.appendChild(makeActionButton("👎", async function() {
+                    await fetch("/feedback", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ feedback_type: "dislike", text: botResp })
+                    });
+                }));
+
                 bubbleWrap.appendChild(actions);
 
                 checkForArtifact(botResp, bubble);
@@ -1702,9 +2030,13 @@ def home():
             }
         });
 
+        window.addEventListener("resize", renderSuggestions);
+
+        initBackground();
         setMode(responseMode);
         renderSuggestions();
         renderHistory();
+        setInterval(rotateSuggestions, 5000);
     </script>
 </body>
 </html>
