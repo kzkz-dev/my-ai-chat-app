@@ -37,7 +37,7 @@ app = Flask(name) app.secret_key = FLASK_SECRET_KEY app.config["SESSION_COOKIE_H
 
 #------------------------------------------
 
-Database
+#Database
 
 #------------------------------------------
 
@@ -49,7 +49,7 @@ init_db()
 
 #------------------------------------------
 
-Groq key manager
+#Groq key manager
 
 #------------------------------------------
 
@@ -65,7 +65,7 @@ def get_groq_client() -> Optional[Groq]: api_key = get_available_key() if not ap
 
 #------------------------------------------
 
-Helpers
+#Helpers
 
 #------------------------------------------
 
@@ -196,7 +196,7 @@ yield "⚠️ System Busy. Please try again in a moment."
 
 #------------------------------------------
 
-Suggestion pool for frontend rendering
+#Suggestion pool for frontend rendering
 
 #------------------------------------------
 
@@ -204,7 +204,7 @@ SUGGESTION_POOL = [ {"icon": "fas fa-gamepad", "text": "Make a Tic-Tac-Toe game"
 
 #------------------------------------------
 
-Main page
+#Main page
 
 #-----------------------------------------
 
@@ -861,7 +861,7 @@ return f"""
 
 #------------------------------------------
 
-Admin routes
+#Admin routes
 
 #------------------------------------------
 
@@ -885,7 +885,7 @@ return jsonify({"ok": False, "error": "Invalid password"}), 401
 
 #------------------------------------------
 
-Health + Chat routes
+#Health + Chat routes
 
 #------------------------------------------
 
