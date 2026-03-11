@@ -2,9 +2,9 @@ from flask import Flask, request, Response, jsonify, session, stream_with_contex
 
 ==========================================
 
-🔹 Flux AI (Ultimate Intelligence - Build 30.0.0) 🧠
+ Flux AI (Ultimate Intelligence - Build 30.0.0) 
 
-🔥 Secure + Cleaner + Smarter Backend Rewrite 🔥
+ Secure + Cleaner + Smarter Backend Rewrite 
 
 ==========================================
 
