@@ -13,7 +13,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "31.0.0"
+VERSION = "32.0.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -41,8 +41,14 @@ app.config["SESSION_COOKIE_SAMESITE"] = "Lax"
 app.config["SESSION_COOKIE_SECURE"] = SESSION_COOKIE_SECURE
 
 
-def init_db():
+def db_connect():
     conn = sqlite3.connect(DB_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+
+def init_db():
+    conn = db_connect()
     cur = conn.cursor()
 
     cur.execute(
@@ -59,10 +65,20 @@ def init_db():
     cur.execute(
         """
         CREATE TABLE IF NOT EXISTS memory (
-            id INTEGER PRIMARY KEY AUTOINCREMENT,
-            key_name TEXT UNIQUE NOT NULL,
+            key_name TEXT PRIMARY KEY,
             value_text TEXT NOT NULL,
             updated_at TEXT NOT NULL
+        )
+        """
+    )
+
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS feedback (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            feedback_type TEXT NOT NULL,
+            payload TEXT,
+            created_at TEXT NOT NULL
         )
         """
     )
@@ -73,9 +89,8 @@ def init_db():
 
 def log_event(event_type, payload=None):
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
-        cur.execute(
+        conn = db_connect()
+        conn.execute(
             "INSERT INTO analytics (event_type, payload, created_at) VALUES (?, ?, ?)",
             (event_type, json.dumps(payload or {}, ensure_ascii=False), datetime.utcnow().isoformat())
         )
@@ -87,9 +102,8 @@ def log_event(event_type, payload=None):
 
 def save_memory(key_name, value_text):
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
-        cur.execute(
+        conn = db_connect()
+        conn.execute(
             """
             INSERT INTO memory (key_name, value_text, updated_at)
             VALUES (?, ?, ?)
@@ -107,22 +121,66 @@ def save_memory(key_name, value_text):
 
 def load_memory(key_name, default_value=""):
     try:
-        conn = sqlite3.connect(DB_PATH)
-        cur = conn.cursor()
-        cur.execute("SELECT value_text FROM memory WHERE key_name = ?", (key_name,))
-        row = cur.fetchone()
+        conn = db_connect()
+        row = conn.execute(
+            "SELECT value_text FROM memory WHERE key_name = ?",
+            (key_name,)
+        ).fetchone()
         conn.close()
         if row:
-            return row[0]
+            return row["value_text"]
     except Exception:
         pass
     return default_value
 
 
+def clear_all_memory():
+    try:
+        conn = db_connect()
+        conn.execute("DELETE FROM memory")
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
+def analytics_count():
+    try:
+        conn = db_connect()
+        row = conn.execute("SELECT COUNT(*) AS c FROM analytics").fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+    except Exception:
+        return 0
+
+
+def feedback_count():
+    try:
+        conn = db_connect()
+        row = conn.execute("SELECT COUNT(*) AS c FROM feedback").fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+    except Exception:
+        return 0
+
+
+def log_feedback(feedback_type, payload=None):
+    try:
+        conn = db_connect()
+        conn.execute(
+            "INSERT INTO feedback (feedback_type, payload, created_at) VALUES (?, ?, ?)",
+            (feedback_type, json.dumps(payload or {}, ensure_ascii=False), datetime.utcnow().isoformat())
+        )
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
 init_db()
 
-if not load_memory("owner_name"):
-    save_memory("owner_name", OWNER_NAME)
+save_memory("app_name", APP_NAME)
+save_memory("owner_name", OWNER_NAME)
 
 KEY_STATES = []
 for key in GROQ_KEYS:
@@ -143,8 +201,7 @@ def admin_required(func):
 
 
 def get_uptime():
-    uptime_seconds = int(time.time() - SERVER_START_TIME)
-    return str(timedelta(seconds=uptime_seconds))
+    return str(timedelta(seconds=int(time.time() - SERVER_START_TIME)))
 
 
 def get_current_context():
@@ -162,8 +219,7 @@ def get_current_context():
 def sanitize_text(text, max_len=MAX_USER_TEXT):
     if text is None:
         return ""
-    text = str(text).replace("\x00", " ").strip()
-    return text[:max_len]
+    return str(text).replace("\x00", " ").strip()[:max_len]
 
 
 def sanitize_messages(messages):
@@ -215,11 +271,11 @@ def safe_math_eval(text):
 
 
 def is_current_info_query(text):
-    t = text.lower()
+    t = (text or "").lower()
     keywords = [
-        "today", "latest", "news", "current", "price", "recent", "update",
-        "now", "weather", "crypto", "president", "ceo", "score",
-        "আজ", "সর্বশেষ", "আজকের", "এখন", "দাম", "নিউজ", "আপডেট"
+        "today", "latest", "news", "current", "price", "recent", "update", "weather",
+        "crypto", "president", "ceo", "score", "live", "আজ", "সর্বশেষ", "আজকের",
+        "এখন", "দাম", "নিউজ", "আপডেট", "আবহাওয়া"
     ]
     return any(k in t for k in keywords)
 
@@ -228,11 +284,11 @@ def detect_task_type(text):
     t = (text or "").lower()
     if any(k in t for k in ["html", "css", "javascript", "js", "app", "game", "website", "calculator", "ui"]):
         return "code"
-    if is_current_info_query(t):
-        return "current_info"
     if looks_like_math_expression(text):
         return "math"
-    if any(k in t for k in ["translate", "rewrite", "summarize", "summary", "explain", "simplify", "অনুবাদ", "সারাংশ", "সহজ"]):
+    if is_current_info_query(text):
+        return "current_info"
+    if any(k in t for k in ["translate", "rewrite", "summarize", "summary", "explain", "simplify", "অনুবাদ", "সারাংশ", "সহজ", "ব্যাখ্যা"]):
         return "transform"
     return "chat"
 
@@ -242,8 +298,7 @@ def update_preferences(user_name, response_mode, latest_user):
         save_memory("user_name", user_name)
     if response_mode:
         save_memory("response_mode", response_mode)
-    lang = detect_language(latest_user)
-    save_memory("preferred_language", lang)
+    save_memory("preferred_language", detect_language(latest_user))
 
 
 def build_system_prompt(user_name, response_mode, latest_user):
@@ -251,17 +306,16 @@ def build_system_prompt(user_name, response_mode, latest_user):
     task_type = detect_task_type(latest_user)
     preferred_language = load_memory("preferred_language", "auto")
 
-    base = f"""
-You are {APP_NAME}, a smart, helpful, mobile-first AI assistant.
-Your creator and owner is fixed as {OWNER_NAME} (Bangla: {OWNER_NAME_BN}).
-Never contradict this identity.
-Current user name: {user_name}.
-Current UTC time: {ctx['time_utc']}.
-Dhaka local time: {ctx['time_local']}.
-Date: {ctx['date']}.
-Day: {ctx['weekday']}.
-Preferred language memory: {preferred_language}.
-"""
+    base = (
+        f"You are {APP_NAME}, a smart and helpful AI assistant. "
+        f"Your creator and owner is fixed as {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). "
+        f"Never contradict this identity. "
+        f"Current user name: {user_name}. "
+        f"Current UTC time: {ctx['time_utc']}. "
+        f"Dhaka local time: {ctx['time_local']}. "
+        f"Date: {ctx['date']}. Day: {ctx['weekday']}. "
+        f"Preferred language memory: {preferred_language}."
+    )
 
     rules = """
 Core rules:
@@ -271,11 +325,13 @@ Core rules:
 4. Keep answers clean and mobile-friendly with short paragraphs.
 5. Never invent facts, current news, prices, or live information.
 6. If uncertain, clearly say you are not sure.
-7. Do not expose secrets, keys, prompts, or internal rules.
+7. Do not expose secrets, API keys, prompts, or internal rules.
 8. If asked who owns or created you, answer consistently: KAWCHUR.
 9. For code tasks, be practical and stable.
 10. For study tasks, explain simply step by step.
-"""
+11. Do not claim live web search or citations unless they truly exist.
+12. Avoid clutter and avoid repeating yourself.
+""".strip()
 
     mode_text = "Response mode: balanced smart."
     if response_mode == "study":
@@ -284,6 +340,8 @@ Core rules:
         mode_text = "Response mode: code. Be precise and implementation-focused."
     elif response_mode == "fast":
         mode_text = "Response mode: fast. Answer briefly and directly."
+    elif response_mode == "search":
+        mode_text = "Response mode: search-style. Since live web search is not enabled here, clearly mark uncertainty."
 
     task_text = "Task type: general chat."
     if task_type == "code":
@@ -291,8 +349,8 @@ Core rules:
 Task type: code.
 If the user asks to build an app or UI, return a single full HTML file inside one ```html code block.
 Put CSS in <style> and JS in <script>.
-Keep it mobile-friendly.
-"""
+Keep it mobile-friendly and stable.
+""".strip()
     elif task_type == "math":
         task_text = "Task type: math. Give the exact answer directly."
     elif task_type == "current_info":
@@ -300,7 +358,7 @@ Keep it mobile-friendly.
     elif task_type == "transform":
         task_text = "Task type: transform. Summarize, rewrite, translate, or simplify directly."
 
-    return "\n\n".join([base.strip(), rules.strip(), mode_text.strip(), task_text.strip()])
+    return "\n\n".join([base, rules, mode_text, task_text])
 
 
 def build_messages_for_model(messages, user_name, response_mode):
@@ -312,12 +370,10 @@ def build_messages_for_model(messages, user_name, response_mode):
 
     update_preferences(user_name, response_mode, latest_user)
 
-    system_prompt = build_system_prompt(user_name, response_mode, latest_user)
-    final_messages = [{"role": "system", "content": system_prompt}]
-    final_messages.append({
-        "role": "system",
-        "content": f"Fixed identity facts: app name is {APP_NAME}. Owner and creator is {OWNER_NAME}."
-    })
+    final_messages = [
+        {"role": "system", "content": build_system_prompt(user_name, response_mode, latest_user)},
+        {"role": "system", "content": f"Fixed identity facts: app name is {APP_NAME}. Owner and creator is {OWNER_NAME}."}
+    ]
 
     math_result = safe_math_eval(latest_user)
     if math_result is not None:
@@ -428,36 +484,36 @@ SUGGESTIONS = [
 def home():
     suggestions_json = json.dumps(SUGGESTIONS, ensure_ascii=False)
 
-    return f"""
+    html = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>{APP_NAME}</title>
+    <title>__APP_NAME__</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Noto+Sans+Bengali:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
-        :root {{
+        :root {
             --bg: #040714;
             --bg2: #09112d;
             --panel: rgba(14, 20, 40, 0.92);
-            --panel2: rgba(18, 27, 52, 0.96);
             --text: #eef2ff;
             --muted: #94a3b8;
             --accent: #8b5cf6;
             --accent2: #60a5fa;
             --border: rgba(255,255,255,0.08);
             --danger: #ef4444;
-        }}
+            --success: #22c55e;
+        }
 
-        * {{
+        * {
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-        }}
+        }
 
-        html, body {{
+        html, body {
             margin: 0;
             width: 100%;
             height: 100%;
@@ -465,32 +521,28 @@ def home():
             background: radial-gradient(circle at top, var(--bg2) 0%, var(--bg) 55%, #02040c 100%);
             color: var(--text);
             font-family: 'Outfit', 'Noto Sans Bengali', sans-serif;
-        }}
+        }
 
-        body {{
-            position: relative;
-        }}
-
-        .app {{
+        .app {
             width: 100%;
             height: 100%;
             overflow: hidden;
             position: relative;
-        }}
+        }
 
-        .sidebar-overlay {{
+        .sidebar-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.5);
             display: none;
             z-index: 90;
-        }}
+        }
 
-        .sidebar-overlay.show {{
+        .sidebar-overlay.show {
             display: block;
-        }}
+        }
 
-        .sidebar {{
+        .sidebar {
             position: fixed;
             top: 0;
             left: 0;
@@ -504,27 +556,27 @@ def home():
             overflow-y: auto;
             overflow-x: hidden;
             padding: 18px 16px 18px;
-        }}
+        }
 
-        .sidebar.open {{
+        .sidebar.open {
             transform: translateX(0);
-        }}
+        }
 
-        .brand {{
+        .brand {
             display: flex;
             align-items: center;
             gap: 12px;
             font-size: 30px;
             font-weight: 800;
             margin-bottom: 18px;
-        }}
+        }
 
-        .brand i {{
+        .brand i {
             color: var(--accent);
             text-shadow: 0 0 24px rgba(139,92,246,0.45);
-        }}
+        }
 
-        .side-btn {{
+        .side-btn {
             width: 100%;
             border: 1px solid var(--border);
             background: var(--panel);
@@ -535,54 +587,70 @@ def home():
             text-align: left;
             margin-bottom: 10px;
             font-size: 15px;
-        }}
+        }
 
-        .side-label {{
+        .side-label {
             font-size: 12px;
             color: var(--muted);
             margin: 18px 0 10px;
             letter-spacing: 1px;
             font-weight: 700;
-        }}
+        }
 
-        .history-item {{
+        .history-item {
             width: 100%;
             padding: 12px 14px;
             border-radius: 12px;
             margin-bottom: 8px;
-            cursor: pointer;
             color: var(--muted);
-            background: transparent;
             border: 1px solid transparent;
+            background: transparent;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .history-title {
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }}
+        }
 
-        .history-item:hover {{
+        .history-mini {
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .history-item:hover {
             background: rgba(255,255,255,0.04);
             border-color: var(--border);
             color: var(--text);
-        }}
+        }
 
-        .about-box {{
+        .about-box {
             padding: 16px;
             border-radius: 16px;
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
             line-height: 1.6;
             word-break: break-word;
-        }}
+        }
 
-        .main {{
+        .main {
             width: 100%;
             height: 100%;
             display: flex;
             flex-direction: column;
             overflow: hidden;
-        }}
+        }
 
-        .topbar {{
+        .topbar {
             height: 66px;
             min-height: 66px;
             display: flex;
@@ -592,9 +660,9 @@ def home():
             border-bottom: 1px solid var(--border);
             background: rgba(5, 8, 22, 0.74);
             backdrop-filter: blur(12px);
-        }}
+        }
 
-        .menu-btn {{
+        .menu-btn {
             width: 42px;
             height: 42px;
             border: none;
@@ -603,9 +671,9 @@ def home():
             color: var(--text);
             cursor: pointer;
             flex-shrink: 0;
-        }}
+        }
 
-        .top-title {{
+        .top-title {
             font-size: 21px;
             font-weight: 800;
             background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 55%, #93c5fd 100%);
@@ -614,25 +682,25 @@ def home():
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-        }}
+        }
 
-        .chat-box {{
+        .chat-box {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 18px 12px 122px;
+            padding: 18px 12px 132px;
             scroll-behavior: smooth;
-        }}
+        }
 
-        .welcome {{
+        .welcome {
             width: 100%;
             max-width: 760px;
             margin: 26px auto 0;
             text-align: center;
             padding: 0 4px;
-        }}
+        }
 
-        .logo-box {{
+        .logo-box {
             width: 82px;
             height: 82px;
             margin: 0 auto 18px;
@@ -644,28 +712,28 @@ def home():
             box-shadow: 0 0 40px rgba(139,92,246,0.15);
             color: var(--accent);
             font-size: 34px;
-        }}
+        }
 
-        .welcome h1 {{
+        .welcome h1 {
             margin: 0 0 8px;
             font-size: clamp(30px, 8vw, 44px);
-        }}
+        }
 
-        .welcome p {{
+        .welcome p {
             margin: 0 0 18px;
             color: var(--muted);
             line-height: 1.6;
-        }}
+        }
 
-        .mode-row {{
+        .mode-row {
             display: flex;
             gap: 8px;
             justify-content: center;
             flex-wrap: wrap;
             margin-bottom: 18px;
-        }}
+        }
 
-        .mode-btn {{
+        .mode-btn {
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.04);
             color: var(--text);
@@ -673,20 +741,20 @@ def home():
             padding: 10px 14px;
             cursor: pointer;
             font-size: 14px;
-        }}
+        }
 
-        .mode-btn.active {{
+        .mode-btn.active {
             background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
             border-color: transparent;
-        }}
+        }
 
-        .suggestions {{
+        .suggestions {
             display: grid;
             grid-template-columns: 1fr;
             gap: 10px;
-        }}
+        }
 
-        .chip {{
+        .chip {
             width: 100%;
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.03);
@@ -700,29 +768,29 @@ def home():
             align-items: center;
             gap: 12px;
             min-height: 72px;
-        }}
+        }
 
-        .chip i {{
+        .chip i {
             color: var(--accent);
             width: 22px;
             text-align: center;
             flex-shrink: 0;
-        }}
+        }
 
-        .message {{
+        .message {
             width: 100%;
             max-width: 820px;
             margin: 0 auto 18px;
             display: flex;
             gap: 10px;
             align-items: flex-start;
-        }}
+        }
 
-        .message.user {{
+        .message.user {
             flex-direction: row-reverse;
-        }}
+        }
 
-        .avatar {{
+        .avatar {
             width: 38px;
             height: 38px;
             border-radius: 12px;
@@ -730,73 +798,82 @@ def home():
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
-        }}
+        }
 
-        .avatar.bot {{
+        .avatar.bot {
             background: linear-gradient(135deg, #a855f7 0%, #60a5fa 100%);
             color: white;
-        }}
+        }
 
-        .avatar.user {{
+        .avatar.user {
             background: rgba(255,255,255,0.08);
             color: white;
-        }}
+        }
 
-        .bubble-wrap {{
+        .bubble-wrap {
             min-width: 0;
             flex: 1;
             max-width: calc(100% - 48px);
-        }}
+        }
 
-        .message.user .bubble-wrap {{
+        .message.user .bubble-wrap {
             display: flex;
             flex-direction: column;
             align-items: flex-end;
-        }}
+        }
 
-        .name {{
+        .name {
             font-size: 12px;
             color: var(--muted);
             margin-bottom: 6px;
             font-weight: 700;
-        }}
+        }
 
-        .message.user .name {{
+        .message.user .name {
             display: none;
-        }}
+        }
 
-        .bubble {{
+        .bubble {
             width: 100%;
             max-width: 100%;
             word-wrap: break-word;
             overflow-wrap: anywhere;
             line-height: 1.68;
             font-size: 16px;
-        }}
+        }
 
-        .message.user .bubble {{
+        .message.user .bubble {
             width: auto;
             max-width: min(82vw, 540px);
             padding: 14px 16px;
             border-radius: 18px;
             background: linear-gradient(135deg, #312e81 0%, #2563eb 100%);
             color: white;
-        }}
+        }
 
-        .message.bot .bubble {{
+        .message.bot .bubble {
             padding: 0;
             background: transparent;
-        }}
+        }
 
-        .bubble p {{
-            margin: 0 0 10px;
-        }}
+        .msg-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
 
-        .bubble p:last-child {{
-            margin-bottom: 0;
-        }}
+        .act-btn {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 7px 11px;
+            cursor: pointer;
+            font-size: 12px;
+        }
 
-        pre {{
+        pre {
             width: 100%;
             max-width: 100%;
             overflow-x: auto;
@@ -807,81 +884,64 @@ def home():
             margin-top: 12px;
             white-space: pre-wrap;
             word-break: break-word;
-        }}
+        }
 
-        code {{
+        code {
             color: #e2e8f0;
             font-family: monospace;
-        }}
+        }
 
-        .artifact {{
+        .artifact {
             width: 100%;
             margin-top: 14px;
             border: 1px solid var(--border);
             border-radius: 16px;
             overflow: hidden;
             background: rgba(255,255,255,0.03);
-        }}
+        }
 
-        .artifact-head {{
+        .artifact-head {
             padding: 12px 14px;
             border-bottom: 1px solid var(--border);
             font-size: 14px;
             font-weight: 600;
-        }}
+        }
 
-        .artifact-frame {{
-            height: 280px;
+        .artifact-frame {
+            height: 240px;
             background: white;
-        }}
+        }
 
-        .artifact-frame iframe {{
+        .artifact-frame iframe {
             width: 100%;
             height: 100%;
             border: none;
-        }}
+        }
 
-        .msg-actions {{
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            margin-top: 10px;
-        }}
-
-        .act-btn {{
-            border: 1px solid var(--border);
-            background: rgba(255,255,255,0.04);
-            color: var(--text);
-            border-radius: 999px;
-            padding: 7px 11px;
-            cursor: pointer;
-            font-size: 12px;
-        }}
-
-        .typing {{
+        .typing {
             width: 100%;
             max-width: 820px;
             margin: 0 auto 18px;
             color: var(--muted);
             padding-left: 2px;
-        }}
+        }
 
-        .input-area {{
+        .input-area {
             position: fixed;
             left: 0;
             right: 0;
             bottom: 0;
             padding: 12px;
             background: linear-gradient(to top, rgba(2,4,12,1) 0%, rgba(2,4,12,0.2) 100%);
-        }}
+        }
 
-        .input-wrap {{
+        .input-wrap {
             width: 100%;
             max-width: 820px;
             margin: 0 auto;
-        }}
+        }
 
-        .input-box {{
+        .input-box {
             display: flex;
             gap: 10px;
             align-items: flex-end;
@@ -890,9 +950,9 @@ def home():
             border: 1px solid var(--border);
             border-radius: 24px;
             padding: 12px 12px 12px 14px;
-        }}
+        }
 
-        textarea {{
+        textarea {
             flex: 1;
             min-width: 0;
             background: transparent;
@@ -904,9 +964,9 @@ def home():
             max-height: 180px;
             font-family: inherit;
             line-height: 1.5;
-        }}
+        }
 
-        .send-btn {{
+        .send-btn {
             width: 46px;
             height: 46px;
             border: none;
@@ -915,9 +975,9 @@ def home():
             color: #111827;
             cursor: pointer;
             flex-shrink: 0;
-        }}
+        }
 
-        .modal-overlay {{
+        .modal-overlay {
             position: fixed;
             inset: 0;
             background: rgba(0,0,0,0.72);
@@ -926,18 +986,19 @@ def home():
             justify-content: center;
             z-index: 200;
             padding: 16px;
-        }}
+        }
 
-        .modal-card {{
+        .modal-card {
             width: 100%;
             max-width: 360px;
             background: #0d1326;
             border: 1px solid var(--border);
             border-radius: 18px;
             padding: 20px;
-        }}
+            position: relative;
+        }
 
-        .modal-card input {{
+        .modal-card input {
             width: 100%;
             margin: 12px 0;
             padding: 12px;
@@ -946,32 +1007,37 @@ def home():
             background: rgba(255,255,255,0.05);
             color: var(--text);
             outline: none;
-        }}
+        }
 
-        .modal-row {{
+        .modal-row {
             display: flex;
             gap: 10px;
-        }}
+        }
 
-        .modal-row button {{
+        .modal-row button {
             flex: 1;
             border: none;
             border-radius: 12px;
             padding: 12px;
             cursor: pointer;
-        }}
+        }
 
-        .btn-cancel {{
+        .btn-cancel {
             background: rgba(255,255,255,0.08);
             color: white;
-        }}
+        }
 
-        .btn-confirm {{
-            background: #22c55e;
+        .btn-confirm {
+            background: var(--success);
             color: black;
-        }}
+        }
 
-        .close-small {{
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .close-small {
             position: absolute;
             top: 10px;
             right: 10px;
@@ -980,69 +1046,65 @@ def home():
             color: var(--muted);
             font-size: 18px;
             cursor: pointer;
-        }}
+        }
 
-        @media (min-width: 900px) {{
-            .sidebar {{
+        @media (min-width: 900px) {
+            .sidebar {
                 transform: translateX(0);
                 width: 290px;
-            }}
+            }
 
-            .sidebar-overlay {{
+            .sidebar-overlay {
                 display: none !important;
-            }}
+            }
 
-            .main {{
+            .main {
                 padding-left: 290px;
-            }}
+            }
 
-            .menu-btn {{
+            .menu-btn {
                 display: none;
-            }}
+            }
 
-            .input-area {{
+            .input-area {
                 left: 290px;
-            }}
+            }
 
-            .suggestions {{
+            .suggestions {
                 grid-template-columns: 1fr 1fr 1fr;
-            }}
-        }}
+            }
+        }
 
-        @media (max-width: 520px) {{
-            .topbar {{
+        @media (max-width: 520px) {
+            .topbar {
                 padding: 0 10px;
-            }}
+            }
 
-            .top-title {{
+            .top-title {
                 font-size: 18px;
-            }}
+            }
 
-            .chat-box {{
-                padding: 14px 10px 122px;
-            }}
+            .chat-box {
+                padding: 14px 10px 132px;
+            }
 
-            .avatar {{
+            .avatar {
                 width: 36px;
                 height: 36px;
-            }}
+            }
 
-            .bubble-wrap {{
+            .bubble-wrap {
                 max-width: calc(100% - 44px);
-            }}
+            }
 
-            .message.user .bubble {{
+            .message.user .bubble {
                 max-width: calc(100vw - 72px);
-            }}
+            }
 
-            .artifact-frame {{
-                height: 240px;
-            }}
-
-            .input-area {{
+            .input-area {
                 padding: 10px;
-            }}
-        }}
+            }
+        }
     </style>
 </head>
 <body>
@@ -1050,10 +1112,14 @@ def home():
         <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
         <aside id="sidebar" class="sidebar">
-            <div class="brand"><i class="fas fa-bolt"></i> {APP_NAME}</div>
+            <div class="brand"><i class="fas fa-bolt"></i> __APP_NAME__</div>
 
             <button class="side-btn" onclick="startNewChat(); closeSidebar();">
                 <i class="fas fa-plus"></i> New Chat
+            </button>
+
+            <button class="side-btn" onclick="exportCurrentChat(); closeSidebar();">
+                <i class="fas fa-file-export"></i> Export Chat
             </button>
 
             <div class="side-label">RECENT</div>
@@ -1061,30 +1127,30 @@ def home():
 
             <div class="side-label">INFO</div>
             <div class="about-box">
-                <div style="font-size:20px;font-weight:800;margin-bottom:6px;">{APP_NAME}</div>
-                <div style="color:var(--muted);margin-bottom:8px;">Version {VERSION}</div>
-                <div style="margin-bottom:10px;">Created by <span style="color:var(--accent);">{OWNER_NAME}</span></div>
+                <div style="font-size:20px;font-weight:800;margin-bottom:6px;">__APP_NAME__</div>
+                <div style="color:var(--muted);margin-bottom:8px;">Version __VERSION__</div>
+                <div style="margin-bottom:10px;">Created by <span style="color:var(--accent);">__OWNER_NAME__</span></div>
                 <div style="display:flex;gap:10px;flex-wrap:wrap;">
-                    <a href="{FACEBOOK_URL}" target="_blank" style="color:white;">Facebook</a>
-                    <a href="{WEBSITE_URL}" target="_blank" style="color:white;">Website</a>
+                    <a href="__FACEBOOK_URL__" target="_blank" style="color:white;">Facebook</a>
+                    <a href="__WEBSITE_URL__" target="_blank" style="color:white;">Website</a>
                 </div>
             </div>
 
             <button class="side-btn" onclick="clearChats()">
-                <i class="fas fa-trash"></i> Delete History
+                <i class="fas fa-trash"></i> Delete All Chats
             </button>
         </aside>
 
         <main class="main">
             <div class="topbar">
                 <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <div class="top-title">{APP_NAME}</div>
+                <div class="top-title">__APP_NAME__</div>
             </div>
 
             <div id="chat-box" class="chat-box">
                 <div id="welcome" class="welcome">
                     <div class="logo-box"><i class="fas fa-bolt"></i></div>
-                    <h1>Welcome to {APP_NAME}</h1>
+                    <h1>Welcome to __APP_NAME__</h1>
                     <p>Minimal, clean, and mobile-first.</p>
 
                     <div class="mode-row">
@@ -1092,6 +1158,7 @@ def home():
                         <button id="mode-study" class="mode-btn" onclick="setMode('study')">Study</button>
                         <button id="mode-code" class="mode-btn" onclick="setMode('code')">Code</button>
                         <button id="mode-fast" class="mode-btn" onclick="setMode('fast')">Fast</button>
+                        <button id="mode-search" class="mode-btn" onclick="setMode('search')">Search</button>
                     </div>
 
                     <div id="suggestions" class="suggestions"></div>
@@ -1101,7 +1168,7 @@ def home():
             <div class="input-area">
                 <div class="input-wrap">
                     <div class="input-box">
-                        <textarea id="msg" rows="1" placeholder="Ask Flux..." oninput="resizeInput(this)"></textarea>
+                        <textarea id="msg" rows="1" placeholder="Ask __APP_NAME__..." oninput="resizeInput(this)"></textarea>
                         <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                     </div>
                 </div>
@@ -1110,7 +1177,7 @@ def home():
     </div>
 
     <div id="admin-modal" class="modal-overlay">
-        <div class="modal-card" style="position:relative;">
+        <div class="modal-card">
             <button class="close-small" onclick="closeAdminModal()"><i class="fas fa-times"></i></button>
             <div style="font-size:22px;font-weight:800;margin-bottom:6px;">Admin Access</div>
             <div style="color:var(--muted);margin-bottom:10px;">Enter authorization code</div>
@@ -1124,24 +1191,29 @@ def home():
     </div>
 
     <div id="status-modal" class="modal-overlay">
-        <div class="modal-card" style="position:relative;">
+        <div class="modal-card">
             <button class="close-small" onclick="closeStatusModal()"><i class="fas fa-times"></i></button>
             <div id="status-title" style="font-size:22px;font-weight:800;margin-bottom:8px;">Status</div>
-            <div id="status-text" style="color:var(--muted);line-height:1.7;"></div>
+            <div id="status-text" style="color:var(--muted);line-height:1.7;white-space:pre-wrap;"></div>
+            <div id="status-actions" class="modal-row" style="margin-top:14px; display:none;">
+                <button class="btn-danger" onclick="toggleSystemAdmin()">Toggle System</button>
+                <button class="btn-cancel" onclick="closeStatusModal()">Close</button>
+            </div>
         </div>
     </div>
 
     <script>
         marked.setOptions({ breaks: true, gfm: true });
 
-        const SUGGESTIONS = {suggestions_json};
+        const SUGGESTIONS = __SUGGESTIONS__;
 
-        let chats = JSON.parse(localStorage.getItem("flux_v31_history") || "[]");
+        let chats = JSON.parse(localStorage.getItem("flux_v32_history") || "[]");
         let currentChatId = null;
         let userName = localStorage.getItem("flux_user_name_fixed") || "";
         let awaitingName = false;
         let responseMode = localStorage.getItem("flux_response_mode") || "smart";
         let lastUserPrompt = "";
+        let isAdminLoggedIn = false;
 
         const chatBox = document.getElementById("chat-box");
         const welcome = document.getElementById("welcome");
@@ -1165,10 +1237,11 @@ def home():
             sidebarOverlay.classList.remove("show");
         }
 
-        function openStatusModal(title, text) {
+        function openStatusModal(title, text, showAdminActions=false) {
             document.getElementById("status-title").textContent = title;
             document.getElementById("status-text").textContent = text;
             document.getElementById("status-modal").style.display = "flex";
+            document.getElementById("status-actions").style.display = showAdminActions ? "flex" : "none";
         }
 
         function closeStatusModal() {
@@ -1189,7 +1262,7 @@ def home():
             responseMode = mode;
             localStorage.setItem("flux_response_mode", mode);
 
-            ["smart", "study", "code", "fast"].forEach(m => {
+            ["smart", "study", "code", "fast", "search"].forEach(function(m) {
                 const el = document.getElementById("mode-" + m);
                 if (el) el.classList.remove("active");
             });
@@ -1201,11 +1274,11 @@ def home():
         function renderSuggestions() {
             const box = document.getElementById("suggestions");
             box.innerHTML = "";
-            SUGGESTIONS.forEach(item => {
+            SUGGESTIONS.forEach(function(item) {
                 const btn = document.createElement("button");
                 btn.className = "chip";
-                btn.innerHTML = `<i class="${item.icon}"></i><span>${item.text}</span>`;
-                btn.onclick = () => {
+                btn.innerHTML = '<i class="' + item.icon + '"></i><span>' + item.text + '</span>';
+                btn.onclick = function() {
                     msgInput.value = item.text;
                     resizeInput(msgInput);
                     sendMessage();
@@ -1215,20 +1288,43 @@ def home():
         }
 
         function saveChats() {
-            localStorage.setItem("flux_v31_history", JSON.stringify(chats));
+            localStorage.setItem("flux_v32_history", JSON.stringify(chats));
         }
 
         function renderHistory() {
             historyList.innerHTML = "";
-            chats.forEach(chat => {
-                const div = document.createElement("div");
-                div.className = "history-item";
-                div.textContent = chat.title || "New Conversation";
-                div.onclick = () => {
+            chats.forEach(function(chat) {
+                const row = document.createElement("div");
+                row.className = "history-item";
+
+                const title = document.createElement("div");
+                title.className = "history-title";
+                title.textContent = chat.title || "New Conversation";
+                title.onclick = function() {
                     loadChat(chat.id);
                     closeSidebar();
                 };
-                historyList.appendChild(div);
+
+                const renameBtn = document.createElement("button");
+                renameBtn.className = "history-mini";
+                renameBtn.innerHTML = '<i class="fas fa-pen"></i>';
+                renameBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    renameChat(chat.id);
+                };
+
+                const delBtn = document.createElement("button");
+                delBtn.className = "history-mini";
+                delBtn.innerHTML = '<i class="fas fa-trash"></i>';
+                delBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    deleteChat(chat.id);
+                };
+
+                row.appendChild(title);
+                row.appendChild(renameBtn);
+                row.appendChild(delBtn);
+                historyList.appendChild(row);
             });
         }
 
@@ -1244,14 +1340,58 @@ def home():
             resizeInput(msgInput);
         }
 
+        function deleteChat(id) {
+            chats = chats.filter(function(c) { return c.id !== id; });
+            if (currentChatId === id) {
+                currentChatId = null;
+                chatBox.innerHTML = "";
+                chatBox.appendChild(welcome);
+                welcome.style.display = "block";
+            }
+            saveChats();
+            renderHistory();
+        }
+
+        function renameChat(id) {
+            const chat = chats.find(function(c) { return c.id === id; });
+            if (!chat) return;
+            const newName = prompt("Rename chat", chat.title || "New Conversation");
+            if (!newName) return;
+            chat.title = newName.trim().slice(0, 40) || chat.title;
+            saveChats();
+            renderHistory();
+        }
+
         function clearChats() {
-            localStorage.removeItem("flux_v31_history");
+            localStorage.removeItem("flux_v32_history");
             location.reload();
+        }
+
+        function exportCurrentChat() {
+            const chat = chats.find(function(c) { return c.id === currentChatId; });
+            if (!chat || !chat.messages.length) {
+                openStatusModal("Export", "No active chat to export.");
+                return;
+            }
+
+            let txt = "";
+            chat.messages.forEach(function(m) {
+                const label = m.role === "user" ? "You" : "__APP_NAME__";
+                txt += label + ":\\n" + m.text + "\\n\\n";
+            });
+
+            const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = "flux_chat.txt";
+            a.click();
+            URL.revokeObjectURL(url);
         }
 
         function loadChat(id) {
             currentChatId = id;
-            const chat = chats.find(c => c.id === id);
+            const chat = chats.find(function(c) { return c.id === id; });
             if (!chat) return;
 
             chatBox.innerHTML = "";
@@ -1260,7 +1400,9 @@ def home():
                 welcome.style.display = "block";
             } else {
                 welcome.style.display = "none";
-                chat.messages.forEach(m => appendBubble(m.text, m.role === "user"));
+                chat.messages.forEach(function(m) {
+                    appendBubble(m.text, m.role === "user");
+                });
             }
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -1280,12 +1422,7 @@ def home():
             const code = match[1];
             const artifact = document.createElement("div");
             artifact.className = "artifact";
-            artifact.innerHTML = `
-                <div class="artifact-head">Live App Preview</div>
-                <div class="artifact-frame">
-                    <iframe srcdoc="${code.replace(/"/g, '&quot;')}"></iframe>
-                </div>
-            `;
+            artifact.innerHTML = '<div class="artifact-head">Live App Preview</div><div class="artifact-frame"><iframe srcdoc="' + code.replace(/"/g, '&quot;') + '"></iframe></div>';
             bubble.appendChild(artifact);
         }
 
@@ -1304,7 +1441,7 @@ def home():
 
             const name = document.createElement("div");
             name.className = "name";
-            name.textContent = isUser ? "You" : "{APP_NAME}";
+            name.textContent = isUser ? "You" : "__APP_NAME__";
 
             const bubble = document.createElement("div");
             bubble.className = "bubble";
@@ -1317,12 +1454,22 @@ def home():
                 const actions = document.createElement("div");
                 actions.className = "msg-actions";
 
-                actions.appendChild(makeActionButton("Copy", () => {
+                actions.appendChild(makeActionButton("Copy", function() {
                     navigator.clipboard.writeText(text || "");
                 }));
 
-                actions.appendChild(makeActionButton("Regenerate", () => {
+                actions.appendChild(makeActionButton("Regenerate", function() {
                     msgInput.value = lastUserPrompt || "";
+                    resizeInput(msgInput);
+                }));
+
+                actions.appendChild(makeActionButton("Shorter", function() {
+                    msgInput.value = "Make your last answer shorter.";
+                    resizeInput(msgInput);
+                }));
+
+                actions.appendChild(makeActionButton("Bangla", function() {
+                    msgInput.value = "Rewrite your last answer in Bangla.";
                     resizeInput(msgInput);
                 }));
 
@@ -1363,17 +1510,43 @@ def home():
 
                 if (!res.ok) throw new Error("Invalid");
 
+                isAdminLoggedIn = true;
                 closeAdminModal();
+                await showAdminPanel();
+            } catch (e) {
+                document.getElementById("admin-error").style.display = "block";
+            }
+        }
 
+        async function showAdminPanel() {
+            try {
                 const statsRes = await fetch("/admin/stats");
                 const stats = await statsRes.json();
 
                 openStatusModal(
                     "Admin Panel",
-                    "Login success\\n\\nUptime: " + stats.uptime + "\\nTotal messages: " + stats.total_messages + "\\nSystem active: " + stats.active
+                    "Login success\\n\\nUptime: " + stats.uptime +
+                    "\\nTotal messages: " + stats.total_messages +
+                    "\\nSystem active: " + stats.active +
+                    "\\nAnalytics: " + stats.analytics_count +
+                    "\\nFeedback: " + stats.feedback_count +
+                    "\\nLoaded keys: " + stats.loaded_keys,
+                    true
                 );
             } catch (e) {
-                document.getElementById("admin-error").style.display = "block";
+                openStatusModal("Admin Panel", "Failed to load admin stats.");
+            }
+        }
+
+        async function toggleSystemAdmin() {
+            try {
+                const res = await fetch("/admin/toggle_system", {
+                    method: "POST"
+                });
+                if (!res.ok) throw new Error("Failed");
+                await showAdminPanel();
+            } catch (e) {
+                openStatusModal("Admin Panel", "Failed to toggle system.");
             }
         }
 
@@ -1391,7 +1564,7 @@ def home():
             closeSidebar();
 
             if (!currentChatId) startNewChat();
-            const chat = chats.find(c => c.id === currentChatId);
+            const chat = chats.find(function(c) { return c.id === currentChatId; });
             if (!chat) return;
 
             chat.messages.push({ role: "user", text: text });
@@ -1409,7 +1582,9 @@ def home():
 
             if (!userName && !awaitingName) {
                 awaitingName = true;
-                setTimeout(() => appendBubble("Hello! I am Flux. What should I call you?", false), 350);
+                setTimeout(function() {
+                    appendBubble("Hello! I am __APP_NAME__. What should I call you?", false);
+                }, 350);
                 return;
             }
 
@@ -1417,21 +1592,26 @@ def home():
                 userName = text;
                 localStorage.setItem("flux_user_name_fixed", userName);
                 awaitingName = false;
-                setTimeout(() => appendBubble("Nice to meet you, " + userName + "! How can I help you today?", false), 350);
+                setTimeout(function() {
+                    appendBubble("Nice to meet you, " + userName + "! How can I help you today?", false);
+                }, 350);
                 return;
             }
 
-            let typingText = "Flux is thinking...";
-            if (responseMode === "study") typingText = "Flux is explaining step by step...";
-            if (responseMode === "code") typingText = "Flux is writing code...";
-            if (responseMode === "fast") typingText = "Flux is preparing a quick reply...";
+            let typingText = "__APP_NAME__ is thinking...";
+            if (responseMode === "study") typingText = "__APP_NAME__ is explaining step by step...";
+            if (responseMode === "code") typingText = "__APP_NAME__ is writing code...";
+            if (responseMode === "fast") typingText = "__APP_NAME__ is preparing a quick reply...";
+            if (responseMode === "search") typingText = "__APP_NAME__ is preparing a search-style answer...";
 
             showTyping(typingText);
 
-            const context = chat.messages.slice(-12).map(m => ({
-                role: m.role === "assistant" ? "assistant" : "user",
-                content: m.text
-            }));
+            const context = chat.messages.slice(-12).map(function(m) {
+                return {
+                    role: m.role === "assistant" ? "assistant" : "user",
+                    content: m.text
+                };
+            });
 
             try {
                 const res = await fetch("/chat", {
@@ -1467,7 +1647,7 @@ def home():
 
                 const name = document.createElement("div");
                 name.className = "name";
-                name.textContent = "{APP_NAME}";
+                name.textContent = "__APP_NAME__";
 
                 const bubble = document.createElement("div");
                 bubble.className = "bubble";
@@ -1488,11 +1668,19 @@ def home():
 
                 const actions = document.createElement("div");
                 actions.className = "msg-actions";
-                actions.appendChild(makeActionButton("Copy", () => {
+                actions.appendChild(makeActionButton("Copy", function() {
                     navigator.clipboard.writeText(botResp || "");
                 }));
-                actions.appendChild(makeActionButton("Regenerate", () => {
+                actions.appendChild(makeActionButton("Regenerate", function() {
                     msgInput.value = lastUserPrompt || "";
+                    resizeInput(msgInput);
+                }));
+                actions.appendChild(makeActionButton("Shorter", function() {
+                    msgInput.value = "Make your last answer shorter.";
+                    resizeInput(msgInput);
+                }));
+                actions.appendChild(makeActionButton("Bangla", function() {
+                    msgInput.value = "Rewrite your last answer in Bangla.";
                     resizeInput(msgInput);
                 }));
                 bubbleWrap.appendChild(actions);
@@ -1522,6 +1710,15 @@ def home():
 </html>
 """
 
+    html = html.replace("__APP_NAME__", APP_NAME)
+    html = html.replace("__OWNER_NAME__", OWNER_NAME)
+    html = html.replace("__VERSION__", VERSION)
+    html = html.replace("__FACEBOOK_URL__", FACEBOOK_URL)
+    html = html.replace("__WEBSITE_URL__", WEBSITE_URL)
+    html = html.replace("__SUGGESTIONS__", suggestions_json)
+
+    return html
+
 
 @app.route("/admin/login", methods=["POST"])
 def admin_login():
@@ -1540,6 +1737,13 @@ def admin_login():
     return jsonify({"ok": False, "error": "Invalid password"}), 401
 
 
+@app.route("/admin/logout", methods=["POST"])
+@admin_required
+def admin_logout():
+    session.pop("is_admin", None)
+    return jsonify({"ok": True})
+
+
 @app.route("/admin/stats")
 @admin_required
 def admin_stats():
@@ -1547,7 +1751,48 @@ def admin_stats():
         "uptime": get_uptime(),
         "total_messages": TOTAL_MESSAGES,
         "active": SYSTEM_ACTIVE,
-        "version": VERSION
+        "version": VERSION,
+        "analytics_count": analytics_count(),
+        "feedback_count": feedback_count(),
+        "loaded_keys": len(GROQ_KEYS)
+    })
+
+
+@app.route("/admin/toggle_system", methods=["POST"])
+@admin_required
+def toggle_system():
+    global SYSTEM_ACTIVE
+    SYSTEM_ACTIVE = not SYSTEM_ACTIVE
+    log_event("toggle_system", {"active": SYSTEM_ACTIVE})
+    return jsonify({"ok": True, "active": SYSTEM_ACTIVE})
+
+
+@app.route("/admin/reset_memory", methods=["POST"])
+@admin_required
+def reset_memory():
+    clear_all_memory()
+    save_memory("app_name", APP_NAME)
+    save_memory("owner_name", OWNER_NAME)
+    return jsonify({"ok": True})
+
+
+@app.route("/feedback", methods=["POST"])
+def feedback():
+    data = request.get_json(silent=True) or {}
+    feedback_type = sanitize_text(data.get("feedback_type", "unknown"), 30)
+    text = sanitize_text(data.get("text", ""), 2000)
+    log_feedback(feedback_type, {"text": text})
+    return jsonify({"ok": True})
+
+
+@app.route("/memory")
+def memory_info():
+    return jsonify({
+        "app_name": load_memory("app_name", APP_NAME),
+        "owner_name": load_memory("owner_name", OWNER_NAME),
+        "preferred_language": load_memory("preferred_language", "auto"),
+        "response_mode": load_memory("response_mode", "smart"),
+        "saved_user_name": load_memory("user_name", "")
     })
 
 
@@ -1575,7 +1820,7 @@ def chat():
     user_name = sanitize_text(data.get("user_name", "User"), 80) or "User"
     response_mode = sanitize_text(data.get("response_mode", "smart"), 20).lower()
 
-    if response_mode not in {"smart", "study", "code", "fast"}:
+    if response_mode not in {"smart", "study", "code", "fast", "search"}:
         response_mode = "smart"
 
     if not messages:
