@@ -14,7 +14,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "34.0.0"
+VERSION = "34.1.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -277,8 +277,10 @@ def is_current_info_query(text):
     t = (text or "").lower()
     keywords = [
         "today", "latest", "news", "current", "price", "recent", "update", "weather",
-        "crypto", "president", "ceo", "score", "live", "আজ", "সর্বশেষ", "আজকের",
-        "এখন", "দাম", "নিউজ", "আপডেট", "আবহাওয়া"
+        "crypto", "president", "ceo", "score", "live", "gold price", "bitcoin price",
+        "stock price", "match result", "breaking", "headline", "rate today",
+        "আজ", "সর্বশেষ", "আজকের", "এখন", "দাম", "নিউজ", "আপডেট", "আবহাওয়া",
+        "আজ দাম", "আজকের খবর", "লাইভ", "বর্তমান"
     ]
     return any(k in t for k in keywords)
 
@@ -301,22 +303,33 @@ def tavily_search(query, topic="general", max_results=5):
         return []
 
     try:
+        headers = {
+            "Content-Type": "application/json",
+            "Authorization": f"Bearer {TAVILY_API_KEY}"
+        }
+        payload = {
+            "query": query,
+            "topic": topic,
+            "max_results": max_results,
+            "search_depth": "advanced",
+            "include_answer": False,
+            "include_raw_content": False
+        }
+
         response = requests.post(
             "https://api.tavily.com/search",
-            json={
-                "api_key": TAVILY_API_KEY,
-                "query": query,
-                "topic": topic,
-                "max_results": max_results,
-                "search_depth": "basic",
-                "include_answer": False,
-                "include_raw_content": False
-            },
-            timeout=20
+            headers=headers,
+            json=payload,
+            timeout=25
         )
         response.raise_for_status()
         data = response.json()
-        return data.get("results", [])
+        results = data.get("results", [])
+
+        if isinstance(results, list):
+            results.sort(key=lambda x: float(x.get("score", 0) or 0), reverse=True)
+
+        return results[:max_results]
     except Exception as e:
         log_event("tavily_error", {"error": str(e), "query": query})
         return []
@@ -327,19 +340,32 @@ def format_search_results_for_prompt(results):
         return ""
 
     lines = []
-    for idx, item in enumerate(results, start=1):
+    for idx, item in enumerate(results[:3], start=1):
         title = sanitize_text(item.get("title", "Untitled"), 200)
         url = sanitize_text(item.get("url", ""), 400)
         content = sanitize_text(item.get("content", ""), 700)
-
         lines.append(
             f"Source {idx}:\n"
             f"Title: {title}\n"
             f"URL: {url}\n"
             f"Summary: {content}"
         )
-
     return "\n\n".join(lines)
+
+
+def format_sources_for_output(results):
+    if not results:
+        return ""
+
+    lines = []
+    for item in results[:3]:
+        title = sanitize_text(item.get("title", "Untitled"), 180)
+        url = sanitize_text(item.get("url", ""), 350)
+        if url:
+            lines.append(f"- {title} — {url}")
+        else:
+            lines.append(f"- {title}")
+    return "\n".join(lines)
 
 
 def update_preferences(user_name, response_mode, latest_user):
@@ -382,7 +408,9 @@ Core rules:
 12. Avoid clutter and avoid repeating yourself.
 13. Keep your owner identity locked as KAWCHUR.
 14. Never claim someone else created you.
-15. If verified web search results are provided, use them carefully and cite them at the end under a 'Sources:' section.
+15. If verified web search results are provided, use them carefully.
+16. For current-info questions with search results, prefer the search results over guesses.
+17. When search results are provided, end with a 'Sources:' section.
 """.strip()
 
     mode_text = "Response mode: balanced smart."
@@ -434,6 +462,7 @@ def build_messages_for_model(messages, user_name, response_mode):
             "content": f"MATH TOOL RESULT: The exact answer is {math_result}. Use it correctly."
         })
 
+    search_results = []
     use_search = False
     search_topic = "general"
     task_type = detect_task_type(latest_user)
@@ -449,16 +478,21 @@ def build_messages_for_model(messages, user_name, response_mode):
         if formatted_sources:
             final_messages.append({
                 "role": "system",
-                "content": "Verified web search results are available below. Use these results carefully and cite them at the end under a 'Sources:' section.\n\n" + formatted_sources
+                "content": (
+                    "Verified web search results are available below. "
+                    "Use these results carefully. For current facts, do not go beyond these sources. "
+                    "At the end of your answer, include a 'Sources:' section.\n\n"
+                    + formatted_sources
+                )
             })
         else:
             final_messages.append({
                 "role": "system",
-                "content": "No live web results were available for this query. Be honest about uncertainty."
+                "content": "No live web results were available for this query. Be honest about uncertainty and say live verification was unavailable."
             })
 
     final_messages.extend(messages)
-    return final_messages
+    return final_messages, search_results
 
 
 def pick_model(messages, response_mode):
@@ -508,8 +542,22 @@ def get_available_key():
         return best["key"]
 
 
+def append_sources_if_missing(text, search_results):
+    if not search_results:
+        return text
+
+    if "Sources:" in text:
+        return text
+
+    source_block = format_sources_for_output(search_results)
+    if not source_block:
+        return text
+
+    return text.rstrip() + "\n\nSources:\n" + source_block
+
+
 def generate_groq_stream(messages, user_name, response_mode):
-    final_messages = build_messages_for_model(messages, user_name, response_mode)
+    final_messages, search_results = build_messages_for_model(messages, user_name, response_mode)
     model_name = pick_model(messages, response_mode)
 
     if not GROQ_KEYS:
@@ -531,13 +579,19 @@ def generate_groq_stream(messages, user_name, response_mode):
                 model=model_name,
                 messages=final_messages,
                 stream=True,
-                temperature=0.6,
+                temperature=0.4 if search_results else 0.6,
                 max_tokens=2048
             )
+
+            collected = ""
             for chunk in stream:
                 if chunk.choices and chunk.choices[0].delta.content:
-                    yield chunk.choices[0].delta.content
+                    collected += chunk.choices[0].delta.content
+
+            collected = append_sources_if_missing(collected, search_results)
+
             mark_key_success(api_key)
+            yield collected
             return
         except Exception as e:
             mark_key_failure(api_key)
@@ -579,7 +633,6 @@ def home():
             --bg: #040714;
             --bg2: #09112d;
             --panel: rgba(14, 20, 40, 0.88);
-            --panel2: rgba(18, 27, 52, 0.95);
             --text: #eef2ff;
             --muted: #94a3b8;
             --accent: #8b5cf6;
@@ -1069,6 +1122,21 @@ def home():
             margin: 0 auto 18px;
             color: var(--muted);
             padding-left: 2px;
+        }
+
+        .sources-block {
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        .sources-block a {
+            color: #b9c7ff;
+            word-break: break-all;
         }
 
         .input-area {
@@ -1767,6 +1835,43 @@ def home():
             return btn;
         }
 
+        function renderSourcesBlock(text) {
+            const marker = "Sources:";
+            const idx = text.indexOf(marker);
+            if (idx === -1) {
+                return {
+                    main: marked.parse(text || ""),
+                    sourcesHtml: ""
+                };
+            }
+
+            const mainText = text.slice(0, idx).trim();
+            const sourcesText = text.slice(idx + marker.length).trim();
+            const lines = sourcesText.split("\\n").filter(Boolean);
+
+            let sourceHtml = "";
+            if (lines.length) {
+                sourceHtml += '<div class="sources-block"><strong>Sources:</strong><br>';
+                lines.forEach(function(line) {
+                    const cleaned = line.replace(/^-\s*/, "").trim();
+                    const parts = cleaned.split(" — ");
+                    if (parts.length >= 2) {
+                        const title = parts[0];
+                        const url = parts.slice(1).join(" — ");
+                        sourceHtml += '<div style="margin-top:8px;"><a href="' + url + '" target="_blank" rel="noopener noreferrer">' + title + '</a></div>';
+                    } else {
+                        sourceHtml += '<div style="margin-top:8px;">' + cleaned + '</div>';
+                    }
+                });
+                sourceHtml += '</div>';
+            }
+
+            return {
+                main: marked.parse(mainText || ""),
+                sourcesHtml: sourceHtml
+            };
+        }
+
         function checkForArtifact(text, bubble) {
             const match = text.match(/```html([\\s\\S]*?)```/);
             if (!match) return;
@@ -1797,7 +1902,13 @@ def home():
 
             const bubble = document.createElement("div");
             bubble.className = "bubble";
-            bubble.innerHTML = marked.parse(text || "");
+
+            if (isUser) {
+                bubble.innerHTML = marked.parse(text || "");
+            } else {
+                const rendered = renderSourcesBlock(text || "");
+                bubble.innerHTML = rendered.main + rendered.sourcesHtml;
+            }
 
             bubbleWrap.appendChild(name);
             bubbleWrap.appendChild(bubble);
@@ -2039,7 +2150,8 @@ def home():
                     const result = await reader.read();
                     if (result.done) break;
                     botResp += decoder.decode(result.value);
-                    bubble.innerHTML = marked.parse(botResp || "");
+                    const rendered = renderSourcesBlock(botResp || "");
+                    bubble.innerHTML = rendered.main + rendered.sourcesHtml;
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
 
