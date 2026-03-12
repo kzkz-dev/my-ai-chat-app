@@ -14,7 +14,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "37.0.0"
+VERSION = "38.0.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -471,6 +471,7 @@ Core rules:
 12. For code tasks, be practical and stable.
 13. If verified web search results are provided, use them carefully and end with a 'Sources:' section.
 14. Avoid clutter and avoid repeating yourself.
+15. If the answer seems especially important, format it clearly with headings or concise emphasis.
 """.strip()
 
     length_rule = "Answer length: balanced."
@@ -702,7 +703,6 @@ def home():
         :root {
             --bg: #050816;
             --bg2: #0a1130;
-            --panel: rgba(17, 24, 48, 0.82);
             --panel2: rgba(18, 27, 52, 0.96);
             --text: #eef2ff;
             --muted: #9aa8c7;
@@ -711,6 +711,23 @@ def home():
             --border: rgba(255,255,255,0.08);
             --danger: #ef4444;
             --success: #22c55e;
+            --hero-grad: radial-gradient(circle at top, rgba(139,92,246,0.10) 0%, transparent 45%);
+        }
+
+        body.theme-smart {
+            --hero-grad: radial-gradient(circle at top, rgba(139,92,246,0.10) 0%, transparent 45%);
+        }
+
+        body.theme-study {
+            --hero-grad: radial-gradient(circle at top, rgba(34,197,94,0.10) 0%, transparent 45%);
+        }
+
+        body.theme-code {
+            --hero-grad: radial-gradient(circle at top, rgba(96,165,250,0.12) 0%, transparent 45%);
+        }
+
+        body.theme-search {
+            --hero-grad: radial-gradient(circle at top, rgba(244,114,182,0.10) 0%, transparent 45%);
         }
 
         * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -730,9 +747,7 @@ def home():
             height: 100%;
             overflow: hidden;
             position: relative;
-            background:
-                radial-gradient(circle at 20% 20%, rgba(139,92,246,0.09), transparent 24%),
-                radial-gradient(circle at 85% 25%, rgba(96,165,250,0.07), transparent 22%);
+            background: var(--hero-grad);
         }
 
         #bg-canvas {
@@ -785,7 +800,7 @@ def home():
             margin-bottom: 16px;
         }
 
-        .brand-mark {
+        .brand-mark, .top-orb {
             width: 46px;
             height: 46px;
             border-radius: 14px;
@@ -895,11 +910,19 @@ def home():
             min-height: 66px;
             display: flex;
             align-items: center;
+            justify-content: space-between;
             gap: 12px;
             padding: 0 14px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
             background: rgba(5, 8, 22, 0.54);
             backdrop-filter: blur(12px);
+        }
+
+        .top-left {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            min-width: 0;
         }
 
         .menu-btn {
@@ -920,13 +943,16 @@ def home():
             background: linear-gradient(135deg, #ffffff 0%, #d7ccff 55%, #b7d9ff 100%);
             -webkit-background-clip: text;
             color: transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .chat-box {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 14px 12px 108px;
+            padding: 12px 12px 108px;
             scroll-behavior: smooth;
         }
 
@@ -941,18 +967,35 @@ def home():
             padding: 28px 0 18px;
         }
 
-        .hero-mark {
-            width: 82px;
-            height: 82px;
+        .hero-orb-wrap {
+            position: relative;
+            width: 92px;
+            height: 92px;
             margin: 0 auto 18px;
+        }
+
+        .hero-orb-ring {
+            position: absolute;
+            inset: 0;
+            border-radius: 50%;
+            border: 1px solid rgba(139,92,246,0.25);
+            animation: pulseRing 2.4s infinite;
+        }
+
+        .hero-orb-ring.r2 { animation-delay: 0.9s; }
+        .hero-orb-ring.r3 { animation-delay: 1.6s; }
+
+        .hero-orb {
+            position: absolute;
+            inset: 12px;
             border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(180deg, rgba(22,22,56,0.95), rgba(7,7,28,0.95));
-            box-shadow: 0 0 38px rgba(139,92,246,0.14);
+            box-shadow: 0 0 38px rgba(139,92,246,0.18);
             color: var(--accent);
-            font-size: 32px;
+            font-size: 34px;
         }
 
         .hero h1 {
@@ -1084,6 +1127,7 @@ def home():
             overflow-wrap: anywhere;
             line-height: 1.7;
             font-size: 16px;
+            position: relative;
         }
 
         .message.user .bubble {
@@ -1096,7 +1140,22 @@ def home():
             box-shadow: 0 10px 26px rgba(37,99,235,0.14);
         }
 
-        .message.bot .bubble { padding: 0; background: transparent; }
+        .message.bot .bubble {
+            padding: 0;
+            background: transparent;
+        }
+
+        .bot-glow {
+            text-shadow: 0 0 12px rgba(139,92,246,0.18);
+        }
+
+        .important-card {
+            border: 1px solid rgba(139,92,246,0.28);
+            background: linear-gradient(180deg, rgba(139,92,246,0.08), rgba(96,165,250,0.06));
+            border-radius: 18px;
+            padding: 14px 16px;
+            box-shadow: 0 0 0 1px rgba(255,255,255,0.02), 0 10px 30px rgba(139,92,246,0.08);
+        }
 
         .msg-time {
             font-size: 11px;
@@ -1180,6 +1239,47 @@ def home():
             color: var(--muted);
         }
 
+        .typing-card {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 16px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            width: fit-content;
+            max-width: 100%;
+        }
+
+        .voice-wave {
+            display: flex;
+            gap: 4px;
+            align-items: center;
+            height: 24px;
+        }
+
+        .voice-wave span {
+            width: 4px;
+            border-radius: 999px;
+            background: linear-gradient(180deg, var(--accent), var(--accent2));
+            animation: wave 1.1s infinite ease-in-out;
+        }
+
+        .voice-wave span:nth-child(1) { height: 10px; animation-delay: 0s; }
+        .voice-wave span:nth-child(2) { height: 18px; animation-delay: 0.12s; }
+        .voice-wave span:nth-child(3) { height: 24px; animation-delay: 0.24s; }
+        .voice-wave span:nth-child(4) { height: 16px; animation-delay: 0.36s; }
+        .voice-wave span:nth-child(5) { height: 12px; animation-delay: 0.48s; }
+
+        .typing-beam {
+            width: 64px;
+            height: 2px;
+            border-radius: 999px;
+            background: linear-gradient(90deg, transparent, var(--accent), transparent);
+            background-size: 200% 100%;
+            animation: beam 1.4s linear infinite;
+        }
+
         .sources-block {
             margin-top: 12px;
             padding: 12px 14px;
@@ -1220,6 +1320,22 @@ def home():
             border-radius: 24px;
             padding: 10px 10px 10px 12px;
             box-shadow: 0 12px 34px rgba(0,0,0,0.20);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .input-box::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(90deg, transparent, rgba(139,92,246,0.08), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.45s ease;
+        }
+
+        .input-box.focused::before {
+            transform: translateX(100%);
         }
 
         .tool-btn, .send-btn {
@@ -1229,6 +1345,8 @@ def home():
             border-radius: 14px;
             cursor: pointer;
             flex-shrink: 0;
+            position: relative;
+            z-index: 1;
         }
 
         .tool-btn {
@@ -1257,6 +1375,8 @@ def home():
             font-family: inherit;
             line-height: 1.5;
             padding: 9px 2px;
+            position: relative;
+            z-index: 1;
         }
 
         .modal-overlay {
@@ -1409,6 +1529,47 @@ def home():
             font-size: 12px;
         }
 
+        .particle {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            border-radius: 999px;
+            background: radial-gradient(circle, rgba(255,255,255,1) 0%, rgba(139,92,246,1) 45%, rgba(96,165,250,0.8) 100%);
+            pointer-events: none;
+            z-index: 500;
+            animation: particleFly 0.7s ease forwards;
+        }
+
+        @keyframes particleFly {
+            0% { transform: translate(0,0) scale(1); opacity: 1; }
+            100% { transform: translate(var(--tx), var(--ty)) scale(0.2); opacity: 0; }
+        }
+
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.55); opacity: 0.6; }
+            50% { transform: scaleY(1); opacity: 1; }
+        }
+
+        @keyframes beam {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        @keyframes pulseRing {
+            0% { transform: scale(0.72); opacity: 0.45; }
+            100% { transform: scale(1.25); opacity: 0; }
+        }
+
+        @keyframes topOrbPulse {
+            0%, 100% { box-shadow: 0 0 22px rgba(139,92,246,0.14); transform: scale(1); }
+            50% { box-shadow: 0 0 34px rgba(96,165,250,0.18); transform: scale(1.04); }
+        }
+
+        .thinking .top-orb,
+        .thinking .hero-orb {
+            animation: topOrbPulse 1.8s infinite ease-in-out;
+        }
+
         @media (min-width: 980px) {
             .sidebar {
                 transform: translateX(0);
@@ -1433,7 +1594,7 @@ def home():
         }
     </style>
 </head>
-<body>
+<body class="theme-smart">
     <canvas id="bg-canvas"></canvas>
 
     <div class="app shell">
@@ -1467,14 +1628,22 @@ def home():
 
         <main class="main">
             <div class="topbar">
-                <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
-                <div class="top-title">__APP_NAME__</div>
+                <div class="top-left">
+                    <button class="menu-btn" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
+                    <div class="top-title">__APP_NAME__</div>
+                </div>
+                <div class="top-orb"><i class="fas fa-bolt"></i></div>
             </div>
 
             <div id="chat-box" class="chat-box">
                 <div id="welcome" class="welcome">
                     <div class="hero">
-                        <div class="hero-mark"><i class="fas fa-bolt"></i></div>
+                        <div class="hero-orb-wrap">
+                            <div class="hero-orb-ring"></div>
+                            <div class="hero-orb-ring r2"></div>
+                            <div class="hero-orb-ring r3"></div>
+                            <div class="hero-orb"><i class="fas fa-bolt"></i></div>
+                        </div>
                         <h1>How can __APP_NAME__ help today?</h1>
                     </div>
 
@@ -1485,10 +1654,10 @@ def home():
 
             <div class="input-area">
                 <div class="input-wrap">
-                    <div class="input-box">
-                        <button class="tool-btn" onclick="toggleToolsSheet()"><i class="fas fa-plus"></i></button>
+                    <div id="input-box" class="input-box">
+                        <button id="tool-btn" class="tool-btn" onclick="toggleToolsSheet()"><i class="fas fa-plus"></i></button>
                         <textarea id="msg" rows="1" placeholder="Ask __APP_NAME__..." oninput="resizeInput(this)"></textarea>
-                        <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
+                        <button id="send-btn" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                     </div>
                 </div>
             </div>
@@ -1518,6 +1687,13 @@ def home():
                 <button id="tone-friendly" class="sheet-pill" onclick="setTone('friendly')">Friendly</button>
                 <button id="tone-teacher" class="sheet-pill" onclick="setTone('teacher')">Teacher</button>
                 <button id="tone-coder" class="sheet-pill" onclick="setTone('coder')">Coder</button>
+            </div>
+
+            <div class="sheet-row-title">Theme</div>
+            <div class="sheet-pills">
+                <button class="sheet-pill" onclick="setVisualTheme('matrix')">Matrix</button>
+                <button class="sheet-pill" onclick="setVisualTheme('neon')">Neon</button>
+                <button class="sheet-pill" onclick="setVisualTheme('galaxy')">Galaxy</button>
             </div>
 
             <div class="sheet-row-title">Options</div>
@@ -1619,7 +1795,7 @@ def home():
         const HOME_CARDS = __HOME_CARDS__;
         const QUICK_CHIPS = __QUICK_CHIPS__;
 
-        let chats = JSON.parse(localStorage.getItem("flux_v37_history") || "[]");
+        let chats = JSON.parse(localStorage.getItem("flux_v38_history") || "[]");
         let currentChatId = null;
         let userName = localStorage.getItem("flux_user_name_fixed") || "";
         let awaitingName = false;
@@ -1627,6 +1803,7 @@ def home():
         let lastUserPrompt = "";
         let renameChatId = null;
         let editingMessageMeta = null;
+        let currentVisualTheme = localStorage.getItem("flux_visual_theme") || "neon";
 
         const chatBox = document.getElementById("chat-box");
         const welcome = document.getElementById("welcome");
@@ -1635,11 +1812,28 @@ def home():
         const sidebar = document.getElementById("sidebar");
         const sidebarOverlay = document.getElementById("sidebar-overlay");
         const toolsSheet = document.getElementById("tools-sheet");
+        const inputBox = document.getElementById("input-box");
+        const sendBtn = document.getElementById("send-btn");
+
+        function setVisualTheme(name) {
+            currentVisualTheme = name;
+            localStorage.setItem("flux_visual_theme", name);
+        }
 
         function initBackground() {
             const canvas = document.getElementById("bg-canvas");
             const ctx = canvas.getContext("2d");
             let particles = [];
+
+            function themeColorSet() {
+                if (currentVisualTheme === "matrix") {
+                    return { p: "rgba(34,197,94,0.65)", l: "rgba(34,197,94,0.10)" };
+                }
+                if (currentVisualTheme === "galaxy") {
+                    return { p: "rgba(244,114,182,0.62)", l: "rgba(139,92,246,0.10)" };
+                }
+                return { p: "rgba(139,92,246,0.62)", l: "rgba(96,165,250,0.11)" };
+            }
 
             function resize() {
                 canvas.width = window.innerWidth;
@@ -1660,8 +1854,29 @@ def home():
                 }
             }
 
+            function drawMatrixRain() {
+                const cols = Math.floor(canvas.width / 18);
+                const t = Date.now() * 0.002;
+                ctx.save();
+                ctx.globalAlpha = 0.08;
+                ctx.fillStyle = "#22c55e";
+                for (let i = 0; i < cols; i++) {
+                    const x = i * 18;
+                    const y = ((t * 120 + i * 57) % (canvas.height + 80)) - 80;
+                    ctx.fillRect(x, y, 2, 24);
+                }
+                ctx.restore();
+            }
+
             function draw() {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                if (currentVisualTheme === "matrix") {
+                    drawMatrixRain();
+                }
+
+                const colors = themeColorSet();
+
                 for (let i = 0; i < particles.length; i++) {
                     const p = particles[i];
                     p.x += p.vx;
@@ -1672,7 +1887,7 @@ def home():
 
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = "rgba(139,92,246,0.62)";
+                    ctx.fillStyle = colors.p;
                     ctx.fill();
 
                     for (let j = i + 1; j < particles.length; j++) {
@@ -1684,7 +1899,7 @@ def home():
                             ctx.beginPath();
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(q.x, q.y);
-                            ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / 110) * 0.11) + ")";
+                            ctx.strokeStyle = colors.l.replace("0.10", ((1 - d / 110) * 0.12).toFixed(3));
                             ctx.lineWidth = 1;
                             ctx.stroke();
                         }
@@ -1705,6 +1920,11 @@ def home():
 
         function nowTime() {
             return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function applyBodyThemeByMode() {
+            document.body.className = "";
+            document.body.classList.add("theme-" + responseMode);
         }
 
         function loadBehaviorPrefs() {
@@ -1839,12 +2059,12 @@ def home():
         function setMode(mode) {
             responseMode = mode;
             localStorage.setItem("flux_response_mode", mode);
-
             ["smart", "study", "code", "search"].forEach(function(m) {
                 const el = document.getElementById("mode-" + m);
                 if (!el) return;
                 el.classList.toggle("active", m === mode);
             });
+            applyBodyThemeByMode();
         }
 
         function renderHomeCards() {
@@ -1884,7 +2104,7 @@ def home():
         }
 
         function saveChats() {
-            localStorage.setItem("flux_v37_history", JSON.stringify(chats));
+            localStorage.setItem("flux_v38_history", JSON.stringify(chats));
         }
 
         function filteredChats() {
@@ -2018,7 +2238,7 @@ def home():
         }
 
         function clearChats() {
-            localStorage.removeItem("flux_v37_history");
+            localStorage.removeItem("flux_v38_history");
             location.reload();
         }
 
@@ -2190,6 +2410,15 @@ def home():
             bubble.appendChild(artifact);
         }
 
+        function isImportantText(text) {
+            const t = (text || "").toLowerCase();
+            const keys = [
+                "important", "note:", "warning", "remember", "steps", "summary",
+                "গুরুত্বপূর্ণ", "মনে রাখো", "সতর্ক", "ধাপ", "সারাংশ"
+            ];
+            return keys.some(function(k) { return t.includes(k); });
+        }
+
         function appendBubble(msg, chatId) {
             welcome.style.display = "none";
             const isUser = msg.role === "user";
@@ -2215,7 +2444,9 @@ def home():
                 bubble.innerHTML = marked.parse(msg.text || "");
             } else {
                 const rendered = renderSourcesBlock(msg.text || "");
-                bubble.innerHTML = rendered.main + rendered.sourcesHtml;
+                const isImportant = isImportantText(msg.text || "");
+                const innerClass = isImportant ? "important-card bot-glow" : "bot-glow";
+                bubble.innerHTML = '<div class="' + innerClass + '">' + rendered.main + rendered.sourcesHtml + '</div>';
             }
 
             const timeDiv = document.createElement("div");
@@ -2287,7 +2518,12 @@ def home():
             const div = document.createElement("div");
             div.id = "typing";
             div.className = "typing";
-            div.textContent = label;
+            div.innerHTML =
+                '<div class="typing-card">' +
+                '<div class="voice-wave"><span></span><span></span><span></span><span></span><span></span></div>' +
+                '<div>' + label + '</div>' +
+                '<div class="typing-beam"></div>' +
+                '</div>';
             chatBox.appendChild(div);
             chatBox.scrollTop = chatBox.scrollHeight;
         }
@@ -2295,6 +2531,23 @@ def home():
         function removeTyping() {
             const el = document.getElementById("typing");
             if (el) el.remove();
+        }
+
+        function createSendParticles() {
+            const rect = sendBtn.getBoundingClientRect();
+            const cx = rect.left + rect.width / 2;
+            const cy = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 12; i++) {
+                const p = document.createElement("div");
+                p.className = "particle";
+                p.style.left = cx + "px";
+                p.style.top = cy + "px";
+                p.style.setProperty("--tx", (Math.random() * 120 - 60) + "px");
+                p.style.setProperty("--ty", (Math.random() * -120 - 20) + "px");
+                document.body.appendChild(p);
+                setTimeout(function() { p.remove(); }, 750);
+            }
         }
 
         async function verifyAdmin() {
@@ -2380,6 +2633,7 @@ def home():
             closeSidebar();
             closeToolsSheet();
             saveBehaviorPrefs();
+            createSendParticles();
 
             if (!currentChatId) startNewChat();
             const chat = chats.find(function(c) { return c.id === currentChatId; });
@@ -2427,10 +2681,11 @@ def home():
 
             let typingText = "__APP_NAME__ is thinking...";
             if (responseMode === "study") typingText = "__APP_NAME__ is explaining step by step...";
-            if (responseMode === "code") typingText = "__APP_NAME__ is writing code...";
+            if (responseMode === "code") typingText = "__APP_NAME__ is building and checking code...";
             if (responseMode === "search") typingText = "__APP_NAME__ is searching the web...";
 
             showTyping(typingText);
+            document.body.classList.add("thinking");
 
             const context = chat.messages.slice(-12).map(function(m) {
                 return {
@@ -2453,6 +2708,7 @@ def home():
                 });
 
                 removeTyping();
+                document.body.classList.remove("thinking");
 
                 if (!res.ok) {
                     const txt = await res.text();
@@ -2497,7 +2753,9 @@ def home():
                     if (result.done) break;
                     botResp += decoder.decode(result.value);
                     const rendered = renderSourcesBlock(botResp || "");
-                    bubble.innerHTML = rendered.main + rendered.sourcesHtml;
+                    const important = isImportantText(botResp || "");
+                    const innerClass = important ? "important-card bot-glow" : "bot-glow";
+                    bubble.innerHTML = '<div class="' + innerClass + '">' + rendered.main + rendered.sourcesHtml + '</div>';
                     chatBox.scrollTop = chatBox.scrollHeight;
                 }
 
@@ -2552,6 +2810,7 @@ def home():
                 renderHistory();
             } catch (e) {
                 removeTyping();
+                document.body.classList.remove("thinking");
                 const errMsg = createMessage("assistant", "System connection error. Please try again.");
                 chat.messages.push(errMsg);
                 saveChats();
@@ -2566,9 +2825,18 @@ def home():
             }
         });
 
+        msgInput.addEventListener("focus", function() {
+            inputBox.classList.add("focused");
+        });
+
+        msgInput.addEventListener("blur", function() {
+            inputBox.classList.remove("focused");
+        });
+
         initBackground();
         loadBehaviorPrefs();
         setMode(responseMode);
+        applyBodyThemeByMode();
         renderHomeCards();
         renderQuickChips();
         renderHistory();
