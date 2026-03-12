@@ -14,7 +14,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "35.0.0"
+VERSION = "36.0.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -159,16 +159,6 @@ def clear_all_memory():
         pass
 
 
-def memory_count():
-    try:
-        conn = db_connect()
-        row = conn.execute("SELECT COUNT(*) AS c FROM memory").fetchone()
-        conn.close()
-        return int(row["c"]) if row else 0
-    except Exception:
-        return 0
-
-
 def analytics_count():
     try:
         conn = db_connect()
@@ -183,6 +173,16 @@ def feedback_count():
     try:
         conn = db_connect()
         row = conn.execute("SELECT COUNT(*) AS c FROM feedback").fetchone()
+        conn.close()
+        return int(row["c"]) if row else 0
+    except Exception:
+        return 0
+
+
+def memory_count():
+    try:
+        conn = db_connect()
+        row = conn.execute("SELECT COUNT(*) AS c FROM memory").fetchone()
         conn.close()
         return int(row["c"]) if row else 0
     except Exception:
@@ -299,7 +299,7 @@ def is_current_info_query(text):
     keywords = [
         "today", "latest", "news", "current", "price", "recent", "update", "weather",
         "crypto", "president", "ceo", "score", "live", "gold price", "bitcoin price",
-        "stock price", "match result", "breaking", "headline", "rate today",
+        "stock price", "breaking", "headline", "rate today",
         "আজ", "সর্বশেষ", "আজকের", "এখন", "দাম", "নিউজ", "আপডেট", "আবহাওয়া",
         "আজ দাম", "আজকের খবর", "লাইভ", "বর্তমান"
     ]
@@ -430,8 +430,9 @@ def update_preferences(user_name, preferences, latest_user):
     if user_name:
         save_memory("user_name", user_name)
 
-    for key, value in preferences.items():
-        save_memory(f"pref_{key}", str(value))
+    if str(preferences.get("memory_enabled", "true")).lower() == "true":
+        for key, value in preferences.items():
+            save_memory(f"pref_{key}", str(value))
 
     save_memory("preferred_language", detect_language(latest_user))
 
@@ -476,7 +477,7 @@ Core rules:
 9. Keep owner identity locked as KAWCHUR.
 10. Never claim someone else created you.
 11. For study tasks, teach clearly and step by step.
-12. For exam/MCQ tasks, be structured and concise.
+12. For exam and MCQ tasks, be structured and concise.
 13. For code tasks, be practical and stable.
 14. If verified web search results are provided, use them carefully and end with a 'Sources:' section.
 15. Avoid clutter and avoid repeating yourself.
@@ -500,9 +501,9 @@ Core rules:
     if response_mode == "study":
         mode_rule = "Mode: study. Explain step by step with easy words."
     elif response_mode == "exam":
-        mode_rule = "Mode: exam. Give precise exam-focused answers."
+        mode_rule = "Mode: exam. Give exam-focused answers clearly."
     elif response_mode == "mcq":
-        mode_rule = "Mode: mcq. Prefer option-based concise responses when relevant."
+        mode_rule = "Mode: mcq. Give concise MCQ-friendly help."
     elif response_mode == "notes":
         mode_rule = "Mode: notes. Convert content into neat study notes."
     elif response_mode == "revision":
@@ -690,10 +691,15 @@ def generate_groq_stream(messages, user_name, preferences):
     yield "System busy. Please try again in a moment."
 
 
-SUGGESTIONS = [
-    {"icon": "fas fa-brain", "text": "Explain Quantum Physics"},
+HOME_CARDS = [
+    {"title": "Study Help", "subtitle": "Step-by-step explanations", "prompt": "Explain this topic step by step for a student", "icon": "fas fa-graduation-cap"},
+    {"title": "Build App", "subtitle": "Create HTML app or UI", "prompt": "Create a modern mobile-friendly app in HTML", "icon": "fas fa-code"},
+    {"title": "Smart Answer", "subtitle": "Clear helpful answers", "prompt": "Give me a smart clear answer", "icon": "fas fa-brain"},
+    {"title": "Search Web", "subtitle": "Current info with sources", "prompt": "latest news today", "icon": "fas fa-globe"}
+]
+
+QUICK_CHIPS = [
     {"icon": "fas fa-book", "text": "Explain photosynthesis simply"},
-    {"icon": "fas fa-code", "text": "Create a login page in HTML"},
     {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
     {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"},
     {"icon": "fas fa-language", "text": "Translate this into English"},
@@ -704,7 +710,8 @@ SUGGESTIONS = [
 
 @app.route("/")
 def home():
-    suggestions_json = json.dumps(SUGGESTIONS, ensure_ascii=False)
+    cards_json = json.dumps(HOME_CARDS, ensure_ascii=False)
+    chips_json = json.dumps(QUICK_CHIPS, ensure_ascii=False)
 
     html = """
 <!DOCTYPE html>
@@ -718,231 +725,822 @@ def home():
     <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <style>
         :root {
-            --bg: #040714;
-            --bg2: #09112d;
-            --panel: rgba(14, 20, 40, 0.88);
+            --bg: #050816;
+            --bg2: #0a1130;
+            --panel: rgba(17, 24, 48, 0.82);
+            --panel2: rgba(18, 27, 52, 0.95);
             --text: #eef2ff;
-            --muted: #94a3b8;
+            --muted: #9aa8c7;
             --accent: #8b5cf6;
             --accent2: #60a5fa;
             --border: rgba(255,255,255,0.08);
             --danger: #ef4444;
             --success: #22c55e;
         }
-        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+        * {
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
         html, body {
-            margin: 0; width: 100%; height: 100%; overflow: hidden;
-            background: radial-gradient(circle at top, var(--bg2) 0%, var(--bg) 55%, #02040c 100%);
-            color: var(--text); font-family: 'Outfit', 'Noto Sans Bengali', sans-serif;
-        }
-        .app {
-            width: 100%; height: 100%; overflow: hidden; position: relative;
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             background:
-                radial-gradient(circle at 20% 20%, rgba(139,92,246,0.14), transparent 22%),
-                radial-gradient(circle at 80% 30%, rgba(96,165,250,0.12), transparent 22%),
-                radial-gradient(circle at 30% 80%, rgba(139,92,246,0.10), transparent 18%);
+                radial-gradient(circle at top, var(--bg2) 0%, var(--bg) 58%, #02040c 100%);
+            color: var(--text);
+            font-family: 'Outfit', 'Noto Sans Bengali', sans-serif;
         }
-        #bg-canvas { position: fixed; inset: 0; width: 100%; height: 100%; z-index: 0; opacity: 0.65; pointer-events: none; }
-        .shell { position: relative; z-index: 1; width: 100%; height: 100%; overflow: hidden; }
-        .sidebar-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.52); display: none; z-index: 90; }
-        .sidebar-overlay.show { display: block; }
+
+        .app {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(139,92,246,0.10), transparent 24%),
+                radial-gradient(circle at 85% 25%, rgba(96,165,250,0.08), transparent 22%),
+                radial-gradient(circle at 35% 78%, rgba(139,92,246,0.08), transparent 18%);
+        }
+
+        #bg-canvas {
+            position: fixed;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            opacity: 0.42;
+            pointer-events: none;
+        }
+
+        .shell {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .sidebar-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.50);
+            display: none;
+            z-index: 90;
+        }
+
+        .sidebar-overlay.show {
+            display: block;
+        }
+
         .sidebar {
-            position: fixed; top: 0; left: 0; width: min(84vw, 340px); height: 100dvh;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: min(84vw, 330px);
+            height: 100dvh;
             background: linear-gradient(180deg, rgba(18,27,52,0.98), rgba(8,12,28,0.98));
-            border-right: 1px solid var(--border); transform: translateX(-100%); transition: transform 0.25s ease;
-            z-index: 100; overflow-y: auto; overflow-x: hidden; padding: 18px 16px 18px; box-shadow: 20px 0 50px rgba(0,0,0,0.35);
+            border-right: 1px solid var(--border);
+            transform: translateX(-100%);
+            transition: transform 0.24s ease;
+            z-index: 100;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 18px 16px;
+            box-shadow: 20px 0 50px rgba(0,0,0,0.32);
         }
-        .sidebar.open { transform: translateX(0); }
-        .brand { display: flex; align-items: center; gap: 12px; font-size: 30px; font-weight: 800; margin-bottom: 18px; }
+
+        .sidebar.open {
+            transform: translateX(0);
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 28px;
+            font-weight: 800;
+            margin-bottom: 18px;
+        }
+
         .brand-mark {
-            width: 54px; height: 54px; border-radius: 16px; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(180deg, rgba(20,20,50,0.95), rgba(5,5,25,0.95));
-            box-shadow: 0 0 30px rgba(139,92,246,0.22); color: var(--accent); font-size: 24px; flex-shrink: 0;
+            width: 50px;
+            height: 50px;
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(22,22,56,0.95), rgba(7,7,28,0.95));
+            box-shadow: 0 0 30px rgba(139,92,246,0.18);
+            color: var(--accent);
+            font-size: 22px;
+            flex-shrink: 0;
         }
-        .side-grid { display: grid; gap: 10px; margin-bottom: 14px; }
+
+        .side-grid {
+            display: grid;
+            gap: 10px;
+            margin-bottom: 14px;
+        }
+
         .side-btn {
-            width: 100%; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text);
-            border-radius: 16px; padding: 15px 16px; cursor: pointer; text-align: left; font-size: 15px; transition: 0.2s ease;
+            width: 100%;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text);
+            border-radius: 16px;
+            padding: 14px 15px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            transition: 0.2s ease;
         }
-        .side-btn:hover { background: rgba(255,255,255,0.06); transform: translateY(-1px); }
-        .side-label { font-size: 12px; color: var(--muted); margin: 18px 0 10px; letter-spacing: 1px; font-weight: 700; }
+
+        .side-btn:hover {
+            background: rgba(255,255,255,0.06);
+        }
+
+        .side-label {
+            font-size: 12px;
+            color: var(--muted);
+            margin: 18px 0 10px;
+            letter-spacing: 1px;
+            font-weight: 700;
+        }
+
         .search-input {
-            width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid var(--border);
-            background: rgba(255,255,255,0.04); color: var(--text); outline: none; margin-bottom: 10px;
+            width: 100%;
+            padding: 12px 14px;
+            border-radius: 14px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            outline: none;
+            margin-bottom: 10px;
         }
+
         .history-item {
-            width: 100%; padding: 12px 12px; border-radius: 14px; margin-bottom: 8px; color: var(--muted);
-            border: 1px solid transparent; background: rgba(255,255,255,0.02); display: flex; gap: 8px; align-items: center;
+            width: 100%;
+            padding: 11px 12px;
+            border-radius: 14px;
+            margin-bottom: 8px;
+            color: var(--muted);
+            border: 1px solid transparent;
+            background: rgba(255,255,255,0.02);
+            display: flex;
+            gap: 8px;
+            align-items: center;
         }
-        .history-title { flex: 1; min-width: 0; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+        .history-title {
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
         .history-mini {
-            border: none; background: transparent; color: var(--muted); cursor: pointer;
-            font-size: 14px; width: 28px; height: 28px; border-radius: 8px;
+            border: none;
+            background: transparent;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: 13px;
+            width: 28px;
+            height: 28px;
+            border-radius: 8px;
         }
-        .history-mini:hover { background: rgba(255,255,255,0.06); color: var(--text); }
+
+        .history-mini:hover {
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+        }
+
         .about-box {
-            padding: 16px; border-radius: 18px; background: rgba(255,255,255,0.03);
-            border: 1px solid var(--border); line-height: 1.7; word-break: break-word;
+            padding: 15px;
+            border-radius: 18px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            line-height: 1.7;
+            word-break: break-word;
         }
-        .copyright-box { margin-top: 12px; font-size: 12px; color: var(--muted); opacity: 0.9; }
-        .main { width: 100%; height: 100%; display: flex; flex-direction: column; overflow: hidden; }
+
+        .copyright-box {
+            margin-top: 12px;
+            font-size: 12px;
+            color: var(--muted);
+            opacity: 0.9;
+        }
+
+        .main {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
         .topbar {
-            height: 70px; min-height: 70px; display: flex; align-items: center; gap: 12px; padding: 0 14px;
-            border-bottom: 1px solid var(--border); background: rgba(5, 8, 22, 0.68); backdrop-filter: blur(14px);
+            height: 68px;
+            min-height: 68px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 14px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(5, 8, 22, 0.56);
+            backdrop-filter: blur(12px);
         }
+
         .menu-btn {
-            width: 44px; height: 44px; border: none; border-radius: 14px; background: rgba(255,255,255,0.06);
-            color: var(--text); cursor: pointer; flex-shrink: 0; font-size: 18px;
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 14px;
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            cursor: pointer;
+            flex-shrink: 0;
+            font-size: 18px;
         }
+
         .top-title {
-            font-size: 22px; font-weight: 800;
-            background: linear-gradient(135deg, #ffffff 0%, #c4b5fd 55%, #93c5fd 100%);
-            -webkit-background-clip: text; color: transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            font-size: 22px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #ffffff 0%, #d7ccff 55%, #b7d9ff 100%);
+            -webkit-background-clip: text;
+            color: transparent;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
-        .chat-box { flex: 1; overflow-y: auto; overflow-x: hidden; padding: 18px 12px 180px; scroll-behavior: smooth; }
-        .welcome { width: 100%; max-width: 860px; margin: 28px auto 0; text-align: center; padding: 0 4px; }
+
+        .chat-box {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding: 18px 12px 178px;
+            scroll-behavior: smooth;
+        }
+
+        .welcome {
+            width: 100%;
+            max-width: 920px;
+            margin: 10px auto 0;
+            padding: 0 2px;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 28px 0 16px;
+        }
+
         .hero-mark {
-            width: 92px; height: 92px; margin: 0 auto 20px; border-radius: 26px; display: flex; align-items: center; justify-content: center;
-            background: linear-gradient(180deg, rgba(20,20,50,0.95), rgba(5,5,25,0.95));
-            box-shadow: 0 0 45px rgba(139,92,246,0.20); color: var(--accent); font-size: 38px;
+            width: 86px;
+            height: 86px;
+            margin: 0 auto 18px;
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, rgba(22,22,56,0.95), rgba(7,7,28,0.95));
+            box-shadow: 0 0 42px rgba(139,92,246,0.16);
+            color: var(--accent);
+            font-size: 34px;
         }
-        .welcome h1 { margin: 0 0 8px; font-size: clamp(34px, 9vw, 52px); }
-        .welcome p { margin: 0 0 18px; color: var(--muted); line-height: 1.7; font-size: 18px; }
-        .mode-row, .submode-row { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 12px; }
-        .mode-btn {
-            border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text);
-            border-radius: 999px; padding: 10px 14px; cursor: pointer; font-size: 14px; transition: 0.2s ease;
+
+        .hero h1 {
+            margin: 0 0 8px;
+            font-size: clamp(30px, 7vw, 48px);
+            letter-spacing: -0.5px;
         }
-        .mode-btn.active {
+
+        .hero p {
+            margin: 0 auto;
+            max-width: 560px;
+            color: var(--muted);
+            line-height: 1.7;
+            font-size: 17px;
+        }
+
+        .cards-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 12px;
+            margin-top: 18px;
+        }
+
+        .home-card {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            border-radius: 22px;
+            padding: 18px;
+            cursor: pointer;
+            transition: 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .home-card:hover {
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-1px);
+        }
+
+        .home-card-icon {
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(139,92,246,0.12);
+            color: var(--accent);
+            flex-shrink: 0;
+            font-size: 18px;
+        }
+
+        .home-card-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 3px;
+        }
+
+        .home-card-sub {
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .compact-row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .pill {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 9px 13px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: 0.2s ease;
+        }
+
+        .pill.active {
             background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
-            border-color: transparent; box-shadow: 0 8px 24px rgba(124,58,237,0.22);
+            border-color: transparent;
         }
-        .suggestions { display: grid; grid-template-columns: 1fr; gap: 10px; }
-        .chip {
-            width: 100%; border: 1px solid var(--border); background: rgba(255,255,255,0.03); color: var(--text);
-            border-radius: 20px; padding: 18px 16px; text-align: left; cursor: pointer; font-size: 16px;
-            display: flex; align-items: center; gap: 12px; min-height: 76px; transition: 0.2s ease;
+
+        .chips-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 18px;
+            justify-content: center;
         }
-        .chip:hover { background: rgba(255,255,255,0.06); transform: translateY(-1px); }
-        .chip i { color: var(--accent); width: 22px; text-align: center; flex-shrink: 0; }
-        .message { width: 100%; max-width: 900px; margin: 0 auto 18px; display: flex; gap: 10px; align-items: flex-start; }
-        .message.user { flex-direction: row-reverse; }
+
+        .quick-chip {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.03);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .quick-chip i {
+            color: var(--accent);
+        }
+
+        .message {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 18px;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            flex-direction: row-reverse;
+        }
+
         .avatar {
-            width: 40px; height: 40px; border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
         }
-        .avatar.bot { background: linear-gradient(135deg, #a855f7 0%, #60a5fa 100%); color: white; }
-        .avatar.user { background: rgba(255,255,255,0.08); color: white; }
-        .bubble-wrap { min-width: 0; flex: 1; max-width: calc(100% - 50px); }
-        .message.user .bubble-wrap { display: flex; flex-direction: column; align-items: flex-end; }
-        .name { font-size: 12px; color: var(--muted); margin-bottom: 6px; font-weight: 700; }
-        .message.user .name { display: none; }
+
+        .avatar.bot {
+            background: linear-gradient(135deg, #a855f7 0%, #60a5fa 100%);
+            color: white;
+        }
+
+        .avatar.user {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .bubble-wrap {
+            min-width: 0;
+            flex: 1;
+            max-width: calc(100% - 50px);
+        }
+
+        .message.user .bubble-wrap {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+        }
+
+        .name {
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+
+        .message.user .name {
+            display: none;
+        }
+
         .bubble {
-            width: 100%; max-width: 100%; word-wrap: break-word; overflow-wrap: anywhere; line-height: 1.7; font-size: 16px;
+            width: 100%;
+            max-width: 100%;
+            word-wrap: break-word;
+            overflow-wrap: anywhere;
+            line-height: 1.7;
+            font-size: 16px;
         }
+
         .message.user .bubble {
-            width: auto; max-width: min(82vw, 560px); padding: 14px 16px; border-radius: 18px;
-            background: linear-gradient(135deg, #312e81 0%, #2563eb 100%); color: white; box-shadow: 0 10px 26px rgba(37,99,235,0.18);
+            width: auto;
+            max-width: min(82vw, 560px);
+            padding: 14px 16px;
+            border-radius: 18px;
+            background: linear-gradient(135deg, #312e81 0%, #2563eb 100%);
+            color: white;
+            box-shadow: 0 10px 26px rgba(37,99,235,0.16);
         }
-        .message.bot .bubble { padding: 0; background: transparent; }
-        .msg-time { font-size: 11px; color: var(--muted); margin-top: 6px; }
-        .msg-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+
+        .message.bot .bubble {
+            padding: 0;
+            background: transparent;
+        }
+
+        .msg-time {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 6px;
+        }
+
+        .msg-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
         .act-btn {
-            border: 1px solid var(--border); background: rgba(255,255,255,0.04); color: var(--text);
-            border-radius: 999px; padding: 7px 11px; cursor: pointer; font-size: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 7px 11px;
+            cursor: pointer;
+            font-size: 12px;
         }
+
         pre {
-            width: 100%; max-width: 100%; overflow-x: auto; background: #0b1020; border: 1px solid var(--border);
-            border-radius: 14px; padding: 14px; margin-top: 12px; white-space: pre-wrap; word-break: break-word;
+            width: 100%;
+            max-width: 100%;
+            overflow-x: auto;
+            background: #0b1020;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 14px;
+            margin-top: 12px;
+            white-space: pre-wrap;
+            word-break: break-word;
         }
-        code { color: #e2e8f0; font-family: monospace; }
+
+        code {
+            color: #e2e8f0;
+            font-family: monospace;
+        }
+
         .artifact {
-            width: 100%; margin-top: 14px; border: 1px solid var(--border); border-radius: 16px; overflow: hidden;
+            width: 100%;
+            margin-top: 14px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
             background: rgba(255,255,255,0.03);
         }
+
         .artifact-head {
-            padding: 12px 14px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 600;
-            display: flex; justify-content: space-between; gap: 8px; flex-wrap: wrap;
+            padding: 12px 14px;
+            border-bottom: 1px solid var(--border);
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
         }
-        .artifact-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-        .artifact-frame { height: 260px; background: white; }
-        .artifact-frame iframe { width: 100%; height: 100%; border: none; }
-        .typing { width: 100%; max-width: 900px; margin: 0 auto 18px; color: var(--muted); padding-left: 2px; }
+
+        .artifact-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .artifact-frame {
+            height: 260px;
+            background: white;
+        }
+
+        .artifact-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        .typing {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto 18px;
+            color: var(--muted);
+            padding-left: 2px;
+        }
+
         .sources-block {
-            margin-top: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: 14px;
-            background: rgba(255,255,255,0.03); font-size: 14px; line-height: 1.6;
+            margin-top: 12px;
+            padding: 12px 14px;
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            background: rgba(255,255,255,0.03);
+            font-size: 14px;
+            line-height: 1.6;
         }
-        .sources-block a { color: #b9c7ff; word-break: break-all; }
+
+        .sources-block a {
+            color: #b9c7ff;
+            word-break: break-all;
+        }
+
         .input-area {
-            position: fixed; left: 0; right: 0; bottom: 0; padding: 12px;
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            padding: 12px;
             background: linear-gradient(to top, rgba(2,4,12,1) 0%, rgba(2,4,12,0.2) 100%);
         }
-        .input-wrap { width: 100%; max-width: 900px; margin: 0 auto; display: grid; gap: 10px; }
-        .quick-settings {
-            display: flex; gap: 8px; flex-wrap: wrap; justify-content: center;
+
+        .input-wrap {
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            display: grid;
+            gap: 10px;
         }
-        .mini-select, .mini-toggle {
-            background: rgba(13,19,38,0.96); color: var(--text); border: 1px solid var(--border);
-            border-radius: 14px; padding: 10px 12px; font-size: 13px;
+
+        .mini-settings {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
         }
-        .mini-toggle { display: flex; align-items: center; gap: 6px; }
+
+        .mini-select,
+        .mini-toggle {
+            background: rgba(13,19,38,0.96);
+            color: var(--text);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 10px 12px;
+            font-size: 13px;
+        }
+
+        .mini-toggle {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
         .input-box {
-            display: flex; gap: 10px; align-items: flex-end; width: 100%; background: rgba(13,19,38,0.96);
-            border: 1px solid var(--border); border-radius: 24px; padding: 12px 12px 12px 14px; box-shadow: 0 12px 34px rgba(0,0,0,0.24);
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+            width: 100%;
+            background: rgba(13,19,38,0.96);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 12px 12px 12px 14px;
+            box-shadow: 0 12px 34px rgba(0,0,0,0.20);
         }
+
         textarea {
-            flex: 1; min-width: 0; background: transparent; border: none; outline: none; color: var(--text);
-            font-size: 16px; resize: none; max-height: 180px; font-family: inherit; line-height: 1.5;
+            flex: 1;
+            min-width: 0;
+            background: transparent;
+            border: none;
+            outline: none;
+            color: var(--text);
+            font-size: 16px;
+            resize: none;
+            max-height: 180px;
+            font-family: inherit;
+            line-height: 1.5;
         }
+
         .send-btn {
-            width: 46px; height: 46px; border: none; border-radius: 50%; background: var(--text); color: #111827;
-            cursor: pointer; flex-shrink: 0;
+            width: 46px;
+            height: 46px;
+            border: none;
+            border-radius: 50%;
+            background: var(--text);
+            color: #111827;
+            cursor: pointer;
+            flex-shrink: 0;
         }
+
         .modal-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,0.72); display: none; align-items: center; justify-content: center;
-            z-index: 200; padding: 16px;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.72);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            padding: 16px;
         }
+
         .modal-card {
-            width: 100%; max-width: 420px; background: linear-gradient(180deg, rgba(18,27,52,0.98), rgba(8,12,28,0.98));
-            border: 1px solid var(--border); border-radius: 22px; padding: 22px; position: relative; box-shadow: 0 20px 55px rgba(0,0,0,0.36);
+            width: 100%;
+            max-width: 420px;
+            background: linear-gradient(180deg, rgba(18,27,52,0.98), rgba(8,12,28,0.98));
+            border: 1px solid var(--border);
+            border-radius: 22px;
+            padding: 22px;
+            position: relative;
+            box-shadow: 0 20px 55px rgba(0,0,0,0.36);
         }
-        .modal-card input, .modal-card textarea, .modal-card select {
-            width: 100%; margin: 12px 0; padding: 12px; border-radius: 12px; border: 1px solid var(--border);
-            background: rgba(255,255,255,0.05); color: var(--text); outline: none;
+
+        .modal-card input,
+        .modal-card textarea {
+            width: 100%;
+            margin: 12px 0;
+            padding: 12px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            outline: none;
         }
-        .modal-row { display: flex; gap: 10px; margin-top: 12px; }
+
+        .modal-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
         .modal-row button {
-            flex: 1; border: none; border-radius: 14px; padding: 13px; cursor: pointer; font-size: 15px;
+            flex: 1;
+            border: none;
+            border-radius: 14px;
+            padding: 13px;
+            cursor: pointer;
+            font-size: 15px;
         }
-        .btn-cancel { background: rgba(255,255,255,0.08); color: white; }
-        .btn-confirm { background: var(--success); color: black; }
-        .btn-danger { background: var(--danger); color: white; }
+
+        .btn-cancel {
+            background: rgba(255,255,255,0.08);
+            color: white;
+        }
+
+        .btn-confirm {
+            background: var(--success);
+            color: black;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
         .close-small {
-            position: absolute; top: 12px; right: 12px; background: transparent; border: none;
-            color: var(--muted); font-size: 20px; cursor: pointer;
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: transparent;
+            border: none;
+            color: var(--muted);
+            font-size: 20px;
+            cursor: pointer;
         }
-        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 14px;
+        }
+
         .stat-card {
-            background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 16px; padding: 12px;
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 12px;
         }
-        .stat-value { font-size: 22px; font-weight: 800; margin-bottom: 4px; }
-        .stat-label { color: var(--muted); font-size: 12px; }
+
+        .stat-value {
+            font-size: 22px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .stat-label {
+            color: var(--muted);
+            font-size: 12px;
+        }
+
         @media (min-width: 980px) {
-            .sidebar { transform: translateX(0); width: 340px; }
-            .sidebar-overlay { display: none !important; }
-            .main { padding-left: 340px; }
-            .menu-btn { display: none; }
-            .input-area { left: 340px; }
-            .suggestions { grid-template-columns: 1fr 1fr; }
+            .sidebar {
+                transform: translateX(0);
+                width: 330px;
+            }
+
+            .sidebar-overlay {
+                display: none !important;
+            }
+
+            .main {
+                padding-left: 330px;
+            }
+
+            .menu-btn {
+                display: none;
+            }
+
+            .input-area {
+                left: 330px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr 1fr;
+            }
         }
+
         @media (max-width: 520px) {
-            .topbar { padding: 0 10px; }
-            .top-title { font-size: 18px; }
-            .chat-box { padding: 14px 10px 190px; }
-            .avatar { width: 36px; height: 36px; }
-            .bubble-wrap { max-width: calc(100% - 44px); }
-            .message.user .bubble { max-width: calc(100vw - 72px); }
-            .input-area { padding: 10px; }
-            .stats-grid { grid-template-columns: 1fr; }
+            .topbar {
+                padding: 0 10px;
+            }
+
+            .top-title {
+                font-size: 18px;
+            }
+
+            .chat-box {
+                padding: 14px 10px 186px;
+            }
+
+            .avatar {
+                width: 36px;
+                height: 36px;
+            }
+
+            .bubble-wrap {
+                max-width: calc(100% - 44px);
+            }
+
+            .message.user .bubble {
+                max-width: calc(100vw - 72px);
+            }
+
+            .input-area {
+                padding: 10px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
@@ -993,30 +1591,28 @@ def home():
 
             <div id="chat-box" class="chat-box">
                 <div id="welcome" class="welcome">
-                    <div class="hero-mark"><i class="fas fa-bolt"></i></div>
-                    <h1>Welcome to __APP_NAME__</h1>
-                    <p>Smarter, cleaner, and more alive.</p>
-
-                    <div class="mode-row">
-                        <button id="mode-smart" class="mode-btn active" onclick="setMode('smart')">Smart</button>
-                        <button id="mode-study" class="mode-btn" onclick="setMode('study')">Study</button>
-                        <button id="mode-exam" class="mode-btn" onclick="setMode('exam')">Exam</button>
-                        <button id="mode-mcq" class="mode-btn" onclick="setMode('mcq')">MCQ</button>
-                        <button id="mode-notes" class="mode-btn" onclick="setMode('notes')">Notes</button>
-                        <button id="mode-revision" class="mode-btn" onclick="setMode('revision')">Revision</button>
-                        <button id="mode-code" class="mode-btn" onclick="setMode('code')">Code</button>
-                        <button id="mode-bugfix" class="mode-btn" onclick="setMode('bugfix')">Bug Fix</button>
-                        <button id="mode-fast" class="mode-btn" onclick="setMode('fast')">Fast</button>
-                        <button id="mode-search" class="mode-btn" onclick="setMode('search')">Search</button>
+                    <div class="hero">
+                        <div class="hero-mark"><i class="fas fa-bolt"></i></div>
+                        <h1>How can __APP_NAME__ help today?</h1>
+                        <p>Clean answers, study support, code building, and current information with a simple mobile-first layout.</p>
                     </div>
 
-                    <div id="suggestions" class="suggestions"></div>
+                    <div id="home-cards" class="cards-grid"></div>
+
+                    <div class="compact-row">
+                        <button id="mode-smart" class="pill active" onclick="setMode('smart')">Smart</button>
+                        <button id="mode-study" class="pill" onclick="setMode('study')">Study</button>
+                        <button id="mode-code" class="pill" onclick="setMode('code')">Code</button>
+                        <button id="mode-search" class="pill" onclick="setMode('search')">Search</button>
+                    </div>
+
+                    <div id="quick-chips" class="chips-row"></div>
                 </div>
             </div>
 
             <div class="input-area">
                 <div class="input-wrap">
-                    <div class="quick-settings">
+                    <div class="mini-settings">
                         <select id="answer-length" class="mini-select" onchange="saveBehaviorPrefs()">
                             <option value="short">Short</option>
                             <option value="balanced" selected>Balanced</option>
@@ -1139,16 +1735,16 @@ def home():
     <script>
         marked.setOptions({ breaks: true, gfm: true });
 
-        const ALL_SUGGESTIONS = __SUGGESTIONS__;
+        const HOME_CARDS = __HOME_CARDS__;
+        const QUICK_CHIPS = __QUICK_CHIPS__;
 
-        let chats = JSON.parse(localStorage.getItem("flux_v35_history") || "[]");
+        let chats = JSON.parse(localStorage.getItem("flux_v36_history") || "[]");
         let currentChatId = null;
         let userName = localStorage.getItem("flux_user_name_fixed") || "";
         let awaitingName = false;
         let responseMode = localStorage.getItem("flux_response_mode") || "smart";
         let lastUserPrompt = "";
         let renameChatId = null;
-        let suggestionOffset = 0;
         let editingMessageMeta = null;
 
         const chatBox = document.getElementById("chat-box");
@@ -1170,14 +1766,14 @@ def home():
 
             function makeParticles() {
                 particles = [];
-                const count = Math.max(28, Math.floor(window.innerWidth / 35));
+                const count = Math.max(24, Math.floor(window.innerWidth / 40));
                 for (let i = 0; i < count; i++) {
                     particles.push({
                         x: Math.random() * canvas.width,
                         y: Math.random() * canvas.height,
-                        vx: (Math.random() - 0.5) * 0.25,
-                        vy: (Math.random() - 0.5) * 0.25,
-                        r: Math.random() * 2 + 0.8
+                        vx: (Math.random() - 0.5) * 0.18,
+                        vy: (Math.random() - 0.5) * 0.18,
+                        r: Math.random() * 2 + 0.7
                     });
                 }
             }
@@ -1194,7 +1790,7 @@ def home():
 
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = "rgba(139,92,246,0.75)";
+                    ctx.fillStyle = "rgba(139,92,246,0.68)";
                     ctx.fill();
 
                     for (let j = i + 1; j < particles.length; j++) {
@@ -1202,11 +1798,11 @@ def home():
                         const dx = p.x - q.x;
                         const dy = p.y - q.y;
                         const d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < 120) {
+                        if (d < 118) {
                             ctx.beginPath();
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(q.x, q.y);
-                            ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / 120) * 0.18) + ")";
+                            ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / 118) * 0.15) + ")";
                             ctx.lineWidth = 1;
                             ctx.stroke();
                         }
@@ -1332,7 +1928,7 @@ def home():
             responseMode = mode;
             localStorage.setItem("flux_response_mode", mode);
 
-            ["smart", "study", "exam", "mcq", "notes", "revision", "code", "bugfix", "fast", "search"].forEach(function(m) {
+            ["smart", "study", "code", "search"].forEach(function(m) {
                 const el = document.getElementById("mode-" + m);
                 if (el) el.classList.remove("active");
             });
@@ -1341,23 +1937,32 @@ def home():
             if (active) active.classList.add("active");
         }
 
-        function getVisibleSuggestions() {
-            const count = window.innerWidth >= 980 ? 4 : 3;
-            const result = [];
-            for (let i = 0; i < count; i++) {
-                result.push(ALL_SUGGESTIONS[(suggestionOffset + i) % ALL_SUGGESTIONS.length]);
-            }
-            return result;
+        function renderHomeCards() {
+            const box = document.getElementById("home-cards");
+            box.innerHTML = "";
+
+            HOME_CARDS.forEach(function(card) {
+                const el = document.createElement("div");
+                el.className = "home-card";
+                el.innerHTML =
+                    '<div class="home-card-icon"><i class="' + card.icon + '"></i></div>' +
+                    '<div><div class="home-card-title">' + card.title + '</div><div class="home-card-sub">' + card.subtitle + '</div></div>';
+                el.onclick = function() {
+                    msgInput.value = card.prompt;
+                    resizeInput(msgInput);
+                    sendMessage();
+                };
+                box.appendChild(el);
+            });
         }
 
-        function renderSuggestions() {
-            const box = document.getElementById("suggestions");
+        function renderQuickChips() {
+            const box = document.getElementById("quick-chips");
             box.innerHTML = "";
-            const current = getVisibleSuggestions();
 
-            current.forEach(function(item) {
+            QUICK_CHIPS.forEach(function(item) {
                 const btn = document.createElement("button");
-                btn.className = "chip";
+                btn.className = "quick-chip";
                 btn.innerHTML = '<i class="' + item.icon + '"></i><span>' + item.text + '</span>';
                 btn.onclick = function() {
                     msgInput.value = item.text;
@@ -1368,13 +1973,8 @@ def home():
             });
         }
 
-        function rotateSuggestions() {
-            suggestionOffset = (suggestionOffset + 1) % ALL_SUGGESTIONS.length;
-            renderSuggestions();
-        }
-
         function saveChats() {
-            localStorage.setItem("flux_v35_history", JSON.stringify(chats));
+            localStorage.setItem("flux_v36_history", JSON.stringify(chats));
         }
 
         function filteredChats() {
@@ -1508,7 +2108,7 @@ def home():
         }
 
         function clearChats() {
-            localStorage.removeItem("flux_v35_history");
+            localStorage.removeItem("flux_v36_history");
             location.reload();
         }
 
@@ -1704,7 +2304,6 @@ def home():
 
         function appendBubble(msg, chatId) {
             welcome.style.display = "none";
-
             const isUser = msg.role === "user";
 
             const wrapper = document.createElement("div");
@@ -1788,7 +2387,6 @@ def home():
             }));
 
             bubbleWrap.appendChild(actions);
-
             wrapper.appendChild(avatar);
             wrapper.appendChild(bubbleWrap);
             chatBox.appendChild(wrapper);
@@ -1941,13 +2539,7 @@ def home():
 
             let typingText = "__APP_NAME__ is thinking...";
             if (responseMode === "study") typingText = "__APP_NAME__ is explaining step by step...";
-            if (responseMode === "exam") typingText = "__APP_NAME__ is preparing an exam-focused answer...";
-            if (responseMode === "mcq") typingText = "__APP_NAME__ is preparing MCQ style help...";
-            if (responseMode === "notes") typingText = "__APP_NAME__ is making notes...";
-            if (responseMode === "revision") typingText = "__APP_NAME__ is preparing revision points...";
             if (responseMode === "code") typingText = "__APP_NAME__ is writing code...";
-            if (responseMode === "bugfix") typingText = "__APP_NAME__ is finding bugs...";
-            if (responseMode === "fast") typingText = "__APP_NAME__ is preparing a quick reply...";
             if (responseMode === "search") typingText = "__APP_NAME__ is searching the web...";
 
             showTyping(typingText);
@@ -2086,14 +2678,12 @@ def home():
             }
         });
 
-        window.addEventListener("resize", renderSuggestions);
-
         initBackground();
         loadBehaviorPrefs();
         setMode(responseMode);
-        renderSuggestions();
+        renderHomeCards();
+        renderQuickChips();
         renderHistory();
-        setInterval(rotateSuggestions, 5000);
     </script>
 </body>
 </html>
@@ -2104,7 +2694,8 @@ def home():
     html = html.replace("__VERSION__", VERSION)
     html = html.replace("__FACEBOOK_URL__", FACEBOOK_URL)
     html = html.replace("__WEBSITE_URL__", WEBSITE_URL)
-    html = html.replace("__SUGGESTIONS__", suggestions_json)
+    html = html.replace("__HOME_CARDS__", cards_json)
+    html = html.replace("__QUICK_CHIPS__", chips_json)
 
     return html
 
@@ -2124,13 +2715,6 @@ def admin_login():
 
     log_event("admin_login_failed")
     return jsonify({"ok": False, "error": "Invalid password"}), 401
-
-
-@app.route("/admin/logout", methods=["POST"])
-@admin_required
-def admin_logout():
-    session.pop("is_admin", None)
-    return jsonify({"ok": True})
 
 
 @app.route("/admin/stats")
@@ -2242,7 +2826,7 @@ def chat():
         "memory_enabled": sanitize_text(preferences.get("memory_enabled", "true"), 10).lower()
     }
 
-    if safe_preferences["response_mode"] not in {"smart", "study", "exam", "mcq", "notes", "revision", "code", "bugfix", "fast", "search"}:
+    if safe_preferences["response_mode"] not in {"smart", "study", "code", "search"}:
         safe_preferences["response_mode"] = "smart"
 
     if safe_preferences["answer_length"] not in {"short", "balanced", "detailed"}:
