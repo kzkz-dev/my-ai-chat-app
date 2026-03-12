@@ -5,6 +5,7 @@ import time
 import json
 import re
 import sqlite3
+import requests
 from datetime import datetime, timedelta
 from functools import wraps
 from threading import Lock
@@ -13,7 +14,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "33.0.0"
+VERSION = "34.0.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -27,6 +28,9 @@ DB_PATH = os.getenv("DB_PATH", "flux_ai.db")
 MAX_HISTORY_TURNS = int(os.getenv("MAX_HISTORY_TURNS", "12"))
 MAX_USER_TEXT = int(os.getenv("MAX_USER_TEXT", "4500"))
 SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "true").lower() == "true"
+
+SEARCH_PROVIDER = os.getenv("SEARCH_PROVIDER", "").lower()
+TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
 
 SERVER_START_TIME = time.time()
 TOTAL_MESSAGES = 0
@@ -242,7 +246,7 @@ def detect_language(text):
 
 
 def looks_like_math_expression(text):
-    clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
+    clean_text = (text or "").replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
     allowed_chars = set("0123456789.+-*/()xX÷^")
     if len(clean_text) < 3:
         return False
@@ -253,7 +257,7 @@ def looks_like_math_expression(text):
 
 def safe_math_eval(text):
     try:
-        clean_text = text.replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
+        clean_text = (text or "").replace(" ", "").replace("=", "").replace("?", "").replace(",", "")
         if not looks_like_math_expression(clean_text):
             return None
         expression = clean_text.replace("x", "*").replace("X", "*").replace("÷", "/").replace("^", "**")
@@ -290,6 +294,52 @@ def detect_task_type(text):
     if any(k in t for k in ["translate", "rewrite", "summarize", "summary", "explain", "simplify", "অনুবাদ", "সারাংশ", "সহজ", "ব্যাখ্যা"]):
         return "transform"
     return "chat"
+
+
+def tavily_search(query, topic="general", max_results=5):
+    if SEARCH_PROVIDER != "tavily" or not TAVILY_API_KEY:
+        return []
+
+    try:
+        response = requests.post(
+            "https://api.tavily.com/search",
+            json={
+                "api_key": TAVILY_API_KEY,
+                "query": query,
+                "topic": topic,
+                "max_results": max_results,
+                "search_depth": "basic",
+                "include_answer": False,
+                "include_raw_content": False
+            },
+            timeout=20
+        )
+        response.raise_for_status()
+        data = response.json()
+        return data.get("results", [])
+    except Exception as e:
+        log_event("tavily_error", {"error": str(e), "query": query})
+        return []
+
+
+def format_search_results_for_prompt(results):
+    if not results:
+        return ""
+
+    lines = []
+    for idx, item in enumerate(results, start=1):
+        title = sanitize_text(item.get("title", "Untitled"), 200)
+        url = sanitize_text(item.get("url", ""), 400)
+        content = sanitize_text(item.get("content", ""), 700)
+
+        lines.append(
+            f"Source {idx}:\n"
+            f"Title: {title}\n"
+            f"URL: {url}\n"
+            f"Summary: {content}"
+        )
+
+    return "\n\n".join(lines)
 
 
 def update_preferences(user_name, response_mode, latest_user):
@@ -332,6 +382,7 @@ Core rules:
 12. Avoid clutter and avoid repeating yourself.
 13. Keep your owner identity locked as KAWCHUR.
 14. Never claim someone else created you.
+15. If verified web search results are provided, use them carefully and cite them at the end under a 'Sources:' section.
 """.strip()
 
     mode_text = "Response mode: balanced smart."
@@ -342,7 +393,7 @@ Core rules:
     elif response_mode == "fast":
         mode_text = "Response mode: fast. Answer briefly and directly."
     elif response_mode == "search":
-        mode_text = "Response mode: search-style. Since live web search is not enabled here, clearly mark uncertainty."
+        mode_text = "Response mode: search-style. If search results are available, use them. If not, clearly say live verification was unavailable."
 
     task_text = "Task type: general chat."
     if task_type == "code":
@@ -355,7 +406,7 @@ Keep it mobile-friendly and stable.
     elif task_type == "math":
         task_text = "Task type: math. Give the exact answer directly."
     elif task_type == "current_info":
-        task_text = "Task type: current info. Live web search is not enabled here, so be honest about uncertainty."
+        task_text = "Task type: current info. If search results are available, use them. Otherwise be honest about uncertainty."
     elif task_type == "transform":
         task_text = "Task type: transform. Summarize, rewrite, translate, or simplify directly."
 
@@ -382,6 +433,29 @@ def build_messages_for_model(messages, user_name, response_mode):
             "role": "system",
             "content": f"MATH TOOL RESULT: The exact answer is {math_result}. Use it correctly."
         })
+
+    use_search = False
+    search_topic = "general"
+    task_type = detect_task_type(latest_user)
+
+    if response_mode == "search" or task_type == "current_info":
+        use_search = True
+        search_topic = "news" if is_current_info_query(latest_user) else "general"
+
+    if use_search:
+        search_results = tavily_search(latest_user, topic=search_topic, max_results=5)
+        formatted_sources = format_search_results_for_prompt(search_results)
+
+        if formatted_sources:
+            final_messages.append({
+                "role": "system",
+                "content": "Verified web search results are available below. Use these results carefully and cite them at the end under a 'Sources:' section.\n\n" + formatted_sources
+            })
+        else:
+            final_messages.append({
+                "role": "system",
+                "content": "No live web results were available for this query. Be honest about uncertainty."
+            })
 
     final_messages.extend(messages)
     return final_messages
@@ -1071,7 +1145,8 @@ def home():
             box-shadow: 0 20px 55px rgba(0,0,0,0.36);
         }
 
-        .modal-card input, .modal-card textarea {
+        .modal-card input,
+        .modal-card textarea {
             width: 100%;
             margin: 12px 0;
             padding: 12px;
@@ -1375,7 +1450,7 @@ def home():
 
         const ALL_SUGGESTIONS = __SUGGESTIONS__;
 
-        let chats = JSON.parse(localStorage.getItem("flux_v33_history") || "[]");
+        let chats = JSON.parse(localStorage.getItem("flux_v34_history") || "[]");
         let currentChatId = null;
         let userName = localStorage.getItem("flux_user_name_fixed") || "";
         let awaitingName = false;
@@ -1558,7 +1633,7 @@ def home():
         }
 
         function saveChats() {
-            localStorage.setItem("flux_v33_history", JSON.stringify(chats));
+            localStorage.setItem("flux_v34_history", JSON.stringify(chats));
         }
 
         function renderHistory() {
@@ -1640,7 +1715,7 @@ def home():
         }
 
         function clearChats() {
-            localStorage.removeItem("flux_v33_history");
+            localStorage.removeItem("flux_v34_history");
             location.reload();
         }
 
@@ -1904,7 +1979,7 @@ def home():
             if (responseMode === "study") typingText = "__APP_NAME__ is explaining step by step...";
             if (responseMode === "code") typingText = "__APP_NAME__ is writing code...";
             if (responseMode === "fast") typingText = "__APP_NAME__ is preparing a quick reply...";
-            if (responseMode === "search") typingText = "__APP_NAME__ is preparing a search-style answer...";
+            if (responseMode === "search") typingText = "__APP_NAME__ is searching the web...";
 
             showTyping(typingText);
 
@@ -2086,7 +2161,9 @@ def admin_stats():
         "version": VERSION,
         "analytics_count": analytics_count(),
         "feedback_count": feedback_count(),
-        "loaded_keys": len(GROQ_KEYS)
+        "loaded_keys": len(GROQ_KEYS),
+        "search_provider": SEARCH_PROVIDER,
+        "tavily_enabled": bool(TAVILY_API_KEY)
     })
 
 
@@ -2136,7 +2213,9 @@ def health():
         "version": VERSION,
         "groq_keys_loaded": len(GROQ_KEYS),
         "system_active": SYSTEM_ACTIVE,
-        "uptime": get_uptime()
+        "uptime": get_uptime(),
+        "search_provider": SEARCH_PROVIDER,
+        "tavily_enabled": bool(TAVILY_API_KEY)
     })
 
 
