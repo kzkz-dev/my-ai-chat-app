@@ -14,7 +14,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "36.0.0"
+VERSION = "37.0.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -299,9 +299,8 @@ def is_current_info_query(text):
     keywords = [
         "today", "latest", "news", "current", "price", "recent", "update", "weather",
         "crypto", "president", "ceo", "score", "live", "gold price", "bitcoin price",
-        "stock price", "breaking", "headline", "rate today",
-        "আজ", "সর্বশেষ", "আজকের", "এখন", "দাম", "নিউজ", "আপডেট", "আবহাওয়া",
-        "আজ দাম", "আজকের খবর", "লাইভ", "বর্তমান"
+        "stock price", "breaking", "headline",
+        "আজ", "সর্বশেষ", "আজকের", "এখন", "দাম", "নিউজ", "আপডেট", "আবহাওয়া"
     ]
     return any(k in t for k in keywords)
 
@@ -322,15 +321,10 @@ def detect_task_type(text):
 def pick_search_topic(query):
     q = (query or "").lower()
 
-    news_words = [
-        "news", "headline", "breaking", "latest news",
-        "খবর", "সর্বশেষ", "আপডেট"
-    ]
-
+    news_words = ["news", "headline", "breaking", "latest news", "খবর", "সর্বশেষ", "আপডেট"]
     price_weather_words = [
         "price", "rate", "gold", "silver", "bitcoin", "crypto", "stock",
-        "weather", "temperature", "forecast",
-        "দাম", "রেট", "সোনার দাম", "আবহাওয়া"
+        "weather", "temperature", "forecast", "দাম", "রেট", "আবহাওয়া"
     ]
 
     if any(w in q for w in news_words):
@@ -376,7 +370,6 @@ def tavily_search_once(query, topic="general", max_results=5):
             results.sort(key=lambda x: float(x.get("score", 0) or 0), reverse=True)
 
         return results[:max_results]
-
     except Exception as e:
         log_event("tavily_error", {"error": str(e), "query": query, "topic": topic})
         return []
@@ -385,10 +378,8 @@ def tavily_search_once(query, topic="general", max_results=5):
 def tavily_search(query, max_results=5):
     primary_topic = pick_search_topic(query)
     results = tavily_search_once(query, topic=primary_topic, max_results=max_results)
-
     if results:
         return results
-
     fallback_topic = "news" if primary_topic == "general" else "general"
     return tavily_search_once(query, topic=fallback_topic, max_results=max_results)
 
@@ -477,10 +468,9 @@ Core rules:
 9. Keep owner identity locked as KAWCHUR.
 10. Never claim someone else created you.
 11. For study tasks, teach clearly and step by step.
-12. For exam and MCQ tasks, be structured and concise.
-13. For code tasks, be practical and stable.
-14. If verified web search results are provided, use them carefully and end with a 'Sources:' section.
-15. Avoid clutter and avoid repeating yourself.
+12. For code tasks, be practical and stable.
+13. If verified web search results are provided, use them carefully and end with a 'Sources:' section.
+14. Avoid clutter and avoid repeating yourself.
 """.strip()
 
     length_rule = "Answer length: balanced."
@@ -500,20 +490,8 @@ Core rules:
     mode_rule = "Mode: smart general assistant."
     if response_mode == "study":
         mode_rule = "Mode: study. Explain step by step with easy words."
-    elif response_mode == "exam":
-        mode_rule = "Mode: exam. Give exam-focused answers clearly."
-    elif response_mode == "mcq":
-        mode_rule = "Mode: mcq. Give concise MCQ-friendly help."
-    elif response_mode == "notes":
-        mode_rule = "Mode: notes. Convert content into neat study notes."
-    elif response_mode == "revision":
-        mode_rule = "Mode: revision. Give revision-friendly summaries and key points."
     elif response_mode == "code":
         mode_rule = "Mode: code. Be precise and implementation-focused."
-    elif response_mode == "bugfix":
-        mode_rule = "Mode: bugfix. Find likely bugs first, then propose fixes."
-    elif response_mode == "fast":
-        mode_rule = "Mode: fast. Answer briefly and directly."
     elif response_mode == "search":
         mode_rule = "Mode: search-style. If search results are available, use them. Otherwise clearly say live verification was unavailable."
 
@@ -678,7 +656,6 @@ def generate_groq_stream(messages, user_name, preferences):
                     collected += chunk.choices[0].delta.content
 
             collected = append_sources_if_missing(collected, search_results)
-
             mark_key_success(api_key)
             yield collected
             return
@@ -692,19 +669,17 @@ def generate_groq_stream(messages, user_name, preferences):
 
 
 HOME_CARDS = [
-    {"title": "Study Help", "subtitle": "Step-by-step explanations", "prompt": "Explain this topic step by step for a student", "icon": "fas fa-graduation-cap"},
-    {"title": "Build App", "subtitle": "Create HTML app or UI", "prompt": "Create a modern mobile-friendly app in HTML", "icon": "fas fa-code"},
-    {"title": "Smart Answer", "subtitle": "Clear helpful answers", "prompt": "Give me a smart clear answer", "icon": "fas fa-brain"},
-    {"title": "Search Web", "subtitle": "Current info with sources", "prompt": "latest news today", "icon": "fas fa-globe"}
+    {"title": "Study Help", "prompt": "Explain this topic step by step for a student", "icon": "fas fa-graduation-cap"},
+    {"title": "Build App", "prompt": "Create a modern mobile-friendly app in HTML", "icon": "fas fa-code"},
+    {"title": "Smart Answer", "prompt": "Give me a smart clear answer", "icon": "fas fa-brain"},
+    {"title": "Search Web", "prompt": "latest news today", "icon": "fas fa-globe"}
 ]
 
 QUICK_CHIPS = [
     {"icon": "fas fa-book", "text": "Explain photosynthesis simply"},
     {"icon": "fas fa-lightbulb", "text": "Business ideas for students"},
     {"icon": "fas fa-calculator", "text": "Solve: 50 * 3 + 20"},
-    {"icon": "fas fa-language", "text": "Translate this into English"},
-    {"icon": "fas fa-pen", "text": "Rewrite this text better"},
-    {"icon": "fas fa-mobile-alt", "text": "Create a mobile calculator UI"}
+    {"icon": "fas fa-language", "text": "Translate this into English"}
 ]
 
 
@@ -728,7 +703,7 @@ def home():
             --bg: #050816;
             --bg2: #0a1130;
             --panel: rgba(17, 24, 48, 0.82);
-            --panel2: rgba(18, 27, 52, 0.95);
+            --panel2: rgba(18, 27, 52, 0.96);
             --text: #eef2ff;
             --muted: #9aa8c7;
             --accent: #8b5cf6;
@@ -738,18 +713,14 @@ def home():
             --success: #22c55e;
         }
 
-        * {
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
+        * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 
         html, body {
             margin: 0;
             width: 100%;
             height: 100%;
             overflow: hidden;
-            background:
-                radial-gradient(circle at top, var(--bg2) 0%, var(--bg) 58%, #02040c 100%);
+            background: radial-gradient(circle at top, var(--bg2) 0%, var(--bg) 58%, #02040c 100%);
             color: var(--text);
             font-family: 'Outfit', 'Noto Sans Bengali', sans-serif;
         }
@@ -760,9 +731,8 @@ def home():
             overflow: hidden;
             position: relative;
             background:
-                radial-gradient(circle at 20% 20%, rgba(139,92,246,0.10), transparent 24%),
-                radial-gradient(circle at 85% 25%, rgba(96,165,250,0.08), transparent 22%),
-                radial-gradient(circle at 35% 78%, rgba(139,92,246,0.08), transparent 18%);
+                radial-gradient(circle at 20% 20%, rgba(139,92,246,0.09), transparent 24%),
+                radial-gradient(circle at 85% 25%, rgba(96,165,250,0.07), transparent 22%);
         }
 
         #bg-canvas {
@@ -771,78 +741,62 @@ def home():
             width: 100%;
             height: 100%;
             z-index: 0;
-            opacity: 0.42;
+            opacity: 0.36;
             pointer-events: none;
         }
 
-        .shell {
-            position: relative;
-            z-index: 1;
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-        }
+        .shell { position: relative; z-index: 1; width: 100%; height: 100%; overflow: hidden; }
 
         .sidebar-overlay {
             position: fixed;
             inset: 0;
-            background: rgba(0,0,0,0.50);
+            background: rgba(0,0,0,0.48);
             display: none;
             z-index: 90;
         }
 
-        .sidebar-overlay.show {
-            display: block;
-        }
+        .sidebar-overlay.show { display: block; }
 
         .sidebar {
             position: fixed;
             top: 0;
             left: 0;
-            width: min(84vw, 330px);
+            width: min(84vw, 320px);
             height: 100dvh;
             background: linear-gradient(180deg, rgba(18,27,52,0.98), rgba(8,12,28,0.98));
             border-right: 1px solid var(--border);
             transform: translateX(-100%);
-            transition: transform 0.24s ease;
+            transition: transform 0.22s ease;
             z-index: 100;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 18px 16px;
+            padding: 16px;
             box-shadow: 20px 0 50px rgba(0,0,0,0.32);
         }
 
-        .sidebar.open {
-            transform: translateX(0);
-        }
+        .sidebar.open { transform: translateX(0); }
 
         .brand {
             display: flex;
             align-items: center;
             gap: 12px;
-            font-size: 28px;
+            font-size: 26px;
             font-weight: 800;
-            margin-bottom: 18px;
+            margin-bottom: 16px;
         }
 
         .brand-mark {
-            width: 50px;
-            height: 50px;
-            border-radius: 16px;
+            width: 46px;
+            height: 46px;
+            border-radius: 14px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(180deg, rgba(22,22,56,0.95), rgba(7,7,28,0.95));
-            box-shadow: 0 0 30px rgba(139,92,246,0.18);
+            box-shadow: 0 0 24px rgba(139,92,246,0.16);
             color: var(--accent);
-            font-size: 22px;
+            font-size: 20px;
             flex-shrink: 0;
-        }
-
-        .side-grid {
-            display: grid;
-            gap: 10px;
-            margin-bottom: 14px;
         }
 
         .side-btn {
@@ -850,22 +804,18 @@ def home():
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.03);
             color: var(--text);
-            border-radius: 16px;
-            padding: 14px 15px;
+            border-radius: 15px;
+            padding: 13px 14px;
             cursor: pointer;
             text-align: left;
             font-size: 14px;
-            transition: 0.2s ease;
-        }
-
-        .side-btn:hover {
-            background: rgba(255,255,255,0.06);
+            margin-bottom: 10px;
         }
 
         .side-label {
             font-size: 12px;
             color: var(--muted);
-            margin: 18px 0 10px;
+            margin: 16px 0 8px;
             letter-spacing: 1px;
             font-weight: 700;
         }
@@ -887,7 +837,6 @@ def home():
             border-radius: 14px;
             margin-bottom: 8px;
             color: var(--muted);
-            border: 1px solid transparent;
             background: rgba(255,255,255,0.02);
             display: flex;
             gap: 8px;
@@ -920,19 +869,17 @@ def home():
         }
 
         .about-box {
-            padding: 15px;
+            padding: 14px;
             border-radius: 18px;
             background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
             line-height: 1.7;
-            word-break: break-word;
         }
 
         .copyright-box {
             margin-top: 12px;
             font-size: 12px;
             color: var(--muted);
-            opacity: 0.9;
         }
 
         .main {
@@ -944,22 +891,22 @@ def home():
         }
 
         .topbar {
-            height: 68px;
-            min-height: 68px;
+            height: 66px;
+            min-height: 66px;
             display: flex;
             align-items: center;
             gap: 12px;
             padding: 0 14px;
             border-bottom: 1px solid rgba(255,255,255,0.05);
-            background: rgba(5, 8, 22, 0.56);
+            background: rgba(5, 8, 22, 0.54);
             backdrop-filter: blur(12px);
         }
 
         .menu-btn {
-            width: 44px;
-            height: 44px;
+            width: 42px;
+            height: 42px;
             border: none;
-            border-radius: 14px;
+            border-radius: 13px;
             background: rgba(255,255,255,0.06);
             color: var(--text);
             cursor: pointer;
@@ -973,70 +920,58 @@ def home():
             background: linear-gradient(135deg, #ffffff 0%, #d7ccff 55%, #b7d9ff 100%);
             -webkit-background-clip: text;
             color: transparent;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
         }
 
         .chat-box {
             flex: 1;
             overflow-y: auto;
             overflow-x: hidden;
-            padding: 18px 12px 178px;
+            padding: 14px 12px 108px;
             scroll-behavior: smooth;
         }
 
         .welcome {
             width: 100%;
             max-width: 920px;
-            margin: 10px auto 0;
-            padding: 0 2px;
+            margin: 0 auto;
         }
 
         .hero {
             text-align: center;
-            padding: 28px 0 16px;
+            padding: 28px 0 18px;
         }
 
         .hero-mark {
-            width: 86px;
-            height: 86px;
+            width: 82px;
+            height: 82px;
             margin: 0 auto 18px;
             border-radius: 24px;
             display: flex;
             align-items: center;
             justify-content: center;
             background: linear-gradient(180deg, rgba(22,22,56,0.95), rgba(7,7,28,0.95));
-            box-shadow: 0 0 42px rgba(139,92,246,0.16);
+            box-shadow: 0 0 38px rgba(139,92,246,0.14);
             color: var(--accent);
-            font-size: 34px;
+            font-size: 32px;
         }
 
         .hero h1 {
-            margin: 0 0 8px;
-            font-size: clamp(30px, 7vw, 48px);
+            margin: 0;
+            font-size: clamp(30px, 7vw, 46px);
             letter-spacing: -0.5px;
-        }
-
-        .hero p {
-            margin: 0 auto;
-            max-width: 560px;
-            color: var(--muted);
-            line-height: 1.7;
-            font-size: 17px;
         }
 
         .cards-grid {
             display: grid;
             grid-template-columns: 1fr;
             gap: 12px;
-            margin-top: 18px;
+            margin-top: 10px;
         }
 
         .home-card {
             border: 1px solid var(--border);
             background: rgba(255,255,255,0.03);
-            border-radius: 22px;
+            border-radius: 20px;
             padding: 18px;
             cursor: pointer;
             transition: 0.2s ease;
@@ -1047,7 +982,6 @@ def home():
 
         .home-card:hover {
             background: rgba(255,255,255,0.05);
-            transform: translateY(-1px);
         }
 
         .home-card-icon {
@@ -1066,43 +1000,13 @@ def home():
         .home-card-title {
             font-size: 18px;
             font-weight: 700;
-            margin-bottom: 3px;
-        }
-
-        .home-card-sub {
-            font-size: 14px;
-            color: var(--muted);
-        }
-
-        .compact-row {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-            margin-top: 16px;
-        }
-
-        .pill {
-            border: 1px solid var(--border);
-            background: rgba(255,255,255,0.04);
-            color: var(--text);
-            border-radius: 999px;
-            padding: 9px 13px;
-            cursor: pointer;
-            font-size: 13px;
-            transition: 0.2s ease;
-        }
-
-        .pill.active {
-            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
-            border-color: transparent;
         }
 
         .chips-row {
             display: flex;
             gap: 10px;
             flex-wrap: wrap;
-            margin-top: 18px;
+            margin-top: 16px;
             justify-content: center;
         }
 
@@ -1119,9 +1023,7 @@ def home():
             gap: 8px;
         }
 
-        .quick-chip i {
-            color: var(--accent);
-        }
+        .quick-chip i { color: var(--accent); }
 
         .message {
             width: 100%;
@@ -1132,9 +1034,7 @@ def home():
             align-items: flex-start;
         }
 
-        .message.user {
-            flex-direction: row-reverse;
-        }
+        .message.user { flex-direction: row-reverse; }
 
         .avatar {
             width: 40px;
@@ -1175,9 +1075,7 @@ def home():
             font-weight: 700;
         }
 
-        .message.user .name {
-            display: none;
-        }
+        .message.user .name { display: none; }
 
         .bubble {
             width: 100%;
@@ -1195,13 +1093,10 @@ def home():
             border-radius: 18px;
             background: linear-gradient(135deg, #312e81 0%, #2563eb 100%);
             color: white;
-            box-shadow: 0 10px 26px rgba(37,99,235,0.16);
+            box-shadow: 0 10px 26px rgba(37,99,235,0.14);
         }
 
-        .message.bot .bubble {
-            padding: 0;
-            background: transparent;
-        }
+        .message.bot .bubble { padding: 0; background: transparent; }
 
         .msg-time {
             font-size: 11px;
@@ -1239,10 +1134,7 @@ def home():
             word-break: break-word;
         }
 
-        code {
-            color: #e2e8f0;
-            font-family: monospace;
-        }
+        code { color: #e2e8f0; font-family: monospace; }
 
         .artifact {
             width: 100%;
@@ -1286,7 +1178,6 @@ def home():
             max-width: 900px;
             margin: 0 auto 18px;
             color: var(--muted);
-            padding-left: 2px;
         }
 
         .sources-block {
@@ -1317,31 +1208,6 @@ def home():
             width: 100%;
             max-width: 900px;
             margin: 0 auto;
-            display: grid;
-            gap: 10px;
-        }
-
-        .mini-settings {
-            display: flex;
-            gap: 8px;
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .mini-select,
-        .mini-toggle {
-            background: rgba(13,19,38,0.96);
-            color: var(--text);
-            border: 1px solid var(--border);
-            border-radius: 14px;
-            padding: 10px 12px;
-            font-size: 13px;
-        }
-
-        .mini-toggle {
-            display: flex;
-            align-items: center;
-            gap: 6px;
         }
 
         .input-box {
@@ -1352,8 +1218,30 @@ def home():
             background: rgba(13,19,38,0.96);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: 12px 12px 12px 14px;
+            padding: 10px 10px 10px 12px;
             box-shadow: 0 12px 34px rgba(0,0,0,0.20);
+        }
+
+        .tool-btn, .send-btn {
+            width: 44px;
+            height: 44px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .tool-btn {
+            background: rgba(255,255,255,0.06);
+            color: var(--text);
+            font-size: 18px;
+        }
+
+        .send-btn {
+            border-radius: 50%;
+            background: var(--text);
+            color: #111827;
+            font-size: 18px;
         }
 
         textarea {
@@ -1368,17 +1256,7 @@ def home():
             max-height: 180px;
             font-family: inherit;
             line-height: 1.5;
-        }
-
-        .send-btn {
-            width: 46px;
-            height: 46px;
-            border: none;
-            border-radius: 50%;
-            background: var(--text);
-            color: #111827;
-            cursor: pointer;
-            flex-shrink: 0;
+            padding: 9px 2px;
         }
 
         .modal-overlay {
@@ -1401,6 +1279,67 @@ def home():
             padding: 22px;
             position: relative;
             box-shadow: 0 20px 55px rgba(0,0,0,0.36);
+        }
+
+        .sheet {
+            position: fixed;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(18,27,52,0.99), rgba(8,12,28,0.99));
+            border-top: 1px solid var(--border);
+            border-top-left-radius: 22px;
+            border-top-right-radius: 22px;
+            padding: 18px;
+            z-index: 220;
+            transform: translateY(110%);
+            transition: transform 0.22s ease;
+            box-shadow: 0 -20px 50px rgba(0,0,0,0.3);
+        }
+
+        .sheet.open { transform: translateY(0); }
+
+        .sheet-grid { display: grid; gap: 12px; }
+
+        .sheet-row-title {
+            font-size: 13px;
+            color: var(--muted);
+            letter-spacing: 0.6px;
+            font-weight: 700;
+            margin-top: 2px;
+        }
+
+        .sheet-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .sheet-pill {
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            color: var(--text);
+            border-radius: 999px;
+            padding: 10px 14px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+
+        .sheet-pill.active {
+            background: linear-gradient(135deg, #7c3aed 0%, #2563eb 100%);
+            border-color: transparent;
+        }
+
+        .sheet-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid var(--border);
+            background: rgba(255,255,255,0.04);
+            border-radius: 14px;
+            padding: 10px 12px;
+            color: var(--text);
+            font-size: 13px;
         }
 
         .modal-card input,
@@ -1430,20 +1369,9 @@ def home():
             font-size: 15px;
         }
 
-        .btn-cancel {
-            background: rgba(255,255,255,0.08);
-            color: white;
-        }
-
-        .btn-confirm {
-            background: var(--success);
-            color: black;
-        }
-
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
+        .btn-cancel { background: rgba(255,255,255,0.08); color: white; }
+        .btn-confirm { background: var(--success); color: black; }
+        .btn-danger { background: var(--danger); color: white; }
 
         .close-small {
             position: absolute;
@@ -1484,63 +1412,24 @@ def home():
         @media (min-width: 980px) {
             .sidebar {
                 transform: translateX(0);
-                width: 330px;
+                width: 320px;
             }
-
-            .sidebar-overlay {
-                display: none !important;
-            }
-
-            .main {
-                padding-left: 330px;
-            }
-
-            .menu-btn {
-                display: none;
-            }
-
-            .input-area {
-                left: 330px;
-            }
-
-            .cards-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+            .sidebar-overlay { display: none !important; }
+            .main { padding-left: 320px; }
+            .menu-btn { display: none; }
+            .input-area { left: 320px; }
+            .cards-grid { grid-template-columns: 1fr 1fr; }
         }
 
         @media (max-width: 520px) {
-            .topbar {
-                padding: 0 10px;
-            }
-
-            .top-title {
-                font-size: 18px;
-            }
-
-            .chat-box {
-                padding: 14px 10px 186px;
-            }
-
-            .avatar {
-                width: 36px;
-                height: 36px;
-            }
-
-            .bubble-wrap {
-                max-width: calc(100% - 44px);
-            }
-
-            .message.user .bubble {
-                max-width: calc(100vw - 72px);
-            }
-
-            .input-area {
-                padding: 10px;
-            }
-
-            .stats-grid {
-                grid-template-columns: 1fr;
-            }
+            .topbar { padding: 0 10px; }
+            .top-title { font-size: 18px; }
+            .chat-box { padding: 12px 10px 104px; }
+            .avatar { width: 36px; height: 36px; }
+            .bubble-wrap { max-width: calc(100% - 44px); }
+            .message.user .bubble { max-width: calc(100vw - 72px); }
+            .input-area { padding: 10px; }
+            .stats-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -1556,27 +1445,20 @@ def home():
                 <div>__APP_NAME__</div>
             </div>
 
-            <div class="side-grid">
-                <button class="side-btn" onclick="startNewChat(); closeSidebar();"><i class="fas fa-plus"></i> New Chat</button>
-                <button class="side-btn" onclick="exportCurrentChat(); closeSidebar();"><i class="fas fa-file-export"></i> Export Chat</button>
-                <button class="side-btn" onclick="copyWholeChat(); closeSidebar();"><i class="fas fa-copy"></i> Copy Whole Chat</button>
-            </div>
+            <button class="side-btn" onclick="startNewChat(); closeSidebar();"><i class="fas fa-plus"></i> New Chat</button>
+            <button class="side-btn" onclick="exportCurrentChat(); closeSidebar();"><i class="fas fa-file-export"></i> Export Chat</button>
 
-            <div class="side-label">SEARCH CHATS</div>
+            <div class="side-label">Search Chats</div>
             <input id="chat-search" class="search-input" placeholder="Search history..." oninput="renderHistory()">
 
-            <div class="side-label">RECENT</div>
+            <div class="side-label">Recent</div>
             <div id="history-list"></div>
 
-            <div class="side-label">INFO</div>
+            <div class="side-label">About</div>
             <div class="about-box">
-                <div style="font-size:20px;font-weight:800;margin-bottom:6px;">__APP_NAME__</div>
+                <div style="font-size:18px;font-weight:800;margin-bottom:6px;">__APP_NAME__</div>
                 <div style="color:var(--muted);margin-bottom:8px;">Version __VERSION__</div>
-                <div style="margin-bottom:10px;">Created by <span style="color:var(--accent);">__OWNER_NAME__</span></div>
-                <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
-                    <a href="__FACEBOOK_URL__" target="_blank" style="color:white;">Facebook</a>
-                    <a href="__WEBSITE_URL__" target="_blank" style="color:white;">Website</a>
-                </div>
+                <div>Created by <span style="color:var(--accent);">__OWNER_NAME__</span></div>
                 <div class="copyright-box">© 2026 __APP_NAME__ — Copyright by __OWNER_NAME__</div>
             </div>
 
@@ -1594,56 +1476,56 @@ def home():
                     <div class="hero">
                         <div class="hero-mark"><i class="fas fa-bolt"></i></div>
                         <h1>How can __APP_NAME__ help today?</h1>
-                        <p>Clean answers, study support, code building, and current information with a simple mobile-first layout.</p>
                     </div>
 
                     <div id="home-cards" class="cards-grid"></div>
-
-                    <div class="compact-row">
-                        <button id="mode-smart" class="pill active" onclick="setMode('smart')">Smart</button>
-                        <button id="mode-study" class="pill" onclick="setMode('study')">Study</button>
-                        <button id="mode-code" class="pill" onclick="setMode('code')">Code</button>
-                        <button id="mode-search" class="pill" onclick="setMode('search')">Search</button>
-                    </div>
-
                     <div id="quick-chips" class="chips-row"></div>
                 </div>
             </div>
 
             <div class="input-area">
                 <div class="input-wrap">
-                    <div class="mini-settings">
-                        <select id="answer-length" class="mini-select" onchange="saveBehaviorPrefs()">
-                            <option value="short">Short</option>
-                            <option value="balanced" selected>Balanced</option>
-                            <option value="detailed">Detailed</option>
-                        </select>
-
-                        <select id="tone-select" class="mini-select" onchange="saveBehaviorPrefs()">
-                            <option value="normal">Normal</option>
-                            <option value="friendly">Friendly</option>
-                            <option value="teacher">Teacher</option>
-                            <option value="coder">Coder</option>
-                        </select>
-
-                        <label class="mini-toggle">
-                            <input id="bangla-first" type="checkbox" onchange="saveBehaviorPrefs()">
-                            Bangla First
-                        </label>
-
-                        <label class="mini-toggle">
-                            <input id="memory-enabled" type="checkbox" checked onchange="saveBehaviorPrefs()">
-                            Memory
-                        </label>
-                    </div>
-
                     <div class="input-box">
+                        <button class="tool-btn" onclick="toggleToolsSheet()"><i class="fas fa-plus"></i></button>
                         <textarea id="msg" rows="1" placeholder="Ask __APP_NAME__..." oninput="resizeInput(this)"></textarea>
                         <button class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
                     </div>
                 </div>
             </div>
         </main>
+    </div>
+
+    <div id="tools-sheet" class="sheet">
+        <div class="sheet-grid">
+            <div class="sheet-row-title">Mode</div>
+            <div class="sheet-pills">
+                <button id="mode-smart" class="sheet-pill active" onclick="setMode('smart')">Smart</button>
+                <button id="mode-study" class="sheet-pill" onclick="setMode('study')">Study</button>
+                <button id="mode-code" class="sheet-pill" onclick="setMode('code')">Code</button>
+                <button id="mode-search" class="sheet-pill" onclick="setMode('search')">Search</button>
+            </div>
+
+            <div class="sheet-row-title">Answer length</div>
+            <div class="sheet-pills">
+                <button id="len-short" class="sheet-pill" onclick="setAnswerLength('short')">Short</button>
+                <button id="len-balanced" class="sheet-pill active" onclick="setAnswerLength('balanced')">Balanced</button>
+                <button id="len-detailed" class="sheet-pill" onclick="setAnswerLength('detailed')">Detailed</button>
+            </div>
+
+            <div class="sheet-row-title">Tone</div>
+            <div class="sheet-pills">
+                <button id="tone-normal" class="sheet-pill active" onclick="setTone('normal')">Normal</button>
+                <button id="tone-friendly" class="sheet-pill" onclick="setTone('friendly')">Friendly</button>
+                <button id="tone-teacher" class="sheet-pill" onclick="setTone('teacher')">Teacher</button>
+                <button id="tone-coder" class="sheet-pill" onclick="setTone('coder')">Coder</button>
+            </div>
+
+            <div class="sheet-row-title">Options</div>
+            <div class="sheet-pills">
+                <label class="sheet-toggle"><input id="bangla-first" type="checkbox" onchange="saveBehaviorPrefs()"> Bangla First</label>
+                <label class="sheet-toggle"><input id="memory-enabled" type="checkbox" checked onchange="saveBehaviorPrefs()"> Memory</label>
+            </div>
+        </div>
     </div>
 
     <div id="admin-modal" class="modal-overlay">
@@ -1692,7 +1574,6 @@ def home():
         <div class="modal-card">
             <button class="close-small" onclick="closeRenameModal()"><i class="fas fa-times"></i></button>
             <div style="font-size:24px;font-weight:800;margin-bottom:6px;">Rename Chat</div>
-            <div style="color:var(--muted);margin-bottom:10px;">Enter a new chat title</div>
             <input type="text" id="rename-input" placeholder="New title">
             <div class="modal-row">
                 <button class="btn-cancel" onclick="closeRenameModal()">Cancel</button>
@@ -1738,7 +1619,7 @@ def home():
         const HOME_CARDS = __HOME_CARDS__;
         const QUICK_CHIPS = __QUICK_CHIPS__;
 
-        let chats = JSON.parse(localStorage.getItem("flux_v36_history") || "[]");
+        let chats = JSON.parse(localStorage.getItem("flux_v37_history") || "[]");
         let currentChatId = null;
         let userName = localStorage.getItem("flux_user_name_fixed") || "";
         let awaitingName = false;
@@ -1753,6 +1634,7 @@ def home():
         const historyList = document.getElementById("history-list");
         const sidebar = document.getElementById("sidebar");
         const sidebarOverlay = document.getElementById("sidebar-overlay");
+        const toolsSheet = document.getElementById("tools-sheet");
 
         function initBackground() {
             const canvas = document.getElementById("bg-canvas");
@@ -1766,14 +1648,14 @@ def home():
 
             function makeParticles() {
                 particles = [];
-                const count = Math.max(24, Math.floor(window.innerWidth / 40));
+                const count = Math.max(22, Math.floor(window.innerWidth / 48));
                 for (let i = 0; i < count; i++) {
                     particles.push({
                         x: Math.random() * canvas.width,
                         y: Math.random() * canvas.height,
-                        vx: (Math.random() - 0.5) * 0.18,
-                        vy: (Math.random() - 0.5) * 0.18,
-                        r: Math.random() * 2 + 0.7
+                        vx: (Math.random() - 0.5) * 0.14,
+                        vy: (Math.random() - 0.5) * 0.14,
+                        r: Math.random() * 2 + 0.6
                     });
                 }
             }
@@ -1790,7 +1672,7 @@ def home():
 
                     ctx.beginPath();
                     ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-                    ctx.fillStyle = "rgba(139,92,246,0.68)";
+                    ctx.fillStyle = "rgba(139,92,246,0.62)";
                     ctx.fill();
 
                     for (let j = i + 1; j < particles.length; j++) {
@@ -1798,11 +1680,11 @@ def home():
                         const dx = p.x - q.x;
                         const dy = p.y - q.y;
                         const d = Math.sqrt(dx * dx + dy * dy);
-                        if (d < 118) {
+                        if (d < 110) {
                             ctx.beginPath();
                             ctx.moveTo(p.x, p.y);
                             ctx.lineTo(q.x, q.y);
-                            ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / 118) * 0.15) + ")";
+                            ctx.strokeStyle = "rgba(96,165,250," + ((1 - d / 110) * 0.11) + ")";
                             ctx.lineWidth = 1;
                             ctx.stroke();
                         }
@@ -1826,24 +1708,46 @@ def home():
         }
 
         function loadBehaviorPrefs() {
-            document.getElementById("answer-length").value = localStorage.getItem("flux_answer_length") || "balanced";
-            document.getElementById("tone-select").value = localStorage.getItem("flux_tone") || "normal";
+            const answerLength = localStorage.getItem("flux_answer_length") || "balanced";
+            const tone = localStorage.getItem("flux_tone") || "normal";
             document.getElementById("bangla-first").checked = (localStorage.getItem("flux_bangla_first") || "false") === "true";
             document.getElementById("memory-enabled").checked = (localStorage.getItem("flux_memory_enabled") || "true") === "true";
+            updatePillGroup("len", answerLength);
+            updatePillGroup("tone", tone);
         }
 
         function saveBehaviorPrefs() {
-            localStorage.setItem("flux_answer_length", document.getElementById("answer-length").value);
-            localStorage.setItem("flux_tone", document.getElementById("tone-select").value);
             localStorage.setItem("flux_bangla_first", String(document.getElementById("bangla-first").checked));
             localStorage.setItem("flux_memory_enabled", String(document.getElementById("memory-enabled").checked));
+        }
+
+        function setAnswerLength(value) {
+            localStorage.setItem("flux_answer_length", value);
+            updatePillGroup("len", value);
+        }
+
+        function setTone(value) {
+            localStorage.setItem("flux_tone", value);
+            updatePillGroup("tone", value);
+        }
+
+        function updatePillGroup(prefix, activeValue) {
+            const values = {
+                len: ["short", "balanced", "detailed"],
+                tone: ["normal", "friendly", "teacher", "coder"]
+            };
+            (values[prefix] || []).forEach(function(v) {
+                const el = document.getElementById(prefix + "-" + v);
+                if (!el) return;
+                el.classList.toggle("active", v === activeValue);
+            });
         }
 
         function getBehaviorPrefs() {
             return {
                 response_mode: responseMode,
-                answer_length: document.getElementById("answer-length").value,
-                tone: document.getElementById("tone-select").value,
+                answer_length: localStorage.getItem("flux_answer_length") || "balanced",
+                tone: localStorage.getItem("flux_tone") || "normal",
                 bangla_first: String(document.getElementById("bangla-first").checked),
                 memory_enabled: String(document.getElementById("memory-enabled").checked)
             };
@@ -1862,6 +1766,14 @@ def home():
         function closeSidebar() {
             sidebar.classList.remove("open");
             sidebarOverlay.classList.remove("show");
+        }
+
+        function toggleToolsSheet() {
+            toolsSheet.classList.toggle("open");
+        }
+
+        function closeToolsSheet() {
+            toolsSheet.classList.remove("open");
         }
 
         function openStatusModal(title, text) {
@@ -1930,11 +1842,9 @@ def home():
 
             ["smart", "study", "code", "search"].forEach(function(m) {
                 const el = document.getElementById("mode-" + m);
-                if (el) el.classList.remove("active");
+                if (!el) return;
+                el.classList.toggle("active", m === mode);
             });
-
-            const active = document.getElementById("mode-" + mode);
-            if (active) active.classList.add("active");
         }
 
         function renderHomeCards() {
@@ -1946,7 +1856,7 @@ def home():
                 el.className = "home-card";
                 el.innerHTML =
                     '<div class="home-card-icon"><i class="' + card.icon + '"></i></div>' +
-                    '<div><div class="home-card-title">' + card.title + '</div><div class="home-card-sub">' + card.subtitle + '</div></div>';
+                    '<div><div class="home-card-title">' + card.title + '</div></div>';
                 el.onclick = function() {
                     msgInput.value = card.prompt;
                     resizeInput(msgInput);
@@ -1974,7 +1884,7 @@ def home():
         }
 
         function saveChats() {
-            localStorage.setItem("flux_v36_history", JSON.stringify(chats));
+            localStorage.setItem("flux_v37_history", JSON.stringify(chats));
         }
 
         function filteredChats() {
@@ -2108,7 +2018,7 @@ def home():
         }
 
         function clearChats() {
-            localStorage.removeItem("flux_v36_history");
+            localStorage.removeItem("flux_v37_history");
             location.reload();
         }
 
@@ -2132,22 +2042,6 @@ def home():
             a.download = "flux_chat.txt";
             a.click();
             URL.revokeObjectURL(url);
-        }
-
-        function copyWholeChat() {
-            const chat = chats.find(function(c) { return c.id === currentChatId; });
-            if (!chat || !chat.messages.length) {
-                openStatusModal("Copy Chat", "No active chat to copy.");
-                return;
-            }
-
-            let txt = "";
-            chat.messages.forEach(function(m) {
-                const label = m.role === "user" ? "You" : "__APP_NAME__";
-                txt += label + " [" + (m.created_at || "") + "]\\n" + m.text + "\\n\\n";
-            });
-            navigator.clipboard.writeText(txt);
-            openStatusModal("Copy Chat", "Conversation copied.");
         }
 
         function loadChat(id) {
@@ -2209,10 +2103,7 @@ def home():
             const marker = "Sources:";
             const idx = text.indexOf(marker);
             if (idx === -1) {
-                return {
-                    main: marked.parse(text || ""),
-                    sourcesHtml: ""
-                };
+                return { main: marked.parse(text || ""), sourcesHtml: "" };
             }
 
             const mainText = text.slice(0, idx).trim();
@@ -2236,10 +2127,7 @@ def home():
                 sourceHtml += '</div>';
             }
 
-            return {
-                main: marked.parse(mainText || ""),
-                sourcesHtml: sourceHtml
-            };
+            return { main: marked.parse(mainText || ""), sourcesHtml: sourceHtml };
         }
 
         function addArtifactActions(container, code) {
@@ -2420,7 +2308,6 @@ def home():
                 });
 
                 if (!res.ok) throw new Error("Invalid");
-
                 closeAdminModal();
                 await refreshAdminPanel();
                 openAdminPanel();
@@ -2491,6 +2378,7 @@ def home():
             }
 
             closeSidebar();
+            closeToolsSheet();
             saveBehaviorPrefs();
 
             if (!currentChatId) startNewChat();
