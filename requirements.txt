@@ -2,3 +2,4 @@ Flask
 groq
 pytz
 gunicorn
+requests
