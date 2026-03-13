@@ -160,6 +160,27 @@ def log_event(event_type, payload=None):
         pass
 
 
+def clear_analytics():
+    try:
+        conn = db_connect()
+        conn.execute("DELETE FROM analytics")
+        conn.execute("DELETE FROM feedback")
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
+def clear_all_memory():
+    try:
+        conn = db_connect()
+        conn.execute("DELETE FROM memory")
+        conn.commit()
+        conn.close()
+    except Exception:
+        pass
+
+
 def save_memory(key_name, value_text):
     try:
         conn = db_connect()
@@ -313,18 +334,6 @@ def get_uptime():
     return str(timedelta(seconds=int(time.time() - SERVER_START_TIME)))
 
 
-def get_current_context():
-    tz_dhaka = pytz.timezone("Asia/Dhaka")
-    now_dhaka = datetime.now(tz_dhaka)
-    now_utc = datetime.now(pytz.utc)
-    return {
-        "time_utc": now_utc.strftime("%I:%M %p"),
-        "time_local": now_dhaka.strftime("%I:%M %p"),
-        "date": now_dhaka.strftime("%d %B, %Y"),
-        "weekday": now_dhaka.strftime("%A"),
-    }
-
-
 def is_bad_source(url):
     if not url:
         return True
@@ -463,34 +472,27 @@ def build_live_fallback(query):
     return "I couldn't verify this current information from trusted live sources, so I won't guess."
 
 
-def update_preferences(user_name, preferences, latest_user):
+def update_preferences(user_name, latest_user):
     if user_name:
         save_memory("user_name", user_name)
     save_memory("preferred_language", detect_language(latest_user))
 
 
 def build_system_prompt(user_name, preferences, latest_user, live_results_found):
-    ctx = get_current_context()
-    task_type = detect_task_type(latest_user)
-    preferred_language = load_memory("preferred_language", "auto")
-
     answer_length = preferences.get("answer_length", "balanced")
     tone = preferences.get("tone", "normal")
-    bangla_first = str(preferences.get("bangla_first", "false")).lower() == "true"
     response_mode = preferences.get("response_mode", "smart")
+    preferred_language = load_memory("preferred_language", "auto")
+    task_type = detect_task_type(latest_user)
 
     base = (
         f"You are {APP_NAME}, a smart and helpful AI assistant. "
         f"Your creator and owner is fixed as {OWNER_NAME} (Bangla: {OWNER_NAME_BN}). "
         f"Never contradict this identity. "
         f"Current user name: {user_name}. "
-        f"Current UTC time: {ctx['time_utc']}. "
-        f"Dhaka local time: {ctx['time_local']}. "
-        f"Date: {ctx['date']}. Day: {ctx['weekday']}. "
         f"Preferred language memory: {preferred_language}. "
         f"Answer length preference: {answer_length}. "
         f"Tone preference: {tone}. "
-        f"Bangla-first: {bangla_first}. "
         f"Primary mode: {response_mode}."
     )
 
@@ -511,48 +513,20 @@ Core rules:
 13. For study tasks, explain step by step.
 14. For code tasks, be practical and stable.
 15. Avoid clutter and repetition.
-16. Never guess current political roles.
 """.strip()
 
-    length_rule = "Answer length: balanced."
-    if answer_length == "short":
-        length_rule = "Answer length: short and direct."
-    elif answer_length == "detailed":
-        length_rule = "Answer length: detailed and thorough."
-
-    tone_rule = "Tone: normal helpful assistant."
-    if tone == "friendly":
-        tone_rule = "Tone: warm and friendly."
-    elif tone == "teacher":
-        tone_rule = "Tone: patient teacher."
-    elif tone == "coder":
-        tone_rule = "Tone: practical coding expert."
-
-    mode_rule = "Mode: smart general assistant."
-    if response_mode == "study":
-        mode_rule = "Mode: study. Explain step by step with easy words."
-    elif response_mode == "code":
-        mode_rule = "Mode: code. Be precise and implementation-focused."
-    elif response_mode == "search":
-        mode_rule = "Mode: search-style. Use live results only when available."
-
-    task_text = "Task type: general chat."
-    if task_type == "code":
-        task_text = (
-            "Task type: code. "
-            "If the user asks to build an app or UI, return a single full HTML file inside one ```html code block. "
-            "Put CSS in <style> and JS in <script>. Keep it mobile-friendly and stable."
-        )
-    elif task_type == "math":
-        task_text = "Task type: math. Give the exact answer directly."
+    task_rule = "Task type: general chat."
+    if task_type == "math":
+        task_rule = "Task type: math. Give the exact answer directly."
     elif task_type == "current_info":
-        task_text = (
-            "Task type: current info. Use only the provided trusted live results."
-            if live_results_found else
-            "Task type: current info. Live trusted results are unavailable. Do not guess."
+        task_rule = "Task type: current info. Use only provided live results."
+    elif task_type == "code":
+        task_rule = (
+            "Task type: code. If the user asks to build an app or UI, "
+            "return one full HTML file inside a single ```html code block."
         )
 
-    return "\n\n".join([base, rules, length_rule, tone_rule, mode_rule, task_text])
+    return "\n\n".join([base, rules, task_rule])
 
 
 def build_messages_for_model(messages, user_name, preferences):
@@ -562,7 +536,7 @@ def build_messages_for_model(messages, user_name, preferences):
             latest_user = msg["content"]
             break
 
-    update_preferences(user_name, preferences, latest_user)
+    update_preferences(user_name, latest_user)
 
     search_results = []
     response_mode = preferences.get("response_mode", "smart")
@@ -575,10 +549,8 @@ def build_messages_for_model(messages, user_name, preferences):
         else:
             search_results = search_results[:3]
 
-    live_results_found = bool(search_results)
-
     final_messages = [
-        {"role": "system", "content": build_system_prompt(user_name, preferences, latest_user, live_results_found)},
+        {"role": "system", "content": build_system_prompt(user_name, preferences, latest_user, bool(search_results))},
         {"role": "system", "content": f"Fixed identity facts: app name is {APP_NAME}. Owner and creator is {OWNER_NAME}."},
     ]
 
@@ -592,18 +564,14 @@ def build_messages_for_model(messages, user_name, preferences):
     if search_results:
         final_messages.append({
             "role": "system",
-            "content": (
-                "Verified trusted live results are provided below. "
-                "Answer cleanly in 1-3 short paragraphs. "
-                "Use only these sources.\n\n" + format_search_results_for_prompt(search_results)
-            )
+            "content": "Verified trusted live results are below. Answer from these only.\n\n" + format_search_results_for_prompt(search_results)
         })
 
     final_messages.extend(messages)
     return final_messages, search_results
 
 
-def pick_model(messages, preferences):
+def pick_model(messages):
     latest_user = ""
     for msg in reversed(messages):
         if msg["role"] == "user":
@@ -666,7 +634,7 @@ def generate_groq_stream(messages, user_name, preferences):
             return
 
     final_messages, search_results = build_messages_for_model(messages, user_name, preferences)
-    model_name = pick_model(messages, preferences)
+    model_name = pick_model(messages)
 
     if not GROQ_KEYS:
         yield json.dumps({"answer": "Config error: No Groq API keys found.", "sources": []}, ensure_ascii=False)
@@ -734,11 +702,7 @@ def build_patch_suggestion(problem_text):
             "possible_risk": "low visual regression",
             "risk_level": "low",
             "rollback_method": "theme-related JS revert",
-            "test_prompts": [
-                "Neon theme",
-                "Matrix theme",
-                "Galaxy theme"
-            ],
+            "test_prompts": ["Neon theme", "Matrix theme", "Galaxy theme"],
         }
 
     if "prime minister" in text or "প্রধানমন্ত্রী" in text or "current info" in text:
@@ -768,11 +732,7 @@ def build_patch_suggestion(problem_text):
             "possible_risk": "low",
             "risk_level": "low",
             "rollback_method": "sheet toggle JS revert",
-            "test_prompts": [
-                "tap plus",
-                "tap plus again",
-                "tap outside overlay"
-            ],
+            "test_prompts": ["tap plus", "tap plus again", "tap outside overlay"],
         }
 
     return {
@@ -784,11 +744,7 @@ def build_patch_suggestion(problem_text):
         "possible_risk": "unknown minor regression",
         "risk_level": "medium",
         "rollback_method": "restore previous stable file",
-        "test_prompts": [
-            "latest news today",
-            "2+2",
-            "create html login page"
-        ],
+        "test_prompts": ["latest news today", "2+2", "create html login page"],
     }
 
 
@@ -826,10 +782,7 @@ def create_patch_queue_item(suggestion, notes=""):
 def list_patch_queue(status=None):
     conn = db_connect()
     if status:
-        rows = conn.execute(
-            "SELECT * FROM patch_queue WHERE status = ? ORDER BY id DESC",
-            (status,)
-        ).fetchall()
+        rows = conn.execute("SELECT * FROM patch_queue WHERE status = ? ORDER BY id DESC", (status,)).fetchall()
     else:
         rows = conn.execute("SELECT * FROM patch_queue ORDER BY id DESC").fetchall()
     conn.close()
@@ -857,11 +810,7 @@ def get_patch_item(patch_id):
 
 def update_patch_status(patch_id, status):
     conn = db_connect()
-    time_field = {
-        "approved": "approved_at",
-        "rejected": "rejected_at",
-        "applied": "applied_at",
-    }.get(status)
+    time_field = {"approved": "approved_at", "rejected": "rejected_at", "applied": "applied_at"}.get(status)
 
     if time_field:
         conn.execute(
@@ -878,10 +827,7 @@ def apply_low_risk_patch(item):
     if item["risk_level"] != "low":
         return {"ok": False, "message": "Only low-risk patch auto apply is allowed."}
 
-    # Stable safe apply: config/memory level apply only
-    # Production code overwrite intentionally disabled in this stable version
-    key_name = f"applied_patch_{item['id']}"
-    save_memory(key_name, item["patch_name"])
+    save_memory(f"applied_patch_{item['id']}", item["patch_name"])
     update_patch_status(item["id"], "applied")
     return {"ok": True, "message": "Low-risk patch marked as applied to stable memory layer."}
 
@@ -903,7 +849,7 @@ def home():
 <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
 <style>
 :root{
-  --bg:#050816;--bg2:#0a1130;--text:#eef2ff;--muted:#9aa8c7;--accent:#8b5cf6;--accent2:#60a5fa;--border:rgba(255,255,255,.08);
+  --bg:#050816;--bg2:#0a1130;--text:#eef2ff;--muted:#9aa8c7;--accent:#8b5cf6;--accent2:#60a5fa;--border:rgba(255,255,255,.08);--danger:#ef4444;--success:#22c55e;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-gradient(circle at top,var(--bg2) 0%,var(--bg) 58%,#02040c 100%);color:var(--text);font-family:'Outfit','Noto Sans Bengali',sans-serif}
@@ -911,8 +857,9 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:radial-grad
 #bg-canvas{position:fixed;inset:0;width:100%;height:100%;opacity:.3;pointer-events:none;z-index:0}
 .shell{position:relative;z-index:1;width:100%;height:100%;display:flex;flex-direction:column}
 .topbar{height:64px;display:flex;align-items:center;justify-content:space-between;padding:0 14px;border-bottom:1px solid rgba(255,255,255,.05);background:rgba(5,8,22,.54);backdrop-filter:blur(12px)}
+.top-left{display:flex;align-items:center;gap:10px}
 .top-title{font-size:22px;font-weight:800;background:linear-gradient(135deg,#fff 0%,#d7ccff 55%,#b7d9ff 100%);-webkit-background-clip:text;color:transparent}
-.top-orb{width:46px;height:46px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(22,22,56,.98),rgba(7,7,28,.98));color:var(--accent);box-shadow:0 0 18px rgba(139,92,246,.22);animation:topOrbPulse 3.2s infinite ease-in-out}
+.top-orb{width:46px;height:46px;border-radius:16px;display:flex;align-items:center;justify-content:center;background:linear-gradient(180deg,rgba(22,22,56,.98),rgba(7,7,28,.98));color:var(--accent);box-shadow:0 0 18px rgba(139,92,246,.22);animation:topOrbPulse 3.2s infinite ease-in-out;cursor:pointer}
 .chat-box{flex:1;overflow-y:auto;padding:16px 12px 108px}
 .welcome{max-width:900px;margin:0 auto;text-align:center}
 .hero-orb{width:90px;height:90px;border-radius:24px;display:flex;align-items:center;justify-content:center;margin:20px auto;background:linear-gradient(180deg,rgba(22,22,56,.95),rgba(7,7,28,.95));box-shadow:0 0 42px rgba(139,92,246,.22);color:var(--accent);font-size:34px}
@@ -947,16 +894,36 @@ textarea{flex:1;min-width:0;background:transparent;border:none;outline:none;colo
 .voice-wave{display:flex;gap:4px;align-items:center;height:24px}
 .voice-wave span{width:4px;border-radius:999px;background:linear-gradient(180deg,var(--accent),var(--accent2));animation:wave 1.1s infinite ease-in-out}
 .voice-wave span:nth-child(1){height:10px}.voice-wave span:nth-child(2){height:18px}.voice-wave span:nth-child(3){height:24px}.voice-wave span:nth-child(4){height:16px}.voice-wave span:nth-child(5){height:12px}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:none;align-items:center;justify-content:center;z-index:200;padding:16px}
+.modal-card{width:100%;max-width:460px;background:linear-gradient(180deg,rgba(18,27,52,.98),rgba(8,12,28,.98));border:1px solid var(--border);border-radius:22px;padding:22px;position:relative;box-shadow:0 20px 55px rgba(0,0,0,.36);max-height:90vh;overflow:auto}
+.close-small{position:absolute;top:12px;right:12px;background:transparent;border:none;color:var(--muted);font-size:20px;cursor:pointer}
+.modal-card input,.modal-card textarea{width:100%;margin:12px 0;padding:12px;border-radius:12px;border:1px solid var(--border);background:rgba(255,255,255,.05);color:var(--text);outline:none}
+.modal-row{display:flex;gap:10px;margin-top:12px}
+.modal-row button{flex:1;border:none;border-radius:14px;padding:13px;cursor:pointer;font-size:15px}
+.btn-cancel{background:rgba(255,255,255,.08);color:#fff}
+.btn-confirm{background:var(--success);color:#000}
+.btn-danger{background:var(--danger);color:#fff}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
+.stat-card{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:16px;padding:12px}
+.stat-value{font-size:22px;font-weight:800;margin-bottom:4px}
+.stat-label{color:var(--muted);font-size:12px}
+.patch-item{border:1px solid var(--border);background:rgba(255,255,255,.03);border-radius:14px;padding:12px;margin-top:10px}
+.patch-title{font-weight:700;margin-bottom:6px}
+.patch-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.patch-tests{font-size:13px;color:#dbe4ff}
 @keyframes wave{0%,100%{transform:scaleY(.55);opacity:.6}50%{transform:scaleY(1);opacity:1}}
 @keyframes topOrbPulse{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+@media (max-width:520px){.stats-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <canvas id="bg-canvas"></canvas>
 <div class="app shell">
   <div class="topbar">
-    <div class="top-title">__APP_NAME__</div>
-    <div class="top-orb"><i class="fas fa-bolt"></i></div>
+    <div class="top-left">
+      <div class="top-title">__APP_NAME__</div>
+    </div>
+    <div class="top-orb" onclick="openAdminModal()"><i class="fas fa-bolt"></i></div>
   </div>
 
   <div id="chat-box" class="chat-box">
@@ -974,6 +941,52 @@ textarea{flex:1;min-width:0;background:transparent;border:none;outline:none;colo
         <textarea id="msg" rows="1" placeholder="Ask __APP_NAME__..."></textarea>
         <button id="send-btn" class="send-btn" onclick="sendMessage()"><i class="fas fa-arrow-up"></i></button>
       </div>
+    </div>
+  </div>
+</div>
+
+<div id="admin-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button class="close-small" onclick="closeAdminModal()"><i class="fas fa-times"></i></button>
+    <div style="font-size:28px;font-weight:800;margin-bottom:6px;">Admin Access</div>
+    <div style="color:var(--muted);margin-bottom:10px;">Enter authorization code</div>
+    <input type="password" id="admin-pass" placeholder="Password">
+    <div id="admin-error" style="display:none;color:#fca5a5;margin-bottom:10px;">Invalid password</div>
+    <div class="modal-row">
+      <button class="btn-cancel" onclick="closeAdminModal()">Cancel</button>
+      <button class="btn-confirm" onclick="verifyAdmin()">Login</button>
+    </div>
+  </div>
+</div>
+
+<div id="admin-panel-modal" class="modal-overlay">
+  <div class="modal-card">
+    <button class="close-small" onclick="closeAdminPanel()"><i class="fas fa-times"></i></button>
+    <div style="font-size:30px;font-weight:800;margin-bottom:6px;">Admin Panel</div>
+    <div style="color:var(--muted);margin-bottom:8px;">System overview + AutoPatch</div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div id="stat-messages" class="stat-value">0</div><div class="stat-label">Total Messages</div></div>
+      <div class="stat-card"><div id="stat-uptime" class="stat-value">0</div><div class="stat-label">Uptime</div></div>
+      <div class="stat-card"><div id="stat-system" class="stat-value">ON</div><div class="stat-label">System</div></div>
+      <div class="stat-card"><div id="stat-keys" class="stat-value">0</div><div class="stat-label">Loaded Keys</div></div>
+      <div class="stat-card"><div id="stat-pending" class="stat-value">0</div><div class="stat-label">Pending Patches</div></div>
+      <div class="stat-card"><div id="stat-search" class="stat-value">OFF</div><div class="stat-label">Web Search</div></div>
+    </div>
+
+    <div style="margin-top:18px;font-size:18px;font-weight:700;">Create AutoPatch Suggestion</div>
+    <textarea id="patch-problem" rows="4" placeholder="Describe the problem..."></textarea>
+    <textarea id="patch-notes" rows="2" placeholder="Optional notes..."></textarea>
+    <div class="modal-row">
+      <button class="btn-confirm" onclick="createPatchSuggestion()">Create Suggestion</button>
+    </div>
+
+    <div style="margin-top:18px;font-size:18px;font-weight:700;">Patch Queue</div>
+    <div id="patch-list"></div>
+
+    <div class="modal-row">
+      <button class="btn-danger" onclick="toggleSystemAdmin()">Toggle System</button>
+      <button class="btn-cancel" onclick="closeAdminPanel()">Close</button>
     </div>
   </div>
 </div>
@@ -1175,6 +1188,167 @@ async function sendMessage(){
   }
 }
 
+function openAdminModal(){
+  document.getElementById("admin-error").style.display="none";
+  document.getElementById("admin-pass").value="";
+  document.getElementById("admin-modal").style.display="flex";
+}
+function closeAdminModal(){ document.getElementById("admin-modal").style.display="none"; }
+function openAdminPanel(){ document.getElementById("admin-panel-modal").style.display="flex"; }
+function closeAdminPanel(){ document.getElementById("admin-panel-modal").style.display="none"; }
+
+async function verifyAdmin(){
+  const pass=document.getElementById("admin-pass").value;
+  try{
+    const res=await fetch("/admin/login",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({password:pass})
+    });
+    if(!res.ok) throw new Error("Invalid");
+    closeAdminModal();
+    await refreshAdminPanel();
+    openAdminPanel();
+  }catch(e){
+    document.getElementById("admin-error").style.display="block";
+  }
+}
+
+async function refreshAdminPanel(){
+  try{
+    const statsRes = await fetch("/admin/stats");
+    const stats = await statsRes.json();
+    document.getElementById("stat-messages").textContent = stats.total_messages;
+    document.getElementById("stat-uptime").textContent = stats.uptime;
+    document.getElementById("stat-system").textContent = stats.active ? "ON" : "OFF";
+    document.getElementById("stat-keys").textContent = stats.loaded_keys;
+    document.getElementById("stat-pending").textContent = stats.pending_patches;
+    document.getElementById("stat-search").textContent = stats.tavily_enabled ? "ON" : "OFF";
+
+    const listRes = await fetch("/autopatch/list");
+    const listData = await listRes.json();
+    renderPatchList(listData.patches || []);
+  }catch(e){
+    alert("Failed to load admin panel");
+  }
+}
+
+function renderPatchList(patches){
+  const box=document.getElementById("patch-list");
+  box.innerHTML="";
+  if(!patches.length){
+    box.innerHTML='<div style="color:var(--muted);margin-top:10px;">No patches yet.</div>';
+    return;
+  }
+
+  patches.forEach(p=>{
+    const el=document.createElement("div");
+    el.className="patch-item";
+    const tests=(p.test_prompts || []).map(t=>'<div>• '+t+'</div>').join('');
+    el.innerHTML=
+      '<div class="patch-title">'+p.patch_name+'</div>'+
+      '<div class="patch-meta">Risk: '+p.risk_level+' | Status: '+p.status+'</div>'+
+      '<div><strong>Problem:</strong> '+p.problem_summary+'</div>'+
+      '<div style="margin-top:6px;"><strong>Change:</strong> '+p.exact_change+'</div>'+
+      '<div style="margin-top:6px;"><strong>Benefit:</strong> '+p.expected_benefit+'</div>'+
+      '<div style="margin-top:6px;"><strong>Risk:</strong> '+p.possible_risk+'</div>'+
+      '<div style="margin-top:6px;"><strong>Rollback:</strong> '+p.rollback_method+'</div>'+
+      '<div class="patch-tests" style="margin-top:8px;"><strong>Tests:</strong>'+tests+'</div>';
+
+    const row=document.createElement("div");
+    row.className="modal-row";
+    row.style.marginTop="10px";
+
+    const approve=document.createElement("button");
+    approve.className="btn-confirm";
+    approve.textContent="Approve";
+    approve.onclick=()=>approvePatch(p.id);
+
+    const reject=document.createElement("button");
+    reject.className="btn-danger";
+    reject.textContent="Reject";
+    reject.onclick=()=>rejectPatch(p.id);
+
+    const apply=document.createElement("button");
+    apply.className="btn-cancel";
+    apply.textContent="Apply";
+    apply.onclick=()=>applyPatch(p.id);
+
+    row.appendChild(approve);
+    row.appendChild(reject);
+    row.appendChild(apply);
+    el.appendChild(row);
+    box.appendChild(el);
+  });
+}
+
+async function createPatchSuggestion(){
+  const problem=document.getElementById("patch-problem").value.trim();
+  const notes=document.getElementById("patch-notes").value.trim();
+  if(!problem){
+    alert("Problem লিখো");
+    return;
+  }
+  try{
+    const res=await fetch("/autopatch/suggest",{
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({problem,notes})
+    });
+    const data=await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.error || "Failed");
+    document.getElementById("patch-problem").value="";
+    document.getElementById("patch-notes").value="";
+    await refreshAdminPanel();
+  }catch(e){
+    alert("Patch suggestion failed");
+  }
+}
+
+async function approvePatch(id){
+  try{
+    const res=await fetch("/autopatch/approve/"+id,{method:"POST"});
+    const data=await res.json();
+    if(!res.ok || !data.ok) throw new Error("Failed");
+    await refreshAdminPanel();
+  }catch(e){
+    alert("Approve failed");
+  }
+}
+
+async function rejectPatch(id){
+  try{
+    const res=await fetch("/autopatch/reject/"+id,{method:"POST"});
+    const data=await res.json();
+    if(!res.ok || !data.ok) throw new Error("Failed");
+    await refreshAdminPanel();
+  }catch(e){
+    alert("Reject failed");
+  }
+}
+
+async function applyPatch(id){
+  try{
+    const res=await fetch("/autopatch/apply/"+id,{method:"POST"});
+    const data=await res.json();
+    if(!res.ok || !data.ok) throw new Error(data.message || "Failed");
+    alert(data.message || "Applied");
+    await refreshAdminPanel();
+  }catch(e){
+    alert("Apply failed");
+  }
+}
+
+async function toggleSystemAdmin(){
+  try{
+    const res=await fetch("/admin/toggle_system",{method:"POST"});
+    if(!res.ok) throw new Error("Failed");
+    await refreshAdminPanel();
+  }catch(e){
+    alert("Toggle failed");
+  }
+}
+
 msgInput.addEventListener("keypress", function(e){
   if(e.key==="Enter" && !e.shiftKey){
     e.preventDefault();
@@ -1203,14 +1377,18 @@ msgInput.addEventListener("input", function(){ resizeInput(this); });
       if(p.x<0 || p.x>canvas.width) p.vx*=-1;
       if(p.y<0 || p.y>canvas.height) p.vy*=-1;
       ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle="rgba(96,165,250,0.70)"; ctx.fill();
+      ctx.fillStyle="rgba(96,165,250,0.70)";
+      ctx.fill();
       for(let j=i+1;j<particles.length;j++){
         const q=particles[j];
         const dx=p.x-q.x, dy=p.y-q.y, d=Math.sqrt(dx*dx+dy*dy);
         if(d<90){
-          ctx.beginPath(); ctx.moveTo(p.x,p.y); ctx.lineTo(q.x,q.y);
+          ctx.beginPath();
+          ctx.moveTo(p.x,p.y);
+          ctx.lineTo(q.x,q.y);
           ctx.strokeStyle="rgba(59,130,246,"+((1-d/90)*0.12).toFixed(3)+")";
-          ctx.lineWidth=1; ctx.stroke();
+          ctx.lineWidth=1;
+          ctx.stroke();
         }
       }
     }
@@ -1324,20 +1502,7 @@ def reset_memory():
 @app.route("/admin/clear_analytics", methods=["POST"])
 @admin_required
 def admin_clear_analytics():
-    conn = db_connect()
-    conn.execute("DELETE FROM analytics")
-    conn.execute("DELETE FROM feedback")
-    conn.commit()
-    conn.close()
-    return jsonify({"ok": True})
-
-
-@app.route("/feedback", methods=["POST"])
-def feedback():
-    data = request.get_json(silent=True) or {}
-    feedback_type = sanitize_text(data.get("feedback_type", "unknown"), 30)
-    text = sanitize_text(data.get("text", ""), 2000)
-    log_feedback(feedback_type, {"text": text})
+    clear_analytics()
     return jsonify({"ok": True})
 
 
@@ -1375,8 +1540,7 @@ def autopatch_approve(patch_id):
     result = {"ok": True, "status": "approved_only"}
 
     if AUTO_APPLY_LOW_RISK and item["risk_level"] == "low":
-        apply_result = apply_low_risk_patch(item)
-        result["auto_apply"] = apply_result
+        result["auto_apply"] = apply_low_risk_patch(item)
 
     log_event("autopatch_approve", {"patch_id": patch_id, "patch_name": item["patch_name"]})
     return jsonify(result)
