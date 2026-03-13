@@ -6,6 +6,7 @@ import json
 import re
 import sqlite3
 import requests
+import base64
 from datetime import datetime, timedelta
 from functools import wraps
 from threading import Lock
@@ -31,7 +32,17 @@ SESSION_COOKIE_SECURE = os.getenv("SESSION_COOKIE_SECURE", "true").lower() == "t
 
 SEARCH_PROVIDER = os.getenv("SEARCH_PROVIDER", "").lower()
 TAVILY_API_KEY = os.getenv("TAVILY_API_KEY", "")
+
 AUTO_APPLY_LOW_RISK = os.getenv("AUTO_APPLY_LOW_RISK", "false").lower() == "true"
+
+GITHUB_TOKEN = os.getenv("GITHUB_TOKEN", "")
+GITHUB_OWNER = os.getenv("GITHUB_OWNER", "")
+GITHUB_REPO = os.getenv("GITHUB_REPO", "")
+GITHUB_BRANCH = os.getenv("GITHUB_BRANCH", "main")
+RENDER_DEPLOY_HOOK = os.getenv("RENDER_DEPLOY_HOOK", "")
+APP_BASE_URL = os.getenv("APP_BASE_URL", "").rstrip("/")
+HEALTH_TIMEOUT = int(os.getenv("HEALTH_TIMEOUT", "180"))
+HEALTH_INTERVAL = int(os.getenv("HEALTH_INTERVAL", "8"))
 
 SERVER_START_TIME = time.time()
 TOTAL_MESSAGES = 0
@@ -69,6 +80,12 @@ def db_connect():
     conn = sqlite3.connect(DB_PATH)
     conn.row_factory = sqlite3.Row
     return conn
+
+
+def ensure_column(conn, table_name, column_name, column_def):
+    cols = [r["name"] for r in conn.execute(f"PRAGMA table_info({table_name})").fetchall()]
+    if column_name not in cols:
+        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_def}")
 
 
 def init_db():
@@ -120,17 +137,27 @@ def init_db():
             risk_level TEXT NOT NULL,
             rollback_method TEXT NOT NULL,
             test_prompts TEXT NOT NULL,
-            preview_before TEXT NOT NULL,
-            preview_after TEXT NOT NULL,
+            preview_before TEXT NOT NULL DEFAULT '',
+            preview_after TEXT NOT NULL DEFAULT '',
             status TEXT NOT NULL,
             created_at TEXT NOT NULL,
             approved_at TEXT,
             rejected_at TEXT,
             applied_at TEXT,
-            notes TEXT
+            notes TEXT,
+            github_commit_sha TEXT,
+            rollback_commit_sha TEXT,
+            last_pipeline_log TEXT
         )
         """
     )
+
+    ensure_column(conn, "patch_queue", "preview_before", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "patch_queue", "preview_after", "TEXT NOT NULL DEFAULT ''")
+    ensure_column(conn, "patch_queue", "notes", "TEXT")
+    ensure_column(conn, "patch_queue", "github_commit_sha", "TEXT")
+    ensure_column(conn, "patch_queue", "rollback_commit_sha", "TEXT")
+    ensure_column(conn, "patch_queue", "last_pipeline_log", "TEXT")
 
     conn.commit()
     conn.close()
@@ -432,13 +459,28 @@ def filter_current_info_results(query, results):
         return results[:3]
 
     trusted = []
-    for item in results:
-        if is_trusted_current_source(item["url"]):
-            trusted.append(item)
+    stale_terms = [
+        "sheikh hasina",
+        "2024 protest",
+        "interim government",
+        "former prime minister",
+        "old cabinet",
+        "previous government"
+    ]
 
-    if trusted:
-        return trusted[:3]
-    return []
+    for item in results:
+        title_l = (item.get("title") or "").lower()
+        content_l = (item.get("content") or "").lower()
+
+        if not is_trusted_current_source(item["url"]):
+            continue
+
+        if any(term in title_l or term in content_l for term in stale_terms):
+            continue
+
+        trusted.append(item)
+
+    return trusted[:3]
 
 
 def tavily_search_once(query, topic="general", max_results=6):
@@ -834,18 +876,14 @@ def build_patch_preview(problem_text):
             "patch_name": "Theme State Refresh Fix",
             "problem_summary": "Visual theme change immediately reflects না।",
             "files_change": ["app.py"],
-            "exact_change": "theme state update + active button refresh + surface color refresh",
+            "exact_change": "theme state refresh + UI repaint + close tools sheet after theme tap",
             "expected_benefit": "theme click করার সাথে সাথে UI update হবে",
             "possible_risk": "low visual regression",
             "risk_level": "low",
-            "rollback_method": "theme-related JS revert",
-            "test_prompts": [
-                "Neon theme",
-                "Matrix theme",
-                "Galaxy theme"
-            ],
-            "preview_before": "Theme button চাপার পর active UI বা accent color সঙ্গে সঙ্গে update হচ্ছিল না।",
-            "preview_after": "Theme state save + button active state refresh + accent color surface refresh হবে।"
+            "rollback_method": "restore previous app.py commit",
+            "test_prompts": ["Neon theme", "Matrix theme", "Galaxy theme"],
+            "preview_before": "Theme button চাপার পর কিছু surface একসাথে refresh নাও হতে পারে।",
+            "preview_after": "Theme state save হওয়ার সাথে সাথে surface repaint হবে এবং tools sheet close হবে।"
         }
 
     if "plus" in text or "sheet" in text or "close" in text:
@@ -853,18 +891,14 @@ def build_patch_preview(problem_text):
             "patch_name": "Tools Sheet Toggle Fix",
             "problem_summary": "Plus button open হওয়ার পর tools sheet close হচ্ছে না।",
             "files_change": ["app.py"],
-            "exact_change": "toggle sheet + overlay close logic + same button toggle behavior",
+            "exact_change": "explicit open/close state sync for tools sheet and overlay",
             "expected_benefit": "plus button বা overlay tap দিয়েই close হবে",
             "possible_risk": "low",
             "risk_level": "low",
-            "rollback_method": "sheet toggle JS revert",
-            "test_prompts": [
-                "tap plus",
-                "tap plus again",
-                "tap outside overlay"
-            ],
-            "preview_before": "Tools sheet open হওয়ার পর back button ছাড়া close করা কঠিন ছিল।",
-            "preview_after": "Same plus button আবার চাপলে এবং overlay চাপলেও tools sheet close হবে।"
+            "rollback_method": "restore previous app.py commit",
+            "test_prompts": ["tap plus", "tap plus again", "tap outside overlay"],
+            "preview_before": "Tools sheet toggle state inconsistent হতে পারে।",
+            "preview_after": "Tools sheet open/close deterministic হবে।"
         }
 
     if "prime minister" in text or "office-holder" in text or "প্রধানমন্ত্রী" in text or "current info" in text:
@@ -872,37 +906,42 @@ def build_patch_preview(problem_text):
             "patch_name": "Trusted Current Info Filter",
             "problem_summary": "Current office-holder query তে stale source mix হচ্ছে।",
             "files_change": ["app.py"],
-            "exact_change": "strict trusted-domain filter for office-holder queries only",
+            "exact_change": "strict trusted-domain filter + stale term skip for office-holder queries",
             "expected_benefit": "current role question-এ ভুল কমবে",
-            "possible_risk": "fallback কিছু query-তে বেশি আসতে পারে",
+            "possible_risk": "fallback কিছু query-তে empty result আসতে পারে",
             "risk_level": "medium",
-            "rollback_method": "current-info filter block revert",
+            "rollback_method": "restore previous app.py commit",
             "test_prompts": [
                 "who is the current prime minister of bangladesh",
                 "বাংলাদেশের বর্তমান প্রধানমন্ত্রীর নাম কি",
                 "latest news today"
             ],
-            "preview_before": "General current info search-এ stale বা weak source ঢুকে যাচ্ছিল।",
-            "preview_after": "Office-holder query হলে trusted domain ছাড়া source ধরা হবে না।"
+            "preview_before": "General current info search-এ stale বা weak source ঢুকে যেতে পারে।",
+            "preview_after": "Office-holder query হলে trusted source ছাড়া result ধরা হবে না।"
         }
 
     return {
         "patch_name": "General Stability Patch",
         "problem_summary": problem_text or "General issue detected",
         "files_change": ["app.py"],
-        "exact_change": "reviewed low-risk logic cleanup",
+        "exact_change": "general cleanup preview only",
         "expected_benefit": "better stability",
-        "possible_risk": "unknown minor regression",
-        "risk_level": "medium",
-        "rollback_method": "restore previous stable file",
-        "test_prompts": [
-            "latest news today",
-            "2+2",
-            "create html login page"
-        ],
-        "preview_before": "Current behavior is inconsistent in some cases.",
-        "preview_after": "Logic cleanup will improve stability for repeated operations."
+        "possible_risk": "unknown regression",
+        "risk_level": "high",
+        "rollback_method": "restore previous app.py commit",
+        "test_prompts": ["latest news today", "2+2", "create html login page"],
+        "preview_before": "Current behavior has some unclear issue.",
+        "preview_after": "General logic cleanup would be applied after manual review."
     }
+
+
+def normalize_patch_row(row):
+    if not row:
+        return None
+    item = dict(row)
+    item["files_change"] = json.loads(item["files_change"]) if item.get("files_change") else []
+    item["test_prompts"] = json.loads(item["test_prompts"]) if item.get("test_prompts") else []
+    return item
 
 
 def create_patch_queue_item(suggestion, notes=""):
@@ -935,16 +974,7 @@ def create_patch_queue_item(suggestion, notes=""):
     conn.commit()
     row = conn.execute("SELECT * FROM patch_queue ORDER BY id DESC LIMIT 1").fetchone()
     conn.close()
-    return normalize_patch_row(row) if row else None
-
-
-def normalize_patch_row(row):
-    if not row:
-        return None
-    item = dict(row)
-    item["files_change"] = json.loads(item["files_change"]) if item.get("files_change") else []
-    item["test_prompts"] = json.loads(item["test_prompts"]) if item.get("test_prompts") else []
-    return item
+    return normalize_patch_row(row)
 
 
 def list_patch_queue(status=None):
@@ -981,16 +1011,295 @@ def update_patch_status(patch_id, status):
     conn.close()
 
 
-def apply_low_risk_patch(item):
-    if not item:
-        return {"ok": False, "message": "Patch not found."}
-    if item["risk_level"] != "low":
-        return {"ok": False, "message": "Only low-risk patch can be applied directly in this stable build."}
+def append_patch_log(patch_id, text):
+    conn = db_connect()
+    row = conn.execute("SELECT last_pipeline_log FROM patch_queue WHERE id = ?", (patch_id,)).fetchone()
+    current = row["last_pipeline_log"] if row and row["last_pipeline_log"] else ""
+    line = f"[{datetime.utcnow().isoformat()}] {text}"
+    new_log = (current + "\n" + line).strip() if current else line
+    conn.execute("UPDATE patch_queue SET last_pipeline_log = ? WHERE id = ?", (new_log, patch_id))
+    conn.commit()
+    conn.close()
 
-    save_memory(f"patch_applied_{item['id']}", item["patch_name"])
-    save_memory(f"patch_after_{item['id']}", item["preview_after"])
-    update_patch_status(item["id"], "applied")
-    return {"ok": True, "message": "Low-risk patch marked as applied to stable memory layer."}
+
+def update_patch_commit_info(patch_id, commit_sha=None, rollback_sha=None):
+    conn = db_connect()
+    if commit_sha:
+        conn.execute("UPDATE patch_queue SET github_commit_sha = ? WHERE id = ?", (commit_sha, patch_id))
+    if rollback_sha:
+        conn.execute("UPDATE patch_queue SET rollback_commit_sha = ? WHERE id = ?", (rollback_sha, patch_id))
+    conn.commit()
+    conn.close()
+
+
+def github_headers():
+    return {
+        "Authorization": f"Bearer {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28"
+    }
+
+
+def github_ready():
+    return all([GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH])
+
+
+def github_get_file(path):
+    if not github_ready():
+        raise RuntimeError("GitHub configuration is incomplete.")
+
+    url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/{path}"
+    resp = requests.get(url, headers=github_headers(), params={"ref": GITHUB_BRANCH}, timeout=25)
+    resp.raise_for_status()
+    data = resp.json()
+    content = base64.b64decode(data["content"]).decode("utf-8")
+    return {
+        "path": path,
+        "sha": data["sha"],
+        "content": content
+    }
+
+
+def github_update_file(path, new_content, sha, message):
+    if not github_ready():
+        raise RuntimeError("GitHub configuration is incomplete.")
+
+    url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/{path}"
+    payload = {
+        "message": message,
+        "content": base64.b64encode(new_content.encode("utf-8")).decode("utf-8"),
+        "sha": sha,
+        "branch": GITHUB_BRANCH
+    }
+    resp = requests.put(url, headers=github_headers(), json=payload, timeout=35)
+    resp.raise_for_status()
+    data = resp.json()
+    return {
+        "commit_sha": data.get("commit", {}).get("sha", ""),
+        "content_sha": data.get("content", {}).get("sha", "")
+    }
+
+
+def run_candidate_tests(source_text):
+    compile(source_text, "app.py", "exec")
+
+    required_markers = [
+        'app = Flask(__name__)',
+        '@app.route("/health")',
+        '@app.route("/chat", methods=["POST"])',
+        'def home():'
+    ]
+    missing = [m for m in required_markers if m not in source_text]
+    if missing:
+        raise RuntimeError("Required markers missing: " + ", ".join(missing))
+
+    return True
+
+
+def trigger_render_deploy():
+    if not RENDER_DEPLOY_HOOK:
+        raise RuntimeError("RENDER_DEPLOY_HOOK is missing.")
+    resp = requests.post(RENDER_DEPLOY_HOOK, timeout=20)
+    if resp.status_code >= 400:
+        raise RuntimeError(f"Render deploy hook failed with status {resp.status_code}")
+    return True
+
+
+def wait_for_health(base_url):
+    base = (APP_BASE_URL or base_url or "").rstrip("/")
+    if not base:
+        raise RuntimeError("App base URL not available for health check.")
+
+    target = base + "/health"
+    deadline = time.time() + HEALTH_TIMEOUT
+    last_error = "health timeout"
+
+    while time.time() < deadline:
+        try:
+            resp = requests.get(target, timeout=10)
+            if resp.status_code == 200:
+                data = resp.json()
+                if data.get("ok") is True:
+                    return True, data
+            last_error = f"status={resp.status_code}"
+        except Exception as e:
+            last_error = str(e)
+        time.sleep(HEALTH_INTERVAL)
+
+    return False, {"error": last_error}
+
+
+def regex_replace_once(source_text, pattern, replacement, label):
+    new_text, count = re.subn(pattern, replacement, source_text, flags=re.MULTILINE | re.DOTALL)
+    if count != 1:
+        raise RuntimeError(f"Patch transform failed for: {label}")
+    return new_text
+
+
+def apply_patch_transform(source_text, patch_item):
+    name = patch_item["patch_name"]
+
+    if name == "Theme State Refresh Fix":
+        pattern = r"""function setVisualThemename \{
+            currentVisualTheme = name;
+            localStorage\.setItem"flux_visual_theme", name;
+            updateThemeButtons;
+            applyVisualThemeSurface;
+        \}"""
+        replacement = """function setVisualTheme(name) {
+            currentVisualTheme = name;
+            localStorage.setItem("flux_visual_theme", name);
+            updateThemeButtons();
+            applyVisualThemeSurface();
+            applyBodyThemeByMode();
+            renderQuickChips();
+            closeToolsSheet();
+            document.body.offsetHeight;
+        }"""
+        return regex_replace_once(source_text, pattern, replacement, "theme patch")
+
+    if name == "Tools Sheet Toggle Fix":
+        pattern = r"""function toggleToolsSheet \{
+            toolsSheet\.classList\.toggle"open";
+            sheetOverlay\.classList\.toggle"show";
+        \}"""
+        replacement = """function toggleToolsSheet() {
+            const willOpen = !toolsSheet.classList.contains("open");
+            toolsSheet.classList.toggle("open", willOpen);
+            sheetOverlay.classList.toggle("show", willOpen);
+        }"""
+        return regex_replace_once(source_text, pattern, replacement, "tools sheet patch")
+
+    if name == "Trusted Current Info Filter":
+        pattern = r"""def filter_current_info_resultsquery, results:
+    if not is_office_holder_queryquery:
+        return results:3
+
+    trusted = 
+    stale_terms = 
+        "sheikh hasina",
+        "2024 protest",
+        "interim government",
+        "former prime minister",
+        "old cabinet",
+        "previous government"
+   
+
+    for item in results:
+        title_l = item\.get\("title" or ""\)\.lower
+        content_l = item\.get\("content" or ""\)\.lower
+
+        if not is_trusted_current_sourceitem\["url"\):
+            continue
+
+        if anyterm in title_l or term in content_l for term in stale_terms:
+            continue
+
+        trusted\.appenditem
+
+    return trusted:3"""
+        replacement = """def filter_current_info_results(query, results):
+    if not is_office_holder_query(query):
+        return results[:3]
+
+    trusted = []
+    stale_terms = [
+        "sheikh hasina",
+        "2024 protest",
+        "interim government",
+        "former prime minister",
+        "old cabinet",
+        "previous government",
+        "old government",
+        "archived profile",
+        "former cabinet"
+    ]
+
+    for item in results:
+        title_l = (item.get("title") or "").lower()
+        content_l = (item.get("content") or "").lower()
+
+        if not is_trusted_current_source(item["url"]):
+            continue
+
+        if any(term in title_l or term in content_l for term in stale_terms):
+            continue
+
+        trusted.append(item)
+
+    return trusted[:3]"""
+        return regex_replace_once(source_text, pattern, replacement, "current info patch")
+
+    raise RuntimeError("This patch type is preview-only and not directly auto-applicable.")
+
+
+def run_patch_pipeline(patch_item, base_url):
+    patch_id = patch_item["id"]
+    append_patch_log(patch_id, "Pipeline started")
+
+    repo_file = github_get_file("app.py")
+    original_content = repo_file["content"]
+    original_sha = repo_file["sha"]
+    append_patch_log(patch_id, "Fetched app.py from GitHub")
+
+    candidate = apply_patch_transform(original_content, patch_item)
+    if candidate == original_content:
+        raise RuntimeError("Patch produced no code changes.")
+
+    run_candidate_tests(candidate)
+    append_patch_log(patch_id, "Local syntax/smoke tests passed")
+
+    commit_message = f"Flux AutoPatch #{patch_id}: {patch_item['patch_name']}"
+    commit_data = github_update_file("app.py", candidate, original_sha, commit_message)
+    append_patch_log(patch_id, f"Committed to GitHub: {commit_data['commit_sha']}")
+    update_patch_commit_info(patch_id, commit_sha=commit_data["commit_sha"])
+
+    trigger_render_deploy()
+    append_patch_log(patch_id, "Render deploy triggered")
+
+    healthy, data = wait_for_health(base_url)
+    if healthy:
+        append_patch_log(patch_id, "Health check passed")
+        update_patch_status(patch_id, "applied")
+        save_memory(f"patch_applied_{patch_id}", patch_item["patch_name"])
+        return {
+            "ok": True,
+            "message": f"Patch deployed successfully. Commit: {commit_data['commit_sha']}",
+            "commit_sha": commit_data["commit_sha"]
+        }
+
+    append_patch_log(patch_id, "Health check failed, rollback started")
+
+    rollback_commit = github_update_file(
+        "app.py",
+        original_content,
+        commit_data["content_sha"],
+        f"Flux Rollback #{patch_id}: restore previous stable app.py"
+    )
+    update_patch_commit_info(patch_id, rollback_sha=rollback_commit["commit_sha"])
+    append_patch_log(patch_id, f"Rollback committed: {rollback_commit['commit_sha']}")
+
+    trigger_render_deploy()
+    append_patch_log(patch_id, "Rollback deploy triggered")
+
+    healthy_after_rollback, rb_data = wait_for_health(base_url)
+    if healthy_after_rollback:
+        update_patch_status(patch_id, "rolled_back")
+        append_patch_log(patch_id, "Rollback health check passed")
+        return {
+            "ok": False,
+            "message": "Patch failed health check. Rollback completed successfully.",
+            "rollback_commit_sha": rollback_commit["commit_sha"]
+        }
+
+    update_patch_status(patch_id, "failed")
+    append_patch_log(patch_id, "Rollback health check also failed")
+    return {
+        "ok": False,
+        "message": "Patch failed and rollback may need manual review.",
+        "rollback_commit_sha": rollback_commit["commit_sha"],
+        "health_error": data
+    }
 
 
 @app.route("/")
@@ -1119,7 +1428,6 @@ def home():
             box-shadow: 0 0 18px rgba(139,92,246,0.22);
             overflow: visible;
             animation: topOrbPulse 3.2s infinite ease-in-out;
-            cursor: pointer;
         }
 
         .top-orb::before {
@@ -1887,6 +2195,14 @@ def home():
             margin-bottom: 4px;
         }
 
+        .pipeline-log {
+            white-space: pre-wrap;
+            max-height: 180px;
+            overflow-y: auto;
+            font-size: 12px;
+            color: #d7e3ff;
+        }
+
         .particle {
             position: fixed;
             width: 10px;
@@ -2088,7 +2404,7 @@ def home():
         <div class="modal-card large">
             <button class="close-small" onclick="closeAdminPanel()"><i class="fas fa-times"></i></button>
             <div style="font-size:30px;font-weight:800;margin-bottom:6px;">Admin Panel</div>
-            <div style="color:var(--muted);margin-bottom:8px;">System overview + AutoPatch</div>
+            <div style="color:var(--muted);margin-bottom:8px;">System overview + AutoPatch Pipeline</div>
 
             <div class="stats-grid">
                 <div class="stat-card"><div id="stat-messages" class="stat-value">0</div><div class="stat-label">Total Messages</div></div>
@@ -2181,6 +2497,7 @@ def home():
         let renameChatId = null;
         let editingMessageMeta = null;
         let currentVisualTheme = localStorage.getItem("flux_visual_theme") || "neon";
+        let suggestionTimer = null;
 
         const chatBox = document.getElementById("chat-box");
         const welcome = document.getElementById("welcome");
@@ -2192,7 +2509,6 @@ def home():
         const toolsSheet = document.getElementById("tools-sheet");
         const inputBox = document.getElementById("input-box");
         const sendBtn = document.getElementById("send-btn");
-        let suggestionTimer = null;
 
         function shuffleArray(arr) {
             const a = [...arr];
@@ -2954,6 +3270,10 @@ def home():
                 tests += "<div>• " + t + "</div>";
             });
 
+            const logBox = p.last_pipeline_log
+                ? '<div class="patch-preview-box"><div class="patch-label">Pipeline Log</div><div class="pipeline-log">' + p.last_pipeline_log + '</div></div>'
+                : '';
+
             return '' +
                 '<div class="patch-item">' +
                 '<div class="patch-title">' + p.patch_name + '</div>' +
@@ -2975,6 +3295,7 @@ def home():
                     '<div class="patch-label">Tests</div>' +
                     '<div>' + tests + '</div>' +
                 '</div>' +
+                logBox +
                 '<div class="modal-row">' +
                     '<button class="btn-confirm" onclick="approvePatch(' + p.id + ')">Approve</button>' +
                     '<button class="btn-danger" onclick="rejectPatch(' + p.id + ')">Reject</button>' +
@@ -3081,7 +3402,7 @@ def home():
                 const data = await res.json();
                 if (!res.ok || !data.ok) throw new Error(data.error || "Failed");
                 await refreshAdminPanel();
-                openStatusModal("AutoPatch", "Patch approved.");
+                openStatusModal("AutoPatch", data.message || "Patch approved.");
             } catch (e) {
                 openStatusModal("AutoPatch", "Approve failed.");
             }
@@ -3101,11 +3422,15 @@ def home():
 
         async function applyPatch(id) {
             try {
+                openStatusModal("AutoPatch", "Pipeline চলছে... GitHub commit → test → deploy → health check");
                 const res = await fetch("/autopatch/apply/" + id, { method: "POST" });
                 const data = await res.json();
-                if (!res.ok || !data.ok) throw new Error(data.message || "Failed");
                 await refreshAdminPanel();
-                openStatusModal("AutoPatch", data.message || "Applied");
+                if (!res.ok || !data.ok) {
+                    openStatusModal("AutoPatch", data.message || "Apply failed");
+                    return;
+                }
+                openStatusModal("AutoPatch", data.message || "Patch pipeline completed.");
             } catch (e) {
                 openStatusModal("AutoPatch", "Apply failed");
             }
@@ -3207,16 +3532,7 @@ def home():
                     throw new Error(txt || "Request failed");
                 }
 
-                const reader = res.body.getReader();
-                const decoder = new TextDecoder();
-                let raw = "";
-
-                while (true) {
-                    const result = await reader.read();
-                    if (result.done) break;
-                    raw += decoder.decode(result.value);
-                }
-
+                const raw = await res.text();
                 let parsed = { answer: "System error.", sources: [] };
                 try {
                     parsed = JSON.parse(raw);
@@ -3266,7 +3582,6 @@ def home():
 </body>
 </html>
 """
-
     html = html.replace("__APP_NAME__", APP_NAME)
     html = html.replace("__OWNER_NAME__", OWNER_NAME)
     html = html.replace("__VERSION__", VERSION)
@@ -3366,11 +3681,14 @@ def autopatch_approve(patch_id):
         return jsonify({"ok": False, "error": "Patch not found"}), 404
 
     update_patch_status(patch_id, "approved")
-    if AUTO_APPLY_LOW_RISK and item["risk_level"] == "low":
-        result = apply_low_risk_patch(item)
-        return jsonify({"ok": True, "auto_apply": result})
+    append_patch_log(patch_id, "Patch approved by admin")
 
-    return jsonify({"ok": True, "status": "approved"})
+    if AUTO_APPLY_LOW_RISK and item["risk_level"] == "low":
+        base_url = request.host_url.rstrip("/")
+        result = run_patch_pipeline(item, base_url)
+        return jsonify(result)
+
+    return jsonify({"ok": True, "message": "Patch approved."})
 
 
 @app.route("/autopatch/reject/<int:patch_id>", methods=["POST"])
@@ -3381,6 +3699,7 @@ def autopatch_reject(patch_id):
         return jsonify({"ok": False, "error": "Patch not found"}), 404
 
     update_patch_status(patch_id, "rejected")
+    append_patch_log(patch_id, "Patch rejected by admin")
     return jsonify({"ok": True, "status": "rejected"})
 
 
@@ -3391,9 +3710,25 @@ def autopatch_apply(patch_id):
     if not item:
         return jsonify({"ok": False, "message": "Patch not found"}), 404
 
-    result = apply_low_risk_patch(item)
-    status_code = 200 if result.get("ok") else 400
-    return jsonify(result), status_code
+    if item["status"] not in {"approved", "pending"}:
+        return jsonify({"ok": False, "message": f"Patch status is {item['status']}. Apply allowed only for pending/approved."}), 400
+
+    if item["risk_level"] == "high":
+        return jsonify({"ok": False, "message": "High-risk patch is preview-only in this build."}), 400
+
+    if item["status"] == "pending":
+        update_patch_status(patch_id, "approved")
+        append_patch_log(patch_id, "Patch auto-approved during apply")
+
+    try:
+        base_url = request.host_url.rstrip("/")
+        result = run_patch_pipeline(get_patch_item(patch_id), base_url)
+        status_code = 200 if result.get("ok") else 400
+        return jsonify(result), status_code
+    except Exception as e:
+        append_patch_log(patch_id, f"Pipeline error: {str(e)}")
+        update_patch_status(patch_id, "failed")
+        return jsonify({"ok": False, "message": f"Pipeline failed: {str(e)}"}), 400
 
 
 @app.route("/feedback", methods=["POST"])
