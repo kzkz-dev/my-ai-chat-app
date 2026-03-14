@@ -15,7 +15,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "41.0.0"
+VERSION = "41.1.0"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -68,6 +68,13 @@ BAD_SOURCE_DOMAINS = [
     "m.wikipedia.org",
     "wikidata.org",
 ]
+
+KNOWN_AUTO_PATCHES = {
+    "Export Chat Coming Soon Patch",
+    "Theme State Refresh Fix",
+    "Tools Sheet Toggle Fix",
+    "Trusted Current Info Filter",
+}
 
 app = Flask(__name__)
 app.secret_key = FLASK_SECRET_KEY
@@ -465,7 +472,9 @@ def filter_current_info_results(query, results):
         "interim government",
         "former prime minister",
         "old cabinet",
-        "previous government"
+        "previous government",
+        "archived profile",
+        "old government"
     ]
 
     for item in results:
@@ -845,6 +854,118 @@ def generate_groq_stream(messages, user_name, preferences):
         }, ensure_ascii=False)
 
 
+def extract_json_object(text):
+    if not text:
+        return None
+    start = text.find("{")
+    end = text.rfind("}")
+    if start == -1 or end == -1 or end <= start:
+        return None
+    raw = text[start:end + 1]
+    try:
+        return json.loads(raw)
+    except Exception:
+        return None
+
+
+def normalize_patch_suggestion(obj):
+    if not isinstance(obj, dict):
+        return None
+
+    patch_name = sanitize_text(obj.get("patch_name", "General Stability Patch"), 120)
+    problem_summary = sanitize_text(obj.get("problem_summary", "General issue detected"), 400)
+    exact_change = sanitize_text(obj.get("exact_change", "general cleanup preview only"), 300)
+    expected_benefit = sanitize_text(obj.get("expected_benefit", "better stability"), 240)
+    possible_risk = sanitize_text(obj.get("possible_risk", "unknown regression"), 240)
+    rollback_method = sanitize_text(obj.get("rollback_method", "restore previous app.py commit"), 220)
+    preview_before = sanitize_text(obj.get("preview_before", "Current behavior has some unclear issue."), 300)
+    preview_after = sanitize_text(obj.get("preview_after", "General logic cleanup would be applied after manual review."), 300)
+
+    risk_level = sanitize_text(obj.get("risk_level", "high"), 20).lower()
+    if risk_level not in {"low", "medium", "high"}:
+        risk_level = "high"
+
+    files_change = obj.get("files_change", ["app.py"])
+    if not isinstance(files_change, list) or not files_change:
+        files_change = ["app.py"]
+    files_change = [sanitize_text(x, 80) for x in files_change[:5] if sanitize_text(x, 80)]
+
+    test_prompts = obj.get("test_prompts", ["latest news today", "2+2", "create html login page"])
+    if not isinstance(test_prompts, list) or not test_prompts:
+        test_prompts = ["latest news today", "2+2", "create html login page"]
+    test_prompts = [sanitize_text(x, 120) for x in test_prompts[:6] if sanitize_text(x, 120)]
+
+    if patch_name not in KNOWN_AUTO_PATCHES:
+        risk_level = "high"
+
+    return {
+        "patch_name": patch_name,
+        "problem_summary": problem_summary,
+        "files_change": files_change or ["app.py"],
+        "exact_change": exact_change,
+        "expected_benefit": expected_benefit,
+        "possible_risk": possible_risk,
+        "risk_level": risk_level,
+        "rollback_method": rollback_method,
+        "test_prompts": test_prompts,
+        "preview_before": preview_before,
+        "preview_after": preview_after
+    }
+
+
+def ai_generate_patch_suggestion(problem_text, notes=""):
+    if not GROQ_KEYS:
+        return None
+
+    api_key = get_available_key()
+    if not api_key:
+        return None
+
+    prompt = f"""
+You are generating a patch suggestion object for a Flask app.
+Return JSON only.
+Allowed keys:
+patch_name, problem_summary, files_change, exact_change, expected_benefit,
+possible_risk, risk_level, rollback_method, test_prompts, preview_before, preview_after
+
+Rules:
+- files_change should usually be ["app.py"]
+- risk_level must be low, medium, or high
+- If the problem is about export chat coming soon, use exact patch_name: "Export Chat Coming Soon Patch"
+- If the problem is about theme refresh, use exact patch_name: "Theme State Refresh Fix"
+- If the problem is about plus/tools sheet close, use exact patch_name: "Tools Sheet Toggle Fix"
+- If the problem is about current prime minister / office-holder wrong info, use exact patch_name: "Trusted Current Info Filter"
+- If unsure, still suggest something, but unknown patch names will be preview-only.
+
+Problem:
+{problem_text}
+
+Notes:
+{notes}
+""".strip()
+
+    try:
+        client = Groq(api_key=api_key)
+        resp = client.chat.completions.create(
+            model=MODEL_FAST,
+            messages=[
+                {"role": "system", "content": "Return only a valid JSON object."},
+                {"role": "user", "content": prompt}
+            ],
+            temperature=0.2,
+            max_tokens=800
+        )
+        text = resp.choices[0].message.content if resp.choices else ""
+        parsed = extract_json_object(text)
+        result = normalize_patch_suggestion(parsed)
+        mark_key_success(api_key)
+        return result
+    except Exception as e:
+        mark_key_failure(api_key)
+        log_event("patch_ai_suggest_error", {"error": str(e), "problem": problem_text})
+        return None
+
+
 HOME_CARDS = [
     {"title": "Study Help", "prompt": "Explain this topic step by step for a student", "icon": "fas fa-graduation-cap"},
     {"title": "Build App", "prompt": "Create a modern mobile-friendly app in HTML", "icon": "fas fa-code"},
@@ -868,8 +989,23 @@ SUGGESTION_POOL = [
 ]
 
 
-def build_patch_preview(problem_text):
+def build_patch_preview(problem_text, notes=""):
     text = (problem_text or "").lower()
+
+    if "export chat" in text or ("export" in text and "coming soon" in text):
+        return {
+            "patch_name": "Export Chat Coming Soon Patch",
+            "problem_summary": "Export Chat feature mobile-e stable না, temporary coming soon message দরকার।",
+            "files_change": ["app.py"],
+            "exact_change": "exportCurrentChat action-ke temporary modal message mode-e niye jawa",
+            "expected_benefit": "broken export behavior বন্ধ হবে, clean UX থাকবে",
+            "possible_risk": "very low",
+            "risk_level": "low",
+            "rollback_method": "restore previous app.py commit",
+            "test_prompts": ["tap Export Chat", "open sidebar", "export current chat"],
+            "preview_before": "Export Chat click করলে mobile-e stable download/share নাও হতে পারে।",
+            "preview_after": "Export Chat click করলে status modal-e 'Export Chat is coming soon.' show হবে।"
+        }
 
     if "theme" in text:
         return {
@@ -919,6 +1055,10 @@ def build_patch_preview(problem_text):
             "preview_before": "General current info search-এ stale বা weak source ঢুকে যেতে পারে।",
             "preview_after": "Office-holder query হলে trusted source ছাড়া result ধরা হবে না।"
         }
+
+    ai_guess = ai_generate_patch_suggestion(problem_text, notes)
+    if ai_guess:
+        return ai_guess
 
     return {
         "patch_name": "General Stability Patch",
@@ -982,7 +1122,7 @@ def list_patch_queue(status=None):
     if status:
         rows = conn.execute("SELECT * FROM patch_queue WHERE status = ? ORDER BY id DESC", (status,)).fetchall()
     else:
-        rows = conn.execute("SELECT * FROM patch_queue ORDER BY id DESC").fetchall()
+        rows = conn.execute("SELECT * FROM patch_queue WHERE status != 'rejected' ORDER BY id DESC").fetchall()
     conn.close()
     return [normalize_patch_row(r) for r in rows]
 
@@ -992,6 +1132,13 @@ def get_patch_item(patch_id):
     row = conn.execute("SELECT * FROM patch_queue WHERE id = ?", (patch_id,)).fetchone()
     conn.close()
     return normalize_patch_row(row)
+
+
+def delete_patch_item(patch_id):
+    conn = db_connect()
+    conn.execute("DELETE FROM patch_queue WHERE id = ?", (patch_id,))
+    conn.commit()
+    conn.close()
 
 
 def update_patch_status(patch_id, status):
@@ -1139,6 +1286,15 @@ def regex_replace_once(source_text, pattern, replacement, label):
 def apply_patch_transform(source_text, patch_item):
     name = patch_item["patch_name"]
 
+    if name == "Export Chat Coming Soon Patch":
+        pattern = r"""function exportCurrentChat \{
+[\s\S]*?
+        \}"""
+        replacement = """function exportCurrentChat() {
+            openStatusModal("Export Chat", "Export Chat is coming soon.");
+        }"""
+        return regex_replace_once(source_text, pattern, replacement, "export chat patch")
+
     if name == "Theme State Refresh Fix":
         pattern = r"""function setVisualThemename \{
             currentVisualTheme = name;
@@ -1182,7 +1338,9 @@ def apply_patch_transform(source_text, patch_item):
         "interim government",
         "former prime minister",
         "old cabinet",
-        "previous government"
+        "previous government",
+        "archived profile",
+        "old government"
    
 
     for item in results:
@@ -1210,9 +1368,10 @@ def apply_patch_transform(source_text, patch_item):
         "former prime minister",
         "old cabinet",
         "previous government",
-        "old government",
         "archived profile",
-        "former cabinet"
+        "old government",
+        "former cabinet",
+        "old profile"
     ]
 
     for item in results:
@@ -3009,13 +3168,23 @@ def home():
                 txt += "\\n";
             });
 
-            const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.href = url;
-            a.download = "flux_chat.txt";
-            a.click();
-            URL.revokeObjectURL(url);
+            try {
+                const blob = new Blob([txt], { type: "text/plain;charset=utf-8" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "flux_chat.txt";
+                a.style.display = "none";
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                }, 300);
+                openStatusModal("Export", "Chat export started.");
+            } catch (e) {
+                openStatusModal("Export", "Export Chat is not stable on this device right now.");
+            }
         }
 
         function loadChat(id) {
@@ -3414,7 +3583,7 @@ def home():
                 const data = await res.json();
                 if (!res.ok || !data.ok) throw new Error(data.error || "Failed");
                 await refreshAdminPanel();
-                openStatusModal("AutoPatch", "Patch rejected.");
+                openStatusModal("AutoPatch", data.message || "Patch removed.");
             } catch (e) {
                 openStatusModal("AutoPatch", "Reject failed.");
             }
@@ -3582,6 +3751,7 @@ def home():
 </body>
 </html>
 """
+
     html = html.replace("__APP_NAME__", APP_NAME)
     html = html.replace("__OWNER_NAME__", OWNER_NAME)
     html = html.replace("__VERSION__", VERSION)
@@ -3660,7 +3830,7 @@ def autopatch_suggest():
     if not problem:
         return jsonify({"ok": False, "error": "problem is required"}), 400
 
-    suggestion = build_patch_preview(problem)
+    suggestion = build_patch_preview(problem, notes)
     row = create_patch_queue_item(suggestion, notes)
     log_event("autopatch_suggest", {"problem": problem, "patch_name": suggestion["patch_name"]})
     return jsonify({"ok": True, "patch": row})
@@ -3683,10 +3853,11 @@ def autopatch_approve(patch_id):
     update_patch_status(patch_id, "approved")
     append_patch_log(patch_id, "Patch approved by admin")
 
-    if AUTO_APPLY_LOW_RISK and item["risk_level"] == "low":
+    if AUTO_APPLY_LOW_RISK and item["risk_level"] == "low" and item["patch_name"] in KNOWN_AUTO_PATCHES:
         base_url = request.host_url.rstrip("/")
         result = run_patch_pipeline(item, base_url)
-        return jsonify(result)
+        status_code = 200 if result.get("ok") else 400
+        return jsonify(result), status_code
 
     return jsonify({"ok": True, "message": "Patch approved."})
 
@@ -3698,9 +3869,9 @@ def autopatch_reject(patch_id):
     if not item:
         return jsonify({"ok": False, "error": "Patch not found"}), 404
 
-    update_patch_status(patch_id, "rejected")
-    append_patch_log(patch_id, "Patch rejected by admin")
-    return jsonify({"ok": True, "status": "rejected"})
+    log_event("autopatch_rejected", {"id": patch_id, "patch_name": item["patch_name"]})
+    delete_patch_item(patch_id)
+    return jsonify({"ok": True, "message": "Patch removed from queue."})
 
 
 @app.route("/autopatch/apply/<int:patch_id>", methods=["POST"])
@@ -3712,6 +3883,9 @@ def autopatch_apply(patch_id):
 
     if item["status"] not in {"approved", "pending"}:
         return jsonify({"ok": False, "message": f"Patch status is {item['status']}. Apply allowed only for pending/approved."}), 400
+
+    if item["patch_name"] not in KNOWN_AUTO_PATCHES:
+        return jsonify({"ok": False, "message": "This AI suggestion is preview-only right now. Known patches only can auto-apply."}), 400
 
     if item["risk_level"] == "high":
         return jsonify({"ok": False, "message": "High-risk patch is preview-only in this build."}), 400
