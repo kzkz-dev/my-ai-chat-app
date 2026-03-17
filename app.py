@@ -15,7 +15,7 @@ import pytz
 APP_NAME = "Flux"
 OWNER_NAME = "KAWCHUR"
 OWNER_NAME_BN = "কাওছুর"
-VERSION = "41.1.0"
+VERSION = "41.1.1"
 
 FACEBOOK_URL = "https://www.facebook.com/share/1CBWMUaou9/"
 WEBSITE_URL = "https://sites.google.com/view/flux-ai-app/home"
@@ -474,7 +474,9 @@ def filter_current_info_results(query, results):
         "old cabinet",
         "previous government",
         "archived profile",
-        "old government"
+        "old government",
+        "former cabinet",
+        "old profile"
     ]
 
     for item in results:
@@ -1191,13 +1193,131 @@ def github_ready():
     return all([GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, GITHUB_BRANCH])
 
 
+def github_masked_token():
+    if not GITHUB_TOKEN:
+        return ""
+    if len(GITHUB_TOKEN) <= 8:
+        return "***"
+    return GITHUB_TOKEN[:4] + "..." + GITHUB_TOKEN[-4:]
+
+
+def github_error_text(resp):
+    try:
+        data = resp.json()
+        if isinstance(data, dict):
+            return data.get("message") or json.dumps(data, ensure_ascii=False)
+        return str(data)
+    except Exception:
+        return (resp.text or "").strip()[:300]
+
+
+def github_debug_snapshot(path="app.py"):
+    info = {
+        "owner": GITHUB_OWNER,
+        "repo": GITHUB_REPO,
+        "branch": GITHUB_BRANCH,
+        "path": path,
+        "token_present": bool(GITHUB_TOKEN),
+        "token_preview": github_masked_token(),
+        "github_ready": github_ready(),
+    }
+
+    if not github_ready():
+        return info
+
+    base = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
+
+    try:
+        repo_resp = requests.get(base, headers=github_headers(), timeout=20)
+        info["repo_status"] = repo_resp.status_code
+        if repo_resp.ok:
+            repo_data = repo_resp.json()
+            info["repo_found"] = True
+            info["default_branch"] = repo_data.get("default_branch", "")
+            info["private"] = bool(repo_data.get("private", False))
+        else:
+            info["repo_found"] = False
+            info["repo_error"] = github_error_text(repo_resp)
+    except Exception as e:
+        info["repo_found"] = False
+        info["repo_error"] = str(e)
+
+    try:
+        branch_resp = requests.get(
+            f"{base}/branches/{GITHUB_BRANCH}",
+            headers=github_headers(),
+            timeout=20
+        )
+        info["branch_status"] = branch_resp.status_code
+        if branch_resp.ok:
+            branch_data = branch_resp.json()
+            info["branch_found"] = True
+            info["branch_commit_sha"] = branch_data.get("commit", {}).get("sha", "")
+        else:
+            info["branch_found"] = False
+            info["branch_error"] = github_error_text(branch_resp)
+    except Exception as e:
+        info["branch_found"] = False
+        info["branch_error"] = str(e)
+
+    try:
+        file_resp = requests.get(
+            f"{base}/contents/{path}",
+            headers=github_headers(),
+            params={"ref": GITHUB_BRANCH},
+            timeout=20
+        )
+        info["file_status"] = file_resp.status_code
+        if file_resp.ok:
+            file_data = file_resp.json()
+            info["file_found"] = True
+            info["file_sha"] = file_data.get("sha", "")
+            info["file_name"] = file_data.get("name", "")
+        else:
+            info["file_found"] = False
+            info["file_error"] = github_error_text(file_resp)
+    except Exception as e:
+        info["file_found"] = False
+        info["file_error"] = str(e)
+
+    return info
+
+
 def github_get_file(path):
     if not github_ready():
-        raise RuntimeError("GitHub configuration is incomplete.")
+        raise RuntimeError("GitHub config incomplete. Check GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, and GITHUB_BRANCH.")
 
-    url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/{path}"
+    base = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}"
+
+    repo_resp = requests.get(base, headers=github_headers(), timeout=25)
+    if repo_resp.status_code == 404:
+        raise RuntimeError(
+            f"GitHub repo access failed (404). Usually owner/repo is wrong or the token does not have access to {GITHUB_OWNER}/{GITHUB_REPO}."
+        )
+    if repo_resp.status_code >= 400:
+        raise RuntimeError(f"GitHub repo check failed: {repo_resp.status_code} - {github_error_text(repo_resp)}")
+
+    branch_resp = requests.get(
+        f"{base}/branches/{GITHUB_BRANCH}",
+        headers=github_headers(),
+        timeout=25
+    )
+    if branch_resp.status_code == 404:
+        raise RuntimeError(f"GitHub branch not found: {GITHUB_BRANCH}")
+    if branch_resp.status_code >= 400:
+        raise RuntimeError(f"GitHub branch check failed: {branch_resp.status_code} - {github_error_text(branch_resp)}")
+
+    url = f"{base}/contents/{path}"
     resp = requests.get(url, headers=github_headers(), params={"ref": GITHUB_BRANCH}, timeout=25)
-    resp.raise_for_status()
+
+    if resp.status_code == 404:
+        raise RuntimeError(
+            f"GitHub file not found: {path} on branch {GITHUB_BRANCH}. "
+            f"If owner/repo/branch is correct, then the token likely cannot access this repo."
+        )
+    if resp.status_code >= 400:
+        raise RuntimeError(f"GitHub file read failed: {resp.status_code} - {github_error_text(resp)}")
+
     data = resp.json()
     content = base64.b64decode(data["content"]).decode("utf-8")
     return {
@@ -1209,7 +1329,7 @@ def github_get_file(path):
 
 def github_update_file(path, new_content, sha, message):
     if not github_ready():
-        raise RuntimeError("GitHub configuration is incomplete.")
+        raise RuntimeError("GitHub config incomplete. Check GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO, and GITHUB_BRANCH.")
 
     url = f"https://api.github.com/repos/{GITHUB_OWNER}/{GITHUB_REPO}/contents/{path}"
     payload = {
@@ -1218,8 +1338,23 @@ def github_update_file(path, new_content, sha, message):
         "sha": sha,
         "branch": GITHUB_BRANCH
     }
+
     resp = requests.put(url, headers=github_headers(), json=payload, timeout=35)
-    resp.raise_for_status()
+
+    if resp.status_code == 404:
+        raise RuntimeError(
+            "GitHub update failed with 404. Usually the token does not have access to this repo "
+            "or Contents: write permission is missing."
+        )
+    if resp.status_code == 403:
+        raise RuntimeError(
+            f"GitHub update blocked (403). Check token permission: Contents -> Read and write. Details: {github_error_text(resp)}"
+        )
+    if resp.status_code == 422:
+        raise RuntimeError(f"GitHub update validation failed (422): {github_error_text(resp)}")
+    if resp.status_code >= 400:
+        raise RuntimeError(f"GitHub update failed: {resp.status_code} - {github_error_text(resp)}")
+
     data = resp.json()
     return {
         "commit_sha": data.get("commit", {}).get("sha", ""),
@@ -1340,7 +1475,9 @@ def apply_patch_transform(source_text, patch_item):
         "old cabinet",
         "previous government",
         "archived profile",
-        "old government"
+        "old government",
+        "former cabinet",
+        "old profile"
    
 
     for item in results:
@@ -2877,8 +3014,9 @@ def home():
         }
 
         function toggleToolsSheet() {
-            toolsSheet.classList.toggle("open");
-            sheetOverlay.classList.toggle("show");
+            const willOpen = !toolsSheet.classList.contains("open");
+            toolsSheet.classList.toggle("open", willOpen);
+            sheetOverlay.classList.toggle("show", willOpen);
         }
 
         function closeToolsSheet() {
@@ -3818,6 +3956,16 @@ def reset_memory():
 def admin_clear_analytics():
     clear_analytics()
     return jsonify({"ok": True})
+
+
+@app.route("/admin/debug/github")
+@admin_required
+def admin_debug_github():
+    path = sanitize_text(request.args.get("path", "app.py"), 120) or "app.py"
+    return jsonify({
+        "ok": True,
+        "debug": github_debug_snapshot(path)
+    })
 
 
 @app.route("/autopatch/suggest", methods=["POST"])
