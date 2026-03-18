@@ -74,6 +74,7 @@ KNOWN_AUTO_PATCHES = {
     "Theme State Refresh Fix",
     "Tools Sheet Toggle Fix",
     "Trusted Current Info Filter",
+    "Version Bump Patch",
 }
 
 app = Flask(__name__)
@@ -935,6 +936,7 @@ Rules:
 - If the problem is about theme refresh, use exact patch_name: "Theme State Refresh Fix"
 - If the problem is about plus/tools sheet close, use exact patch_name: "Tools Sheet Toggle Fix"
 - If the problem is about current prime minister / office-holder wrong info, use exact patch_name: "Trusted Current Info Filter"
+- If the problem is about version bump, use exact patch_name: "Version Bump Patch"
 - If unsure, still suggest something, but unknown patch names will be preview-only.
 
 Problem:
@@ -1054,6 +1056,21 @@ def build_patch_preview(problem_text, notes=""):
             ],
             "preview_before": "General current info search-এ stale বা weak source ঢুকে যেতে পারে।",
             "preview_after": "Office-holder query হলে trusted source ছাড়া result ধরা হবে না।"
+        }
+
+    if "version" in text or "bump version" in text or "update version" in text:
+        return {
+            "patch_name": "Version Bump Patch",
+            "problem_summary": "Patch pipeline test করার জন্য app version visibly bump দরকার।",
+            "files_change": ["app.py"],
+            "exact_change": "VERSION constant-ke next test version-e update করা",
+            "expected_benefit": "patch feature visibly verify করা যাবে",
+            "possible_risk": "very low",
+            "risk_level": "low",
+            "rollback_method": "restore previous app.py commit",
+            "test_prompts": ["open sidebar about box", "check version label", "open /health"],
+            "preview_before": "Current version old value দেখাচ্ছে।",
+            "preview_after": "New bumped version show হবে।"
         }
 
     ai_guess = ai_generate_patch_suggestion(problem_text, notes)
@@ -1334,13 +1351,6 @@ def wait_for_health(base_url):
     return False, {"error": last_error}
 
 
-def regex_replace_once(source_text, pattern, replacement, label):
-    new_text, count = re.subn(pattern, replacement, source_text, flags=re.MULTILINE | re.DOTALL)
-    if count != 1:
-        raise RuntimeError(f"Patch transform failed for: {label}")
-    return new_text
-
-
 def replace_js_function(source_text, func_name, new_function_code):
     marker = f"function {func_name}("
     start = source_text.find(marker)
@@ -1468,6 +1478,17 @@ def apply_patch_transform(source_text, patch_item):
     return trusted[:3]"""
         return replace_python_function(source_text, "filter_current_info_results", replacement)
 
+    if name == "Version Bump Patch":
+        new_text, count = re.subn(
+            r'VERSION = "[^"]+"',
+            'VERSION = "41.1.2"',
+            source_text,
+            count=1
+        )
+        if count != 1:
+            raise RuntimeError("Patch transform failed for: version bump patch")
+        return new_text
+
     raise RuntimeError("This patch type is preview-only and not directly auto-applicable.")
 
 
@@ -1482,7 +1503,13 @@ def run_patch_pipeline(patch_item, base_url):
 
     candidate = apply_patch_transform(original_content, patch_item)
     if candidate == original_content:
-        raise RuntimeError("Patch produced no code changes.")
+        append_patch_log(patch_id, "Patch already present in app.py")
+        update_patch_status(patch_id, "applied")
+        return {
+            "ok": True,
+            "message": "Patch is already present in the current code. No new deploy was needed.",
+            "already_applied": True
+        }
 
     run_candidate_tests(candidate)
     append_patch_log(patch_id, "Local syntax/smoke tests passed")
@@ -1520,7 +1547,7 @@ def run_patch_pipeline(patch_item, base_url):
     trigger_render_deploy()
     append_patch_log(patch_id, "Rollback deploy triggered")
 
-    healthy_after_rollback, rb_data = wait_for_health(base_url)
+    healthy_after_rollback, _rb_data = wait_for_health(base_url)
     if healthy_after_rollback:
         update_patch_status(patch_id, "rolled_back")
         append_patch_log(patch_id, "Rollback health check passed")
