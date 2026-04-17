@@ -2467,7 +2467,7 @@ function renderChips(){{
     }}
     chosen.forEach(s=>{{
       const b=document.createElement("button"); b.className="chip";
-      b.innerHTML=`<i class="${s.icon}"></i><span>${s.text}</span>`;
+      b.innerHTML=`<i class="${{s.icon}}"></i><span>${{s.text}}</span>`;
       b.onclick=()=>{{msgI.value=s.text;resizeTA(msgI);sendMessage();}};
       box.appendChild(b);
     }});
