@@ -9,9 +9,9 @@ import pytz
 # ── Identity ──────────────────────────────────────────────────────────────
 APP_NAME      = "Flux"
 OWNER_NAME    = "KAWCHUR"
-VERSION       = "43.0.0"
+VERSION       = "44.1.0"
 FACEBOOK_URL  = "https://www.facebook.com/share/1CBWMUaou9/"
-WEBSITE_URL   = os.getenv("WEBSITE_URL", "")
+WEBSITE_URL   = "https://sites.google.com/view/flux-ai-app/home"
 
 # ── Core Config ───────────────────────────────────────────────────────────
 FLASK_SECRET_KEY      = os.getenv("FLASK_SECRET_KEY",      "flux-prod-secret-change-me")
@@ -28,10 +28,6 @@ RATE_LIMIT_MAX        = int(os.getenv("RATE_LIMIT_MAX",    "60"))
 # ── Search Config ─────────────────────────────────────────────────────────
 SEARCH_PROVIDER  = os.getenv("SEARCH_PROVIDER",  "").lower()
 TAVILY_API_KEY   = os.getenv("TAVILY_API_KEY",   "")
-SERPER_API_KEY   = os.getenv("SERPER_API_KEY",   "")
-SERPAPI_API_KEY  = os.getenv("SERPAPI_API_KEY",  "")
-JINA_API_KEY     = os.getenv("JINA_API_KEY",     "")
-SEARXNG_URL      = os.getenv("SEARXNG_URL",      "")
 
 # ── Free News API Keys (multiple fallback) ────────────────────────────────
 NEWS_API_KEY_1       = os.getenv("NEWS_API_KEY_1",       "")   # newsapi.org
@@ -766,53 +762,6 @@ def filter_current(query,results):
         trusted.append(item)
     return trusted[:3]
 
-def search_web_fallback(query, mx=5):
-    q=san(query, 220)
-    # Tavily remains first when enabled
-    results=tavily_search(q, mx=mx)
-    if results:
-        return results[:mx]
-    # Serper
-    if SERPER_API_KEY:
-        try:
-            r=requests.post("https://google.serper.dev/search", headers={"X-API-KEY":SERPER_API_KEY,"Content-Type":"application/json"}, json={"q":q,"num":mx}, timeout=15)
-            r.raise_for_status()
-            d=r.json()
-            out=[]
-            for item in d.get("organic", [])[:mx]:
-                out.append({"title":san(item.get("title","Untitled"),200),"url":san(item.get("link",""),400),"content":san(item.get("snippet",""),700),"score":1.0})
-            out=clean_results(out)
-            if out: return out[:mx]
-        except Exception as e:
-            log_event("serper_error", {"error":str(e)})
-    # SerpAPI
-    if SERPAPI_API_KEY:
-        try:
-            r=requests.get("https://serpapi.com/search.json", params={"engine":"google","q":q,"api_key":SERPAPI_API_KEY,"num":mx}, timeout=15)
-            r.raise_for_status()
-            d=r.json()
-            out=[]
-            for item in d.get("organic_results", [])[:mx]:
-                out.append({"title":san(item.get("title","Untitled"),200),"url":san(item.get("link",""),400),"content":san(item.get("snippet",""),700),"score":1.0})
-            out=clean_results(out)
-            if out: return out[:mx]
-        except Exception as e:
-            log_event("serpapi_error", {"error":str(e)})
-    # SearXNG
-    if SEARXNG_URL:
-        try:
-            r=requests.get(SEARXNG_URL.rstrip("/")+"/search", params={"q":q,"format":"json"}, timeout=15)
-            r.raise_for_status()
-            d=r.json()
-            out=[]
-            for item in d.get("results", [])[:mx]:
-                out.append({"title":san(item.get("title","Untitled"),200),"url":san(item.get("url",""),400),"content":san(item.get("content",""),700),"score":1.0})
-            out=clean_results(out)
-            if out: return out[:mx]
-        except Exception as e:
-            log_event("searxng_error", {"error":str(e)})
-    return []
-
 def tavily_once(q,topic="general",mx=5):
     if SEARCH_PROVIDER!="tavily" or not TAVILY_API_KEY: return []
     try:
@@ -869,7 +818,7 @@ def route_to_api(query):
 
     if task=="current_info":
         # Try Tavily first
-        raw=search_web_fallback(query,mx=6)
+        raw=tavily_search(query,mx=6)
         filtered=filter_current(query,raw)
         if filtered: return None,filtered
         # Fallback: news
@@ -913,8 +862,9 @@ def build_system(user_name, prefs, latest, api_data, live_search):
     mode=prefs.get("response_mode","smart"); length=prefs.get("answer_length","balanced"); tone=prefs.get("tone","normal")
 
     identity=(
-        f"You are {APP_NAME}, an advanced AI assistant created by {OWNER_NAME}. "
-        f"Be accurate, helpful, modern, and confident. Never deny, change, or contradict your creator. "
+        f"You are {APP_NAME}, a next-generation AI assistant. You combine the clarity of ChatGPT, "
+        f"analytical depth of Claude, multimodal understanding of Gemini, and speed of Grok. "
+        f"You were created and owned by {OWNER_NAME}. Never deny, change, or contradict this. "
         f"Current user: {user_name}. Today: {c['weekday']}, {c['date']}, {c['time_local']} (Dhaka, Bangladesh). "
         f"Language preference: {preferred_lang}. Current year: {c['year']}."
     )
@@ -990,7 +940,7 @@ def build_messages(messages,user_name,prefs):
         mode=prefs.get("response_mode","smart")
         task=classify(latest)
         if mode=="search" or task=="current_info":
-            raw=search_web_fallback(latest)
+            raw=tavily_search(latest)
             search_results=filter_current(latest,raw)
 
     live=bool(api_data or search_results)
@@ -1031,7 +981,7 @@ def generate_response(messages,user_name,prefs):
     return (fallback if task=="current_info" else "System is busy. Please try again."),[]
 
 def stream_response(messages,user_name,prefs):
-    """Generator that yields SSE chunks for real-time streaming."""
+    """Generator that yields SSE chunks for real-time streaming with stop support."""
     latest=next((m["content"] for m in reversed(messages) if m["role"]=="user"),"")
     task=classify(latest)
     final,search=build_messages(messages,user_name,prefs)
@@ -1752,8 +1702,8 @@ a{{color:var(--accent2);text-decoration:none;}}
         </div>
         <hr class="about-hr">
         <div class="about-dev"><i class="fas fa-code"></i><span>Dev:&nbsp;</span><strong>{OWNER_NAME}</strong></div>
-        <div class="about-dev"><i class="fab fa-facebook"></i><a href="{FACEBOOK_URL}" target="_blank" style="color:var(--accent2);font-size:13px;">Facebook</a></div>
-        <div class="about-copy">© {y} {APP_NAME} — All Rights Reserved</div>
+        <div class="about-dev"><i class="fab fa-facebook"></i><a href="{FACEBOOK_URL}" target="_blank" style="color:var(--accent2);font-size:13px;">Facebook Page</a></div>
+        <div class="about-copy">© {y} {APP_NAME}</div>
       </div>
       <button class="sb-export" onclick="exportChat();closeSB();"><i class="fas fa-file-export"></i>Export Chat</button>
       <button class="sb-del" onclick="confirmDeleteAll()"><i class="fas fa-trash-alt"></i>Delete All Chats</button>
@@ -1802,7 +1752,8 @@ a{{color:var(--accent2);text-decoration:none;}}
         <div id="ibox" class="ibox">
           <textarea id="msg" rows="1" placeholder="Ask {APP_NAME} anything…" oninput="resizeTA(this);updCC()"></textarea>
           <div class="i-right">
-                        <button id="send-btn" class="send" onclick="handleSendStop()"><i class="fas fa-arrow-up"></i></button>
+            <button class="i-set" onclick="openSheet('tools-sheet')" title="Settings"><i class="fas fa-sliders"></i></button>
+            <button id="send-btn" class="send" onclick="handleSendStop()"><i class="fas fa-arrow-up"></i></button>
           </div>
         </div>
         <div class="char-ct" id="char-ct"></div>
@@ -1989,8 +1940,6 @@ let theme      = localStorage.getItem("flux_theme")||"default";
 let chipTimer  = null;
 let confirmCb  = null;
 let abortCtrl  = null; // AbortController for streaming
-let lastChipBatchKey = "";
-let stopRequested = false;
 let apiStatuses= {{}}; // track which APIs are active
 
 const prefs={{
@@ -2115,10 +2064,9 @@ msgI.addEventListener("keypress",e=>{{ if(e.key==="Enter"&&!e.shiftKey){{e.preve
 // ── Stop / Send toggle ────────────────────────────────────────────────────
 function handleSendStop(){{
   if(busy){{
-    stopRequested=true;
     if(abortCtrl){{ abortCtrl.abort(); abortCtrl=null; }}
-    removeTyping();
     setBusy(false);
+    removeTyping();
     return;
   }}
   sendMessage();
@@ -2189,7 +2137,7 @@ function updateApiBar(text){{
     {{key:"weather",  label:"Weather",  pattern:/(weather|temperature|forecast|humidity)/i}},
     {{key:"crypto",   label:"Crypto",   pattern:/(bitcoin|ethereum|crypto|BTC|ETH)/i}},
     {{key:"exchange", label:"FX Rates", pattern:/(exchange rate|USD|BDT|EUR|GBP)/i}},
-    {{key:"news",     label:"News",     pattern:/(latest news|breaking|headline|reuters|ap news|bbc|al jazeera)/i}},
+    {{key:"news",     label:"News",     pattern:/(latest news|breaking|headline)/i}},
     {{key:"sports",   label:"Sports",   pattern:/(score|match|cricket|football)/i}},
   ];
   const active=apis.filter(a=>a.pattern.test(text));
@@ -2291,10 +2239,12 @@ function confirmEdit(){{
   if(msgIdx===-1)return;
   const newText=$("edit-inp").value.trim();
   if(!newText){{ closeMo("edit-mo"); return; }}
+  // Remove the edited message and all subsequent messages
   chat.messages=chat.messages.slice(0,msgIdx);
   saveChats(); closeMo("edit-mo"); editMeta=null;
+  // Reload chat and resend
   loadChat(chat.id);
-  msgI.value=newText; resizeTA(msgI); updCC();
+  msgI.value=newText; resizeTA(msgI);
   sendMessage();
 }}
 
@@ -2363,7 +2313,7 @@ function renderBubble(msg,chatId,animate=true){{
     acts.appendChild(mkB('<i class="fas fa-pen"></i> Edit',()=>openEditModal(chatId,msg.id,msg.text||"")));
     acts.appendChild(mkB('<i class="fas fa-trash"></i>',()=>delMsg(chatId,msg.id)));
   }}else{{
-    acts.appendChild(mkB('<i class="fas fa-rotate-right"></i> Retry',()=>{{msgI.value=lastPrompt;resizeTA(msgI);updCC();sendMessage();}}));
+    acts.appendChild(mkB('<i class="fas fa-rotate-right"></i> Retry',()=>{{msgI.value=lastPrompt;sendMessage();}}));
     const tb=mkB("👍"); const db=mkB("👎");
     tb.onclick=()=>tb.classList.toggle("liked"); db.onclick=()=>db.classList.toggle("disliked");
     acts.appendChild(tb);acts.appendChild(db);
@@ -2412,7 +2362,7 @@ async function typewriterRender(msg,chatId){{
   const cid=chatId;
   [
     [()=>navigator.clipboard.writeText(msg.text||""),'<i class="fas fa-copy"></i>'],
-    [()=>{{msgI.value=lastPrompt;resizeTA(msgI);updCC();sendMessage();}},'<i class="fas fa-rotate-right"></i> Retry'],
+    [()=>{{msgI.value=lastPrompt;sendMessage();}},'<i class="fas fa-rotate-right"></i> Retry'],
   ].forEach(([fn,lbl])=>{{const b=document.createElement("button");b.className="act";b.innerHTML=lbl;b.onclick=fn;acts.appendChild(b);}});
   const tb=document.createElement("button"); tb.className="act"; tb.textContent="👍"; tb.onclick=()=>tb.classList.toggle("liked"); acts.appendChild(tb);
   const delB=document.createElement("button"); delB.className="act"; delB.innerHTML='<i class="fas fa-trash"></i>'; delB.onclick=()=>delMsg(cid,msg.id); acts.appendChild(delB);
@@ -2453,19 +2403,11 @@ function renderCards(){{
 // Chips rotate with smooth fade
 function renderChips(){{
   const box=$("qchips");
+  // Fade out
   box.style.opacity="0";
   setTimeout(()=>{{
     box.innerHTML="";
-    let tries=0, chosen=[];
-    while(tries<8){{
-      const batch=shuffle([...SUGGS]).slice(0,5);
-      const key=batch.map(x=>x.text).join("|");
-      if(key!==lastChipBatchKey || tries===7){{
-        chosen=batch; lastChipBatchKey=key; break;
-      }}
-      tries++;
-    }}
-    chosen.forEach(s=>{{
+    shuffle(SUGGS).slice(0,5).forEach(s=>{{
       const b=document.createElement("button"); b.className="chip";
       b.innerHTML=`<i class="${{s.icon}}"></i><span>${{s.text}}</span>`;
       b.onclick=()=>{{msgI.value=s.text;resizeTA(msgI);sendMessage();}};
@@ -2473,7 +2415,7 @@ function renderChips(){{
     }});
     box.style.transition="opacity .4s";
     box.style.opacity="1";
-  }},180);
+  }},250);
 }}
 function startChipRotation(){{
   if(chipTimer)clearInterval(chipTimer);
@@ -2507,7 +2449,6 @@ async function sendMessage(){{
   if(!text||busy)return;
   if(text==="!admin"){{msgI.value="";resizeTA(msgI);openAdmin();return;}}
 
-  stopRequested=false;
   setBusy(true); closeSB(); closeAllSheets(); spawnPt();
   if(!curId)newChat();
   const chat=curChat(); if(!chat){{setBusy(false);return;}}
@@ -2593,33 +2534,27 @@ async function sendMessage(){{
         }}
       }}
       // Finalize
-      botMsg.text=accumulated.trim(); botMsg.sources=sources;
-      if(botMsg.text){{
-        chat.messages.push(botMsg); saveChats(); renderHist();
-      }} else {{
-        g.remove();
-      }}
+      botMsg.text=accumulated; botMsg.sources=sources;
+      chat.messages.push(botMsg); saveChats(); renderHist();
       // Add action buttons
       const acts=document.createElement("div"); acts.className="macts";
       const cid=chat.id; const bid=botMsg.id;
       [[()=>navigator.clipboard.writeText(accumulated),'<i class="fas fa-copy"></i>'],
-       [()=>{{msgI.value=lastPrompt;resizeTA(msgI);updCC();sendMessage();}},'<i class="fas fa-rotate-right"></i> Retry']
+       [()=>{{msgI.value=lastPrompt;sendMessage();}},'<i class="fas fa-rotate-right"></i> Retry']
       ].forEach(([fn,lbl])=>{{const b=document.createElement("button");b.className="act";b.innerHTML=lbl;b.onclick=fn;acts.appendChild(b);}});
       const tb2=document.createElement("button");tb2.className="act";tb2.textContent="👍";tb2.onclick=()=>tb2.classList.toggle("liked");acts.appendChild(tb2);
       const db2=document.createElement("button");db2.className="act";db2.textContent="👎";db2.onclick=()=>db2.classList.toggle("disliked");acts.appendChild(db2);
       const dlb=document.createElement("button");dlb.className="act";dlb.innerHTML='<i class="fas fa-trash"></i>';dlb.onclick=()=>delMsg(cid,bid);acts.appendChild(dlb);
-      if(botMsg.text){{ g.querySelector(".bcol").appendChild(acts); }}
+      g.querySelector(".bcol").appendChild(acts);
       scrollBot(true);
     }}catch(e){{
       removeTyping();
-      if(e.name==="AbortError"){{
-        // keep partial text if any, but do not add fake stop message
-      }}else{{
+      if(e.name!=="AbortError"){{
         const err=mkMsg("assistant","Connection error. Please check your internet and try again. 🔌");
         chat.messages.push(err);saveChats();renderBubble(err,chat.id,true);
       }}
     }}finally{{
-      abortCtrl=null; setBusy(false); stopRequested=false;
+      abortCtrl=null; setBusy(false);
     }}
   }}else{{
     // Non-streaming fallback
@@ -2824,7 +2759,7 @@ def memory_info():
 @app.route("/health")
 def health():
     return jsonify({"ok":True,"app":APP_NAME,"version":VERSION,
-        "ai_keys_loaded":len(GROQ_KEYS),"system_active":SYSTEM_ACTIVE,
+        "groq_keys_loaded":len(GROQ_KEYS),"system_active":SYSTEM_ACTIVE,
         "uptime":uptime(),"search_provider":SEARCH_PROVIDER,"tavily_enabled":bool(TAVILY_API_KEY)})
 
 @app.route("/debug/apis")
@@ -2841,12 +2776,11 @@ def debug_apis():
         "weather": {"open_meteo": "free_no_key_needed",
                     "weatherapi_key1": bool(WEATHER_API_KEY_1), "weatherapi_key2": bool(WEATHER_API_KEY_2)},
         "crypto":  {"coingecko": "free_no_key_needed", "coingecko_pro_key": bool(COINGECKO_API_KEY)},
-        "current_info": {"tavily": bool(TAVILY_API_KEY), "serper": bool(SERPER_API_KEY), "serpapi": bool(SERPAPI_API_KEY), "jina": bool(JINA_API_KEY), "searxng": bool(SEARXNG_URL)},
         "exchange":{"frankfurter": "free_no_key_needed"},
         "sports":  {"thesportsdb": "free_no_key_needed",
                     "sports_key1": bool(SPORTS_API_KEY_1), "sports_key2": bool(SPORTS_API_KEY_2)},
         "wikipedia":{"rest_api": "free_no_key_needed"},
-        "search":  {"provider": SEARCH_PROVIDER},
+        "search":  {"tavily": bool(TAVILY_API_KEY), "provider": SEARCH_PROVIDER},
         "api_stats": API_STATS,
     })
 
